@@ -10,7 +10,7 @@ import PrivateRoute from "./components/auth/PrivateRoute";
 import Login        from "./pages/auth/Login";
 import Register     from "./pages/auth/Register";
 import Unauthorized from "./pages/auth/Unauthorized";
-
+import LandingPage  from "./pages/LandingPage";
 // Dashboards  (add others as phases complete)
 import ClientDashboard from "./pages/dashboard/ClientDashboard";
 
@@ -37,7 +37,7 @@ function App() {
       <Routes>
 
         {/* ── Public ── */}
-        <Route path="/"             element={<Navigate to="/login" replace />} />
+        <Route path="/"             element={<LandingPage />} />
         <Route path="/login"        element={<Login />} />
         <Route path="/register"     element={<Register />} />
         <Route path="/unauthorized" element={<Unauthorized />} />

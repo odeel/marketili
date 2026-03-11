@@ -64,6 +64,17 @@ const postSchema = new mongoose.Schema(
     categories: [String],
     // e.g. ["Social Media", "Content Creation", "SEO"]
 
+    // ── Media attachments (images / videos uploaded via GridFS) ──
+    media: [
+      {
+        fileId:   String, // GridFS ObjectId as string
+        filename: String,
+        mimeType: String, // "image/jpeg", "video/mp4", etc.
+        size:     Number, // bytes
+        url:      String, // /api/upload/:fileId
+      },
+    ],
+
     // ── Who is this post targeting? ──
     // Client can target specific provider types or leave it open to all
     targetProviders: {
