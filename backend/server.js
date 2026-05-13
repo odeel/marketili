@@ -1,48 +1,41 @@
 require("dotenv").config({ path: require("path").resolve(__dirname, ".env") });
 
-const express  = require("express");
-const cors     = require("cors");
+const express      = require("express");
+const cors         = require("cors");
+const cookieParser = require("cookie-parser");
 const { connectDB } = require("./config/db");
 
-connectDB();
-
 const app = express();
-const cookieParser = require("cookie-parser");
-app.use(cookieParser());
 
+// ── Middleware — order matters ──
+app.use(cookieParser());                               // 1. parse cookies first
 app.use(cors({
   origin: ["http://localhost:3000", "http://localhost:3001"],
   credentials: true,
-}));
-
-app.use(express.json({ limit: "10mb" }));
+}));                                                   // 2. cors
+app.use(express.json({ limit: "10mb" }));              // 3. body parsing
 app.use(express.urlencoded({ extended: true }));
 
+// ── Routes ──
 app.use("/api/auth",           require("./routes/authRoutes"));
 app.use("/api/posts",          require("./routes/postRoutes"));
 app.use("/api/upload",         require("./routes/uploadRoutes"));
-app.use("/api/pitches",        require("./routes/pitchRoutes"));
+app.use("/api/pitches",        require("./routes/Pitchroutes"));
 app.use("/api/projects",       require("./routes/projectRoutes"));
 app.use("/api/admin",          require("./routes/adminRoutes"));
 app.use("/api/agency-members", require("./routes/agencyMemberRoutes"));
-app.use("/api/projects", require("./routes/projectRoutes"));
 
-
-
-import ChangePasswordPage from "./pages/auth/ChangePasswordPage";
-
-
-
-// ✅ /api/notifications removed — not built yet, was crashing server
-
+// ── Health check ──
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "Marketili API is running", timestamp: new Date().toISOString() });
 });
 
+// ── 404 ──
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} introuvable` });
 });
 
+// ── Global error handler ──
 app.use((err, req, res, next) => {
   console.error("Global error:", err);
   res.status(err.statusCode || 500).json({
@@ -52,7 +45,10 @@ app.use((err, req, res, next) => {
   });
 });
 
+// ── Start ──
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Marketili server running on port ${PORT} (${process.env.NODE_ENV})`);
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Marketili server running on port ${PORT} (${process.env.NODE_ENV})`);
+  });
 });
