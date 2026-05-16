@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ProgressBar, PriorityBadge } from "./shared";
 import projectService from "../../../services/projectService";
 import contractService from "../../../services/contractService";
-import { IconCheckSquare, IconZap, IconCalendar } from "../../../components/ui/Icons";
+import { getDeadlineColor, getDeadlineLabel } from "../../../utils/deadlineColor";
+import { IconCheckSquare, IconZap, IconUsers, IconSend } from "../../../components/ui/Icons";
 
 const STATUS_COLOR = {
   pending: "#f59e0b", active: "#7c3aed",
@@ -30,10 +31,16 @@ const ProjectCard = ({ project: p, index, onClick }) => {
         : `${p.client.firstName} ${p.client.lastName}`)
     : "Client inconnu";
 
+  const isDone   = ["completed", "cancelled"].includes(p.projectStatus);
+  const dlColor  = isDone ? "#9e9e9e" : getDeadlineColor(p.deadline);
+  const dlLabel  = isDone ? null      : getDeadlineLabel(p.deadline);
+
   return (
     <motion.div className="card" initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }}
-      style={{ cursor: "pointer" }} onClick={onClick}>
+      style={{ cursor: "pointer", borderLeft: `3px solid ${dlColor}`,
+        opacity: isDone ? 0.62 : 1 }}
+      onClick={onClick}>
       <div style={{ padding: "20px 22px" }}>
         <div style={{ display: "flex", justifyContent: "space-between",
           alignItems: "flex-start", marginBottom: 8 }}>
@@ -52,8 +59,10 @@ const ProjectCard = ({ project: p, index, onClick }) => {
         <ProgressBar value={p.progress || 0} />
         <div style={{ display: "flex", justifyContent: "space-between",
           fontSize: "0.72rem", color: "#9a6060", marginTop: 6 }}>
-          <span>{p.progress || 0}% complété</span>
-          <span>{p.tasks?.length || 0} tâche{p.tasks?.length !== 1 ? "s" : ""}</span>
+          <span>{p.progress || 0}% · {p.tasks?.length || 0} tâche{p.tasks?.length !== 1 ? "s" : ""}</span>
+          {dlLabel && (
+            <span style={{ color: dlColor, fontWeight: 600 }}>{dlLabel}</span>
+          )}
         </div>
       </div>
     </motion.div>
@@ -68,13 +77,19 @@ const TASK_STATUS = {
 };
 
 const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
-  const [project,     setProject]     = useState(initial);
-  const [members,     setMembers]     = useState([]);
-  const [showAddTask, setShowAddTask] = useState(false);
-  const [taskForm,    setTaskForm]    = useState({
+  const [project,        setProject]        = useState(initial);
+  const [members,        setMembers]        = useState([]);
+  const [showAddTask,    setShowAddTask]     = useState(false);
+  const [showAssign,     setShowAssign]      = useState(false);
+  const [showDeliverable,setShowDeliverable] = useState(false);
+  const [showDeadline,   setShowDeadline]    = useState(false);
+  const [taskForm, setTaskForm] = useState({
     title: "", description: "", priority: "medium", dueDate: "", assignedTo: "",
   });
-  const [saving, setSaving] = useState(false);
+  const [assignForm,     setAssignForm]     = useState({ memberId: "", role: "" });
+  const [delivForm,      setDelivForm]      = useState({ fileUrl: "", fileName: "", description: "" });
+  const [newDeadline,    setNewDeadline]    = useState("");
+  const [saving,         setSaving]         = useState(false);
 
   // ── Contract state ──
   const [showContractModal, setShowContractModal] = useState(false);
@@ -90,13 +105,15 @@ const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
       .catch(() => {});
   }, [agencyId, project._id]);
 
-  // ── Load contract ──
   useEffect(() => {
     contractService.getByProject(project._id)
       .then(d => setContract(d.contract))
       .catch(() => {})
       .finally(() => setContractLoading(false));
   }, [project._id]);
+
+  const refresh = () =>
+    projectService.getProject(project._id).then(d => setProject(d.project)).catch(() => {});
 
   const handleAddTask = async (e) => {
     e.preventDefault();
@@ -115,48 +132,239 @@ const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
     finally { setSaving(false); }
   };
 
-  const handleStatusChange = async (taskId, status) => {
+  const handleTaskStatusChange = async (taskId, status) => {
     try {
       const d = await projectService.updateTask(project._id, taskId, { status });
       setProject(d.project);
     } catch {}
   };
 
+  const handleStatusUpdate = async (newStatus) => {
+    try {
+      const d = await projectService.updateProject(project._id, {
+        projectStatus: newStatus,
+        requesterId: agencyUser._id,
+      });
+      setProject(d.project);
+    } catch (err) {
+      alert(err.response?.data?.message || "Erreur");
+    }
+  };
+
+  const handleDeadlineExtend = async (e) => {
+    e.preventDefault();
+    if (!newDeadline) return;
+    setSaving(true);
+    try {
+      const d = await projectService.updateProject(project._id, {
+        deadline: newDeadline,
+        requesterId: agencyUser._id,
+      });
+      setProject(d.project);
+      setShowDeadline(false);
+      setNewDeadline("");
+    } catch (err) {
+      alert(err.response?.data?.message || "Erreur");
+    } finally { setSaving(false); }
+  };
+
+  const handleAssign = async (e) => {
+    e.preventDefault();
+    if (!assignForm.memberId) return;
+    setSaving(true);
+    try {
+      const found = members.find(m => m._id === assignForm.memberId);
+      const d = await projectService.assignMember(project._id, {
+        memberType: "AgencyMember",
+        memberId:   assignForm.memberId,
+        memberName: found ? `${found.firstName} ${found.lastName}` : "",
+        role:       assignForm.role,
+      });
+      setProject(d.project);
+      setShowAssign(false);
+      setAssignForm({ memberId: "", role: "" });
+    } catch (err) {
+      alert(err.response?.data?.message || "Erreur");
+    } finally { setSaving(false); }
+  };
+
+  const handleDeliverable = async (e) => {
+    e.preventDefault();
+    if (!delivForm.fileUrl || !delivForm.fileName) return;
+    setSaving(true);
+    try {
+      const d = await projectService.addDeliverable(project._id, {
+        ...delivForm,
+        submittedBy: agencyUser._id,
+      });
+      setProject(d.project);
+      setShowDeliverable(false);
+      setDelivForm({ fileUrl: "", fileName: "", description: "" });
+    } catch (err) {
+      alert(err.response?.data?.message || "Erreur");
+    } finally { setSaving(false); }
+  };
+
+  const dlColor = getDeadlineColor(project.deadline);
+  const dlLabel = getDeadlineLabel(project.deadline);
+
+  const PROJECT_STATUS_FLOW = [
+    { v: "pending",   l: "En attente" },
+    { v: "active",    l: "Actif"      },
+    { v: "in_review", l: "En révision"},
+    { v: "completed", l: "Terminé"    },
+    { v: "cancelled", l: "Annulé"     },
+  ];
+
   return (
     <div>
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontWeight: 800, fontSize: "1.15rem", color: "#1a0a0a",
-          letterSpacing: "-0.025em", marginBottom: 4 }}>{project.title}</div>
-        <ProgressBar value={project.progress || 0} />
-        <div style={{ fontSize: "0.75rem", color: "#9a6060", marginTop: 4 }}>
-          {project.progress || 0}% · Échéance :{" "}
-          {project.deadline ? new Date(project.deadline).toLocaleDateString("fr-DZ") : "—"}
+      {/* ── Header: title + status + deadline ── */}
+      <div className="card" style={{ marginBottom: 16, padding: "20px 22px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between",
+          alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--d-ink)",
+              letterSpacing: "-0.02em", marginBottom: 6 }}>
+              {project.title}
+            </div>
+            <ProgressBar value={project.progress || 0} />
+            <div style={{ display: "flex", gap: 12, marginTop: 6, flexWrap: "wrap",
+              fontSize: "0.74rem", color: "var(--d-muted)" }}>
+              <span>{project.progress || 0}% complété</span>
+              {project.deadline && (
+                <span style={{ color: dlColor, fontWeight: 600 }}>
+                  {new Date(project.deadline).toLocaleDateString("fr-DZ")} — {dlLabel}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Status selector */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+            <select
+              value={project.projectStatus}
+              onChange={e => handleStatusUpdate(e.target.value)}
+              style={{ padding: "6px 12px", borderRadius: 8, border: "1.5px solid var(--d-border-soft)",
+                fontSize: "0.8rem", fontWeight: 700,
+                color: STATUS_COLOR[project.projectStatus],
+                background: STATUS_COLOR[project.projectStatus] + "18",
+                cursor: "pointer", fontFamily: "inherit" }}>
+              {PROJECT_STATUS_FLOW.map(s => (
+                <option key={s.v} value={s.v}>{s.l}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setShowDeadline(v => !v)}
+              style={{ fontSize: "0.75rem", color: "var(--d-muted)", background: "none",
+                border: "1px solid var(--d-border-soft)", borderRadius: 6,
+                padding: "4px 10px", cursor: "pointer", fontFamily: "inherit" }}>
+              Prolonger le délai
+            </button>
+          </div>
         </div>
+
+        {showDeadline && (
+          <form onSubmit={handleDeadlineExtend}
+            style={{ display: "flex", gap: 10, marginTop: 14, alignItems: "flex-end" }}>
+            <div style={{ flex: 1 }}>
+              <label className="dash-form-label">Nouvelle date limite</label>
+              <input className="dash-form-input" type="date"
+                value={newDeadline} onChange={e => setNewDeadline(e.target.value)}
+                min={new Date().toISOString().split("T")[0]} required />
+            </div>
+            <button type="submit" className="section-cta-btn"
+              style={{ padding: "9px 16px", fontSize: "0.82rem" }} disabled={saving}>
+              Enregistrer
+            </button>
+            <button type="button" onClick={() => setShowDeadline(false)}
+              style={{ padding: "9px 14px", border: "1.5px solid var(--d-border-soft)",
+                borderRadius: 8, background: "none", cursor: "pointer",
+                fontSize: "0.82rem", color: "var(--d-muted)", fontFamily: "inherit" }}>
+              Annuler
+            </button>
+          </form>
+        )}
       </div>
 
-      {project.assignedMembers?.length > 0 && (
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
-          {project.assignedMembers.map((m, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 6,
-              padding: "5px 12px", background: "#fff", border: "1px solid #f0dede",
-              borderRadius: 20, fontSize: "0.78rem", color: "#4a2a2a" }}>
-              <div style={{ width: 22, height: 22, borderRadius: "50%",
-                background: "#c0152a", color: "#fff", fontSize: "0.6rem",
-                display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>
-                {m.memberName?.[0]?.toUpperCase()}
+      {/* ── Assigned members + assign form ── */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-header">
+          <div className="section-head" style={{ marginBottom: 0 }}>
+            <div>
+              <div className="section-head-title">
+                Équipe ({project.assignedMembers?.length || 0})
               </div>
-              {m.memberName}
             </div>
-          ))}
+            <button className="section-head-action"
+              onClick={() => setShowAssign(v => !v)}>
+              + Assigner un membre
+            </button>
+          </div>
         </div>
-      )}
+
+        {showAssign && (
+          <form onSubmit={handleAssign}
+            style={{ padding: "14px 22px", borderBottom: "1px solid var(--d-border-soft)",
+              background: "var(--d-surface-alt)" }}>
+            <div className="dash-form-row">
+              <div className="dash-form-group">
+                <label className="dash-form-label">Membre</label>
+                <select className="dash-form-select" value={assignForm.memberId} required
+                  onChange={e => setAssignForm(p => ({ ...p, memberId: e.target.value }))}>
+                  <option value="">Sélectionner...</option>
+                  {members.map(m => (
+                    <option key={m._id} value={m._id}>
+                      {m.firstName} {m.lastName} — {m.jobTitle}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="dash-form-group">
+                <label className="dash-form-label">Rôle sur ce projet</label>
+                <input className="dash-form-input" placeholder="Ex: Stratégiste, Designer..."
+                  value={assignForm.role}
+                  onChange={e => setAssignForm(p => ({ ...p, role: e.target.value }))} />
+              </div>
+              <button type="submit" className="section-cta-btn"
+                style={{ alignSelf: "flex-end", padding: "9px 18px" }} disabled={saving}>
+                Assigner
+              </button>
+            </div>
+          </form>
+        )}
+
+        <div className="card-body" style={{ padding: "12px 22px" }}>
+          {!project.assignedMembers?.length ? (
+            <div style={{ fontSize: "0.82rem", color: "var(--d-muted)" }}>
+              Aucun membre assigné à ce projet.
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {project.assignedMembers.map((m, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 6,
+                  padding: "5px 12px", background: "var(--d-surface)",
+                  border: "1px solid var(--d-border-soft)",
+                  borderRadius: 20, fontSize: "0.78rem", color: "var(--d-ink)" }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%",
+                    background: "#c0152a", color: "#fff", fontSize: "0.6rem",
+                    display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>
+                    {m.memberName?.[0]?.toUpperCase()}
+                  </div>
+                  <span>{m.memberName}</span>
+                  {m.role && <span style={{ color: "var(--d-muted)", fontSize: "0.7rem" }}>· {m.role}</span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* ── Contract status card ── */}
       <div className="card" style={{ marginBottom: 16, padding: "16px 22px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "#1a0a0a" }}>Contrat</div>
-            <div style={{ fontSize: "0.75rem", color: "#9a6060", marginTop: 2 }}>
+            <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--d-ink)" }}>Contrat</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--d-muted)", marginTop: 2 }}>
               {contractLoading ? "Chargement..."
                 : contract
                   ? `${CONTRACT_STATUS_META[contract.status]?.label || contract.status} · ${new Date(contract.createdAt).toLocaleDateString("fr-DZ")}`
@@ -182,6 +390,88 @@ const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
         </div>
       </div>
 
+      {/* ── Deliverables ── */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-header">
+          <div className="section-head" style={{ marginBottom: 0 }}>
+            <div>
+              <div className="section-head-title">
+                Livrables ({project.deliverables?.length || 0})
+              </div>
+            </div>
+            <button className="section-head-action"
+              onClick={() => setShowDeliverable(v => !v)}>
+              + Soumettre un livrable
+            </button>
+          </div>
+        </div>
+
+        {showDeliverable && (
+          <form onSubmit={handleDeliverable}
+            style={{ padding: "14px 22px", borderBottom: "1px solid var(--d-border-soft)",
+              background: "var(--d-surface-alt)" }}>
+            <div className="dash-form-row">
+              <div className="dash-form-group">
+                <label className="dash-form-label">URL du fichier *</label>
+                <input className="dash-form-input" placeholder="https://..." required
+                  value={delivForm.fileUrl}
+                  onChange={e => setDelivForm(p => ({ ...p, fileUrl: e.target.value }))} />
+              </div>
+              <div className="dash-form-group">
+                <label className="dash-form-label">Nom du fichier *</label>
+                <input className="dash-form-input" placeholder="rapport-final.pdf" required
+                  value={delivForm.fileName}
+                  onChange={e => setDelivForm(p => ({ ...p, fileName: e.target.value }))} />
+              </div>
+            </div>
+            <div className="dash-form-group">
+              <label className="dash-form-label">Description</label>
+              <input className="dash-form-input" placeholder="Note sur ce livrable..."
+                value={delivForm.description}
+                onChange={e => setDelivForm(p => ({ ...p, description: e.target.value }))} />
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button type="submit" className="dash-form-submit" style={{ flex: 1 }} disabled={saving}>
+                {saving ? "Envoi..." : "Soumettre"}
+              </button>
+              <button type="button" onClick={() => setShowDeliverable(false)}
+                style={{ padding: "10px 18px", border: "1.5px solid var(--d-border-soft)",
+                  borderRadius: 9, background: "transparent", cursor: "pointer",
+                  fontSize: "0.85rem", color: "var(--d-muted)", fontFamily: "inherit" }}>
+                Annuler
+              </button>
+            </div>
+          </form>
+        )}
+
+        <div className="card-body" style={{ padding: "8px 0 0" }}>
+          {!project.deliverables?.length ? (
+            <div style={{ padding: "20px 22px", fontSize: "0.82rem", color: "var(--d-muted)" }}>
+              Aucun livrable soumis.
+            </div>
+          ) : project.deliverables.map((d, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12,
+              padding: "11px 22px", borderBottom: "1px solid var(--d-border-soft)" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <a href={d.fileUrl} target="_blank" rel="noreferrer"
+                  style={{ fontWeight: 600, fontSize: "0.85rem", color: "#c0152a",
+                    textDecoration: "none" }}>
+                  {d.fileName}
+                </a>
+                {d.description && (
+                  <div style={{ fontSize: "0.73rem", color: "var(--d-muted)", marginTop: 2 }}>
+                    {d.description}
+                  </div>
+                )}
+              </div>
+              <span style={{ fontSize: "0.7rem", color: "var(--d-muted)", whiteSpace: "nowrap" }}>
+                {d.submittedAt ? new Date(d.submittedAt).toLocaleDateString("fr-DZ") : ""}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── Tasks card ── */}
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-header">
@@ -196,7 +486,7 @@ const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
         </div>
 
         {showAddTask && (
-          <div style={{ padding: "16px 22px", borderBottom: "1px solid #faeaea", background: "#fffbfb" }}>
+          <div style={{ padding: "16px 22px", borderBottom: "1px solid var(--d-border-soft)", background: "var(--d-surface-alt)" }}>
             <form onSubmit={handleAddTask} className="dash-form">
               <div className="dash-form-row">
                 <div className="dash-form-group">
@@ -244,9 +534,9 @@ const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
                   {saving ? "Ajout..." : "Ajouter la tâche"}
                 </button>
                 <button type="button" onClick={() => setShowAddTask(false)}
-                  style={{ padding: "10px 18px", border: "1.5px solid #f0dede",
+                  style={{ padding: "10px 18px", border: "1.5px solid var(--d-border-soft)",
                     borderRadius: 9, background: "transparent", cursor: "pointer",
-                    fontSize: "0.85rem", color: "#9a6060" }}>
+                    fontSize: "0.85rem", color: "var(--d-muted)", fontFamily: "inherit" }}>
                   Annuler
                 </button>
               </div>
@@ -262,28 +552,28 @@ const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
             </div>
           ) : project.tasks.map((task) => (
             <div key={task._id} style={{ display: "flex", alignItems: "center",
-              gap: 12, padding: "12px 22px", borderBottom: "1px solid #faeaea" }}>
+              gap: 12, padding: "12px 22px", borderBottom: "1px solid var(--d-border-soft)" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: "0.87rem", color: "#1a0a0a" }}>
+                <div style={{ fontWeight: 600, fontSize: "0.87rem", color: "var(--d-ink)" }}>
                   {task.title}
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
                   <PriorityBadge priority={task.priority} />
                   {task.dueDate && (
-                    <span style={{ fontSize: "0.72rem", color: "#9a6060" }}>
+                    <span style={{ fontSize: "0.72rem", color: "var(--d-muted)" }}>
                       {new Date(task.dueDate).toLocaleDateString("fr-DZ")}
                     </span>
                   )}
                   {task.assignedTo?.[0]?.memberName && (
-                    <span style={{ fontSize: "0.72rem", color: "#9a6060" }}>
+                    <span style={{ fontSize: "0.72rem", color: "var(--d-muted)" }}>
                       {task.assignedTo[0].memberName}
                     </span>
                   )}
                 </div>
               </div>
               <select value={task.status}
-                onChange={e => handleStatusChange(task._id, e.target.value)}
-                style={{ padding: "5px 10px", borderRadius: 8, border: "1.5px solid #f0dede",
+                onChange={e => handleTaskStatusChange(task._id, e.target.value)}
+                style={{ padding: "5px 10px", borderRadius: 8, border: "1.5px solid var(--d-border-soft)",
                   fontSize: "0.78rem", color: TASK_STATUS[task.status]?.color || "#6b7280",
                   background: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
                 {Object.entries(TASK_STATUS).map(([v, s]) => (
@@ -567,8 +857,16 @@ const DirectorProjects = ({ user }) => {
       .finally(() => setLoading(false));
   }, [user._id]);
 
-  const filtered = filter === "all" ? projects
+  const base = filter === "all" ? projects
     : projects.filter(p => p.projectStatus === filter);
+
+  // Completed/cancelled float to end, rest sorted by closest deadline
+  const filtered = [...base].sort((a, b) => {
+    const aDone = ["completed", "cancelled"].includes(a.projectStatus);
+    const bDone = ["completed", "cancelled"].includes(b.projectStatus);
+    if (aDone !== bDone) return aDone ? 1 : -1;
+    return new Date(a.deadline) - new Date(b.deadline);
+  });
 
   const STATUS_OPTS = [
     { value: "all",       label: "Tous"        },

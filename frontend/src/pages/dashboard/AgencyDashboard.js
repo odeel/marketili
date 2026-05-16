@@ -21,6 +21,7 @@ import CommercialBrowse     from "./agency/CommercialBrowse";
 import WorkerOverview       from "./agency/WorkerOverview";
 import WorkerTasks          from "./agency/WorkerTasks";
 import WorkerCalendar       from "./agency/WorkerCalendar";
+import WorkerProjects       from "./agency/WorkerProjects";
 import { PostCard }         from "./agency/shared";
 import { usePosts }         from "../../hooks/usePosts";
 import {
@@ -56,9 +57,10 @@ const NAV_COMMERCIAL = [
   { label: "Parcourir posts", icon: <IconCompass     size={16} />, path: "/dashboard/agency/browse"  },
 ];
 const NAV_WORKER = [
-  { label: "Vue d'ensemble", icon: <IconHome         size={16} />, path: "/dashboard/agency"          },
-  { label: "Mes tâches",     icon: <IconCheckSquare  size={16} />, path: "/dashboard/agency/tasks"    },
-  { label: "Calendrier",     icon: <IconCalendar     size={16} />, path: "/dashboard/agency/calendar" },
+  { label: "Vue d'ensemble", icon: <IconHome         size={16} />, path: "/dashboard/agency"           },
+  { label: "Mes tâches",     icon: <IconCheckSquare  size={16} />, path: "/dashboard/agency/tasks"     },
+  { label: "Mes projets",    icon: <IconBriefcase    size={16} />, path: "/dashboard/agency/projects"  },
+  { label: "Calendrier",     icon: <IconCalendar     size={16} />, path: "/dashboard/agency/calendar"  },
 ];
 
 // ── Browse posts (director version with pitch action) ─────────────────────────
@@ -192,9 +194,10 @@ const AgencyDashboard = () => {
 
           {/* ── Worker ── */}
           {agencyRole === "worker" && <>
-            <Route index           element={<WorkerOverview  user={user} />} />
-            <Route path="tasks"    element={<WorkerTasks     user={user} />} />
-            <Route path="calendar" element={<WorkerCalendar  user={user} />} />
+            <Route index            element={<WorkerOverview  user={user} />} />
+            <Route path="tasks"     element={<WorkerTasks     user={user} />} />
+            <Route path="projects"  element={<WorkerProjects  user={user} />} />
+            <Route path="calendar"  element={<WorkerCalendar  user={user} />} />
           </>}
 
           <Route path="*" element={<Navigate to="/dashboard/agency" replace />} />

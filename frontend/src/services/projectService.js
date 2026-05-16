@@ -27,6 +27,12 @@ const projectService = {
   getClientProjects: (clientId, params = {}) =>
     api.get(`/projects/client/${clientId}`, { params }).then(r => r.data),
 
+  updateProject: (projectId, data) =>
+    api.patch(`/projects/${projectId}`, data).then(r => r.data),
+
+  addDeliverable: (projectId, data) =>
+    api.post(`/projects/${projectId}/deliverables`, data).then(r => r.data),
+
   // ── Tasks ──
   createTask: (projectId, data) =>
     api.post(`/projects/${projectId}/tasks`, data).then(r => r.data),
@@ -40,6 +46,9 @@ const projectService = {
   // ── Worker ──
   getMemberTasks: (memberId) =>
     api.get(`/projects/member/${memberId}/tasks`).then(r => r.data),
+
+  getMemberProjects: (memberId) =>
+    api.get(`/projects/member/${memberId}/projects`).then(r => r.data),
 };
 
 export default projectService;

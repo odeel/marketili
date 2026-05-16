@@ -46,7 +46,7 @@ exports.getAgencyProjects = async (req, res) => {
     const projects = await Project.find(filter)
       .populate("client", "firstName lastName companyName accountType")
       .populate("post",   "title categories budget")
-      .sort({ createdAt: -1 });
+      .sort({ deadline: 1 });
 
     res.json({ success: true, projects });
   } catch (err) {
@@ -258,8 +258,91 @@ exports.getMemberTasks = async (req, res) => {
   }
 };
 
-// backend/controllers/projectController.js
-// ADD this new export at the bottom — do not touch any existing functions
+// ─────────────────────────────────────────────
+// UPDATE PROJECT  PATCH /api/projects/:projectId
+// ─────────────────────────────────────────────
+exports.updateProject = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { title, description, deadline, projectStatus, agreedPrice, requesterId } = req.body;
+
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    if (title       !== undefined) project.title       = title;
+    if (description !== undefined) project.description = description;
+    if (deadline    !== undefined) project.deadline    = deadline;
+    if (agreedPrice !== undefined) project.agreedPrice = agreedPrice;
+
+    if (projectStatus && projectStatus !== project.projectStatus) {
+      project.projectStatus = projectStatus;
+      if (projectStatus === "completed") project.completedAt = new Date();
+      project.statusHistory.push({
+        status:    projectStatus,
+        changedAt: new Date(),
+        changedBy: requesterId,
+        note:      `Statut mis à jour : ${projectStatus}`,
+      });
+    }
+
+    await project.save();
+    res.json({ success: true, project });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// ADD DELIVERABLE  POST /api/projects/:projectId/deliverables
+// ─────────────────────────────────────────────
+exports.addDeliverable = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { fileUrl, fileName, description, submittedBy } = req.body;
+
+    if (!fileUrl || !fileName) {
+      return res.status(400).json({ message: "fileUrl et fileName requis" });
+    }
+
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    project.deliverables.push({ fileUrl, fileName, description, submittedBy });
+
+    // Auto-move to in_review on first deliverable
+    if (project.projectStatus === "active") {
+      project.projectStatus = "in_review";
+      project.statusHistory.push({
+        status:    "in_review",
+        changedAt: new Date(),
+        changedBy: submittedBy,
+        note:      "Passé en révision suite à la soumission d'un livrable",
+      });
+    }
+
+    await project.save();
+    res.json({ success: true, project });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// GET MEMBER PROJECTS  GET /api/projects/member/:memberId/projects
+// ─────────────────────────────────────────────
+exports.getMemberProjects = async (req, res) => {
+  try {
+    const { memberId } = req.params;
+    const projects = await Project.find({ "assignedMembers.memberId": memberId })
+      .populate("client", "firstName lastName companyName accountType")
+      .populate("post",   "title")
+      .sort({ deadline: 1 })
+      .lean();
+    res.json({ success: true, projects });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 // ─────────────────────────────────────────────
 // GET CLIENT PROJECTS   GET /api/projects/client/:clientId

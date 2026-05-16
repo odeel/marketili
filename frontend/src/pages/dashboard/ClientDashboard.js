@@ -11,6 +11,7 @@ import { useMyPosts }    from "../../hooks/usePosts";
 import useAuth           from "../../hooks/useAuth";
 import projectService    from "../../services/projectService";
 import contractService   from "../../services/contractService";
+import { getDeadlineColor, getDeadlineLabel } from "../../utils/deadlineColor";
 import {
   IconHome, IconClipboard, IconCompass, IconInbox,
   IconBriefcase, IconFileText, IconZap, IconCheckSquare,
@@ -188,9 +189,17 @@ const ClientProjects = ({ user }) => {
       .finally(() => setLoading(false));
   }, [user._id]);
 
-  const filtered = filter === "all"
+  const base = filter === "all"
     ? projects
     : projects.filter(p => p.projectStatus === filter);
+
+  // Completed/cancelled float to end, rest sorted by closest deadline
+  const filtered = [...base].sort((a, b) => {
+    const aDone = ["completed", "cancelled"].includes(a.projectStatus);
+    const bDone = ["completed", "cancelled"].includes(b.projectStatus);
+    if (aDone !== bDone) return aDone ? 1 : -1;
+    return new Date(a.deadline) - new Date(b.deadline);
+  });
 
   const STATUS_OPTS = [
     { value: "all",       label: "Tous"        },
@@ -257,11 +266,16 @@ const ClientProjects = ({ user }) => {
       ) : (
         <div style={{ display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(320px,1fr))", gap: 16 }}>
-          {filtered.map((p, i) => (
+          {filtered.map((p, i) => {
+            const isDone  = ["completed", "cancelled"].includes(p.projectStatus);
+            const dlColor = isDone ? "#9e9e9e" : getDeadlineColor(p.deadline);
+            const dlLabel = isDone ? null : getDeadlineLabel(p.deadline);
+            return (
             <motion.div key={p._id} className="card"
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
-              style={{ cursor: "pointer" }}
+              style={{ cursor: "pointer", borderLeft: `3px solid ${dlColor}`,
+                opacity: isDone ? 0.62 : 1 }}
               onClick={() => setSelected(p)}>
               <div style={{ padding: "20px 22px" }}>
                 {/* Header row */}
@@ -299,12 +313,16 @@ const ClientProjects = ({ user }) => {
                 <div style={{ display: "flex", justifyContent: "space-between",
                   fontSize: "0.72rem", color: "#9a6060" }}>
                   <span>{p.progress || 0}% · {p.tasks?.length || 0} tâche{p.tasks?.length !== 1 ? "s" : ""}</span>
-                  <span>Échéance : {p.deadline
-                    ? new Date(p.deadline).toLocaleDateString("fr-DZ") : "—"}</span>
+                  {dlLabel
+                    ? <span style={{ color: dlColor, fontWeight: 600 }}>{dlLabel}</span>
+                    : <span>Échéance : {p.deadline
+                        ? new Date(p.deadline).toLocaleDateString("fr-DZ") : "—"}</span>
+                  }
                 </div>
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -384,6 +402,43 @@ const ClientProjectDetail = ({ project: initial, onBack, onRefresh }) => {
           </div>
         )}
       </div>
+
+      {/* Deliverables — read-only for client */}
+      {!!project.deliverables?.length && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div style={{ padding: "16px 22px", borderBottom: "1px solid #faeaea" }}>
+            <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "#1a0a0a" }}>
+              Livrables ({project.deliverables.length})
+            </div>
+            <div style={{ fontSize: "0.78rem", color: "#9a6060", marginTop: 2 }}>
+              Fichiers soumis par le prestataire
+            </div>
+          </div>
+          {project.deliverables.map((d, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12,
+              padding: "11px 22px",
+              borderBottom: i < project.deliverables.length - 1 ? "1px solid #faeaea" : "none" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <a href={d.fileUrl} target="_blank" rel="noreferrer"
+                  style={{ fontWeight: 600, fontSize: "0.85rem", color: "#c0152a",
+                    textDecoration: "none" }}>
+                  {d.fileName}
+                </a>
+                {d.description && (
+                  <div style={{ fontSize: "0.73rem", color: "#9a6060", marginTop: 2 }}>
+                    {d.description}
+                  </div>
+                )}
+              </div>
+              {d.submittedAt && (
+                <span style={{ fontSize: "0.7rem", color: "#9a6060", whiteSpace: "nowrap" }}>
+                  {new Date(d.submittedAt).toLocaleDateString("fr-DZ")}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Tasks — read-only for client */}
       <div className="card">
@@ -513,7 +568,7 @@ const ClientContracts = ({ user }) => {
       ) : filtered.length === 0 ? (
         <div className="card">
           <div className="empty-state" style={{ padding: "64px 24px" }}>
-            <div className="empty-state-icon">📄</div>
+            <div className="empty-state-icon"><IconFileText size={20} /></div>
             <div className="empty-state-title">Aucun contrat</div>
             <div className="empty-state-desc">
               Les contrats apparaissent ici après qu'une agence initie le processus.
