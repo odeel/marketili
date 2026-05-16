@@ -1,3 +1,5 @@
+// frontend/src/services/projectService.js
+
 import api from "./api";
 
 const projectService = {
@@ -20,6 +22,10 @@ const projectService = {
   // ── Commercial ──
   flagPost: (agencyId, postId, memberId, memberName, note = "") =>
     api.post(`/projects/flag-post`, { agencyId, postId, memberId, memberName, note }).then(r => r.data),
+
+  // ── Client ── ✅ NEW
+  getClientProjects: (clientId, params = {}) =>
+    api.get(`/projects/client/${clientId}`, { params }).then(r => r.data),
 
   // ── Tasks ──
   createTask: (projectId, data) =>

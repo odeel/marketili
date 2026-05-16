@@ -25,6 +25,9 @@ app.use("/api/projects",       require("./routes/projectRoutes"));
 app.use("/api/admin",          require("./routes/adminRoutes"));
 app.use("/api/agency-members", require("./routes/agencyMemberRoutes"));
 
+// Add this line with the other routes in server.js:
+app.use("/api/contracts", require("./routes/contractRoutes"));
+
 // ── Health check ──
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "Marketili API is running", timestamp: new Date().toISOString() });

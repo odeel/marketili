@@ -257,3 +257,31 @@ exports.getMemberTasks = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// backend/controllers/projectController.js
+// ADD this new export at the bottom — do not touch any existing functions
+
+// ─────────────────────────────────────────────
+// GET CLIENT PROJECTS   GET /api/projects/client/:clientId
+// ─────────────────────────────────────────────
+exports.getClientProjects = async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { status } = req.query;
+
+    const filter = { client: clientId };
+    if (status && status !== "all") filter.projectStatus = status;
+
+    const projects = await Project.find(filter)
+      .populate("providerAgency",     "agencyName")
+      .populate("providerTeam",       "teamName")
+      .populate("providerFreelancer", "firstName lastName")
+      .populate("post",               "title categories")
+      .sort({ deadline: 1 }) // closest deadline first
+      .lean();
+
+    res.json({ success: true, projects });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

@@ -1,21 +1,21 @@
 // backend/config/db.js
 const mongoose = require("mongoose");
-const Grid     = require("gridfs-stream");
+const Grid = require("gridfs-stream");
 const { GridFsStorage } = require("multer-gridfs-storage");
-const multer   = require("multer");
+const multer = require("multer");
 
 let _gfs;
 let _upload;
+let _conn;
 
-// ── Main connection ──
 const connectDB = async () => {
   try {
     const mongoURI = process.env.MONGO_URI;
 
-    const conn = await mongoose.connect(mongoURI);
-    console.log(`✅ MongoDB connected: ${conn.connection.host}`);
+    _conn = await mongoose.connect(mongoURI);
+    console.log(`✅ MongoDB connected: ${_conn.connection.host}`);
 
-    _gfs = Grid(conn.connection.db, mongoose.mongo);
+    _gfs = Grid(_conn.connection.db, mongoose.mongo);
     _gfs.collection("uploads");
     console.log("✅ GridFS initialized");
 
@@ -26,6 +26,7 @@ const connectDB = async () => {
         const allowed = [
           "image/jpeg", "image/png", "image/webp", "image/gif",
           "video/mp4", "video/quicktime", "video/webm",
+          "application/pdf",
         ];
         if (!allowed.includes(file.mimetype)) {
           return new Error("Type de fichier non supporté");
@@ -40,28 +41,33 @@ const connectDB = async () => {
 
     _upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
 
-    return conn;
+    return _conn;
   } catch (error) {
     console.error(`❌ MongoDB connection error: ${error.message}`);
     process.exit(1);
   }
 };
 
-// ── upload object: .single/.array/.fields defer until request time ──
-// Routes use upload.single("file") at definition time — this returns a
-// middleware function that only calls the real multer at request time,
-// by which point connectDB has finished and _upload is ready.
 const upload = {
-  single: (field) => (req, res, next) => _upload.single(field)(req, res, next),
-  array:  (field, max) => (req, res, next) => _upload.array(field, max)(req, res, next),
-  fields: (fields) => (req, res, next) => _upload.fields(fields)(req, res, next),
-  none:   () => (req, res, next) => _upload.none()(req, res, next),
+  single: (field) => (req, res, next) => {
+    if (!_upload) return res.status(500).json({ message: "Upload not initialized" });
+    _upload.single(field)(req, res, next);
+  },
+  array: (field, max) => (req, res, next) => {
+    if (!_upload) return res.status(500).json({ message: "Upload not initialized" });
+    _upload.array(field, max)(req, res, next);
+  },
+  fields: (fields) => (req, res, next) => {
+    if (!_upload) return res.status(500).json({ message: "Upload not initialized" });
+    _upload.fields(fields)(req, res, next);
+  },
+  none: () => (req, res, next) => {
+    if (!_upload) return res.status(500).json({ message: "Upload not initialized" });
+    _upload.none()(req, res, next);
+  },
 };
 
 const getGfs = () => _gfs;
+const getConn = () => _conn?.connection || mongoose.connection;
 
-// uploadRoutes.js uses conn.db directly for GridFSBucket
-// We expose the mongoose default connection for that
-const conn = mongoose.connection;
-
-module.exports = { connectDB, conn, gfs: getGfs, upload };
+module.exports = { connectDB, conn: getConn, gfs: getGfs, upload };

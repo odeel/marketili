@@ -1,4 +1,5 @@
 // frontend/src/pages/dashboard/AdminDashboard.jsx
+
 import React, { useEffect, useState } from "react";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import useAuth         from "../../hooks/useAuth";
@@ -8,10 +9,34 @@ import "../../styles/Dashboard.css";
 const roles = ["", "client", "agency", "agency_member", "team", "team_member", "freelancer"];
 
 const AdminDashboard = () => {
-  const { user, role, token } = useAuth();
+  const { user, role, loading, isAuthenticated } = useAuth();
+  // ✅ FIX 1: Destructure `loading` and `isAuthenticated` instead of `token`
+  // `token` never existed on useAuth — it was always undefined,
+  // so `!token` was always true → instant redirect → infinite loop.
 
-  // Guard: if not logged in as admin, redirect
-  if (!token || role !== "admin") {
+  // ✅ FIX 2: Wait for the /me check to finish before making any auth decision.
+  // Without this, the component renders during the loading phase when
+  // isAuthenticated is still false, triggers the redirect, and loops.
+  if (loading) {
+    return (
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        height: "100vh", background: "#0d0d0d", flexDirection: "column", gap: 12,
+      }}>
+        <div style={{
+          width: 36, height: 36,
+          border: "3px solid #2a0a0a", borderTopColor: "#c0152a",
+          borderRadius: "50%", animation: "spin 0.7s linear infinite",
+        }} />
+        <p style={{ color: "#9a6060", fontSize: "0.85rem" }}>Chargement...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  // ✅ FIX 3: Guard now uses `isAuthenticated` (which actually exists on the hook)
+  // and only fires after loading is done.
+  if (!isAuthenticated || role !== "admin") {
     window.location.href = "/login";
     return null;
   }
@@ -150,3 +175,4 @@ const UsersPanel = () => {
 };
 
 export default AdminDashboard;
+

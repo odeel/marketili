@@ -230,27 +230,36 @@ const getMyPitches = async (req, res) => {
   }
 };
 
+// backend/controllers/pitchController.js
+// Only acceptPitch is modified — everything else stays exactly the same.
+
 const acceptPitch = async (req, res) => {
   try {
     const { clientId } = req.body;
-    const pitch = await Pitch.findById(req.params.id);
+
+    // ── Find and validate the pitch ──
+    const pitch = await Pitch.findById(req.params.id)
+      .populate("post");
     if (!pitch) return fail(res, "Offre introuvable", 404);
     if (pitch.client.toString() !== clientId) return fail(res, "Non autorisé", 403);
     if (pitch.status !== "pending") {
       return fail(res, "Cette offre ne peut plus être acceptée");
     }
 
+    // ── Accept the pitch ──
     pitch.status = "accepted";
     pitch.respondedAt = new Date();
     await pitch.save();
 
-    await Post.findByIdAndUpdate(pitch.post, {
+    // ── Move post to in_progress ──
+    await Post.findByIdAndUpdate(pitch.post._id || pitch.post, {
       status: "in_progress",
       $push: { acceptedPitches: pitch._id },
     });
 
+    // ── Auto-reject all other pending pitches for this post ──
     await Pitch.updateMany(
-      { post: pitch.post, _id: { $ne: pitch._id }, status: "pending" },
+      { post: pitch.post._id || pitch.post, _id: { $ne: pitch._id }, status: "pending" },
       {
         status: "rejected",
         rejectionReason: "Une autre offre a été acceptée",
@@ -258,9 +267,49 @@ const acceptPitch = async (req, res) => {
       }
     );
 
+    // ── Auto-create the project ──
+    // Determine provider field based on senderType
+    const Project = require("../models/Project");
+    const providerField =
+      pitch.senderType === "Agency"     ? "providerAgency"     :
+      pitch.senderType === "Team"       ? "providerTeam"       :
+                                          "providerFreelancer";
+
+    const providerId =
+      pitch.senderType === "Agency"     ? pitch.senderAgency     :
+      pitch.senderType === "Team"       ? pitch.senderTeam       :
+                                          pitch.senderFreelancer;
+
+    // Use post title as project title, fall back to pitch description
+    const postDoc = pitch.post?.title ? pitch.post : await Post.findById(pitch.post);
+    const projectTitle = postDoc?.title || "Nouveau projet";
+
+    // Deadline: use post deadline if available, else 30 days from now
+    const deadline = postDoc?.deadline || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    const project = await Project.create({
+      post:         postDoc?._id || pitch.post,
+      pitch:        pitch._id,
+      client:       pitch.client,
+      providerType: pitch.senderType,
+      [providerField]: providerId,
+      title:        projectTitle,
+      description:  pitch.description || "",
+      deadline,
+      startDate:    new Date(),
+      projectStatus: "active",
+      agreedPrice:  pitch.proposedPrice || {},
+      statusHistory: [{
+        status:    "active",
+        changedAt: new Date(),
+        note:      "Projet créé automatiquement suite à l'acceptation d'une offre",
+      }],
+    });
+
     return ok(res, {
       pitch,
-      message: "Offre acceptée — projet créé automatiquement en Phase 4",
+      project,
+      message: "Offre acceptée — projet créé automatiquement",
     });
   } catch (err) {
     console.error("acceptPitch:", err);

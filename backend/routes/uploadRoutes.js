@@ -1,60 +1,56 @@
 // backend/routes/uploadRoutes.js
-
-const express  = require("express");
-const router   = express.Router();
+const express = require("express");
+const router = express.Router();
 const mongoose = require("mongoose");
-const { conn, gfs, upload } = require("../config/db");
+const { upload, conn } = require("../config/db");
+const { protect } = require("../middleware/authMiddleware");
 
-// POST /api/upload — upload a single file
-// Returns: { success, fileId, filename, url, mimeType, size }
-router.post("/", upload.single("file"), (req, res) => {
-  if (!req.file) return res.status(400).json({ success: false, message: "Aucun fichier reçu" });
-
-  res.status(201).json({
-    success:  true,
-    fileId:   req.file.id.toString(),
-    filename: req.file.filename,
-    url:      `/api/upload/${req.file.id}`,
-    mimeType: req.file.contentType,
-    size:     req.file.size,
-  });
-});
-
-// GET /api/upload/:fileId — stream file (view inline)
-router.get("/:fileId", async (req, res) => {
+router.post("/", protect, upload.single("file"), async (req, res) => {
   try {
-    const bucket = new mongoose.mongo.GridFSBucket(conn.db, { bucketName: "uploads" });
-    const fileId = new mongoose.Types.ObjectId(req.params.fileId);
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
 
-    const files = await bucket.find({ _id: fileId }).toArray();
-    if (!files.length) return res.status(404).json({ success: false, message: "Fichier introuvable" });
+    const connection = conn(); // Call as function
+    const bucket = new mongoose.mongo.GridFSBucket(connection.db, {
+      bucketName: "uploads",
+    });
 
-    const file = files[0];
-    res.set("Content-Type", file.contentType);
-    res.set("Content-Disposition", `inline; filename="${file.filename}"`);
-    bucket.openDownloadStream(fileId).pipe(res);
+    const fileId = req.file.id;
+    const url = `/api/upload/${fileId}`;
 
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Erreur lors du téléchargement" });
+    res.json({
+      success: true,
+      message: "File uploaded successfully",
+      fileId: fileId.toString(),
+      id: fileId.toString(),
+      filename: req.file.filename,
+      url,
+    });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({ success: false, message: "Upload failed", error: error.message });
   }
 });
 
-// GET /api/upload/:fileId/download — force download
-router.get("/:fileId/download", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
-    const bucket = new mongoose.mongo.GridFSBucket(conn.db, { bucketName: "uploads" });
-    const fileId = new mongoose.Types.ObjectId(req.params.fileId);
+    const connection = conn(); // Call as function
+    const bucket = new mongoose.mongo.GridFSBucket(connection.db, {
+      bucketName: "uploads",
+    });
 
-    const files = await bucket.find({ _id: fileId }).toArray();
-    if (!files.length) return res.status(404).json({ success: false, message: "Fichier introuvable" });
+    const fileId = new mongoose.Types.ObjectId(req.params.id);
+    const downloadStream = bucket.openDownloadStream(fileId);
 
-    const file = files[0];
-    res.set("Content-Type", file.contentType);
-    res.set("Content-Disposition", `attachment; filename="${file.filename}"`);
-    bucket.openDownloadStream(fileId).pipe(res);
+    downloadStream.on("error", () => {
+      res.status(404).json({ success: false, message: "File not found" });
+    });
 
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Erreur lors du téléchargement" });
+    downloadStream.pipe(res);
+  } catch (error) {
+    console.error("Download error:", error);
+    res.status(500).json({ success: false, message: "Download failed" });
   }
 });
 

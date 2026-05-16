@@ -112,17 +112,14 @@ const pitchSchema = new mongoose.Schema(
       enum: ["cdd", "cdi"],
     },
 
-    attachments: [
-      {
-        fileId: { type: String },
-        filename: { type: String },
-        mimeType: { type: String },
-        size: { type: Number },
-        url: { type: String },
-        uploadedAt: { type: Date, default: Date.now },
-      },
+attachments: [{
+  fileId: String,
+  filename: String,
+  url: String,
+  uploadedAt: { type: Date, default: Date.now }
+}
     ],
-
+  
     status: {
       type: String,
       enum: ["pending", "accepted", "rejected", "withdrawn"],

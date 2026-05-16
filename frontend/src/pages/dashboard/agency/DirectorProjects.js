@@ -1,8 +1,9 @@
-// src/pages/dashboard/agency/DirectorProjects.jsx
+// frontend/src/pages/dashboard/agency/DirectorProjects.jsx
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ProgressBar, PriorityBadge } from "./shared";
 import projectService from "../../../services/projectService";
+import contractService from "../../../services/contractService";
 
 const STATUS_COLOR = {
   pending: "#f59e0b", active: "#7c3aed",
@@ -11,6 +12,14 @@ const STATUS_COLOR = {
 const STATUS_LABEL = {
   pending: "En attente", active: "Actif",
   in_review: "En révision", completed: "Terminé", cancelled: "Annulé",
+};
+
+const CONTRACT_STATUS_META = {
+  draft:        { label: "Brouillon",     color: "#6b7280" },
+  sent:         { label: "Envoyé",        color: "#f59e0b" },
+  acknowledged: { label: "Reçu confirmé", color: "#0891b2" },
+  signed:       { label: "Finalisé",      color: "#10b981" },
+  resiliation:  { label: "Résilié",       color: "#ef4444" },
 };
 
 const ProjectCard = ({ project: p, index, onClick }) => {
@@ -57,7 +66,7 @@ const TASK_STATUS = {
   done:        { label: "Terminé",     color: "#10b981" },
 };
 
-const ProjectDetail = ({ project: initial, agencyId }) => {
+const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
   const [project,     setProject]     = useState(initial);
   const [members,     setMembers]     = useState([]);
   const [showAddTask, setShowAddTask] = useState(false);
@@ -65,6 +74,11 @@ const ProjectDetail = ({ project: initial, agencyId }) => {
     title: "", description: "", priority: "medium", dueDate: "", assignedTo: "",
   });
   const [saving, setSaving] = useState(false);
+
+  // ── Contract state ──
+  const [showContractModal, setShowContractModal] = useState(false);
+  const [contract,          setContract]          = useState(null);
+  const [contractLoading,   setContractLoading]   = useState(true);
 
   useEffect(() => {
     projectService.getAgencyMembers(agencyId)
@@ -74,6 +88,14 @@ const ProjectDetail = ({ project: initial, agencyId }) => {
       .then(d => setProject(d.project))
       .catch(() => {});
   }, [agencyId, project._id]);
+
+  // ── Load contract ──
+  useEffect(() => {
+    contractService.getByProject(project._id)
+      .then(d => setContract(d.contract))
+      .catch(() => {})
+      .finally(() => setContractLoading(false));
+  }, [project._id]);
 
   const handleAddTask = async (e) => {
     e.preventDefault();
@@ -128,6 +150,38 @@ const ProjectDetail = ({ project: initial, agencyId }) => {
         </div>
       )}
 
+      {/* ── Contract status card ── */}
+      <div className="card" style={{ marginBottom: 16, padding: "16px 22px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "#1a0a0a" }}>Contrat</div>
+            <div style={{ fontSize: "0.75rem", color: "#9a6060", marginTop: 2 }}>
+              {contractLoading ? "Chargement..."
+                : contract
+                  ? `${CONTRACT_STATUS_META[contract.status]?.label || contract.status} · ${new Date(contract.createdAt).toLocaleDateString("fr-DZ")}`
+                  : "Aucun contrat créé"}
+            </div>
+          </div>
+          {!contractLoading && !contract && (
+            <button className="section-cta-btn"
+              style={{ padding: "7px 16px", fontSize: "0.8rem" }}
+              onClick={() => setShowContractModal(true)}>
+              + Créer un contrat
+            </button>
+          )}
+          {contract && (
+            <span style={{
+              padding: "4px 12px", borderRadius: 20, fontSize: "0.74rem", fontWeight: 700,
+              color: CONTRACT_STATUS_META[contract.status]?.color || "#6b7280",
+              background: (CONTRACT_STATUS_META[contract.status]?.color || "#6b7280") + "22",
+            }}>
+              {CONTRACT_STATUS_META[contract.status]?.label}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── Tasks card ── */}
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-header">
           <div className="section-head" style={{ marginBottom: 0 }}>
@@ -239,10 +293,266 @@ const ProjectDetail = ({ project: initial, agencyId }) => {
           ))}
         </div>
       </div>
+
+      {/* ── Contract modal ── */}
+      <AnimatePresence>
+        {showContractModal && (
+          <ContractModal
+            project={project}
+            user={agencyUser}
+            onClose={() => setShowContractModal(false)}
+            onCreated={() => {
+              setShowContractModal(false);
+              contractService.getByProject(project._id)
+                .then(d => setContract(d.contract))
+                .catch(() => {});
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
+// ══════════════════════════════════════════════════════════════════════════════
+// CONTRACT MODAL — CREATE CONTRACT FORM
+// ══════════════════════════════════════════════════════════════════════════════
+const ContractModal = ({ project, user, onClose, onCreated }) => {
+  const [form, setForm] = useState({
+    contractType:    "service_agreement",
+    title:           `Contrat — ${project.title}`,
+    objet:           "",
+    prestations:     "",
+    livrables:       "",
+    amount:          project.agreedPrice?.amount || "",
+    currency:        project.agreedPrice?.currency || "DZD",
+    paymentSchedule: "",
+    paymentMethod:   "virement",
+    startDate:       "",
+    endDate:         "",
+    confidentialityClause: true,
+    exclusivityClause:     false,
+    resiliationTerms:      "",
+    additionalClauses:     "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [error,  setError]  = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.objet.trim()) return setError("L'objet du contrat est requis");
+    setSaving(true);
+    setError("");
+    try {
+      const clientName = project.client
+        ? (project.client.accountType === "company"
+            ? project.client.companyName
+            : `${project.client.firstName} ${project.client.lastName}`)
+        : "Client";
+
+      await contractService.create({
+        projectId:  project._id,
+        pitchId:    project.pitch,
+        contractType: form.contractType,
+        // Party A = agency (provider)
+        partyAType: "Agency",
+        partyAId:   project.providerAgency || user._id,
+        partyAName: user.agencyName || "Agence",
+        // Party B = client
+        partyBType: "Client",
+        partyBId:   project.client?._id || project.client,
+        partyBName: clientName,
+        title:       form.title,
+        objet:       form.objet,
+        prestations: form.prestations,
+        livrables:   form.livrables,
+        financialTerms: {
+          amount:          Number(form.amount) || undefined,
+          currency:        form.currency,
+          paymentMethod:   form.paymentMethod,
+          paymentSchedule: form.paymentSchedule,
+        },
+        duration: {
+          startDate: form.startDate || undefined,
+          endDate:   form.endDate   || undefined,
+        },
+        confidentialityClause: form.confidentialityClause,
+        exclusivityClause:     form.exclusivityClause,
+        resiliationTerms:      form.resiliationTerms,
+        additionalClauses:     form.additionalClauses,
+        initiatedBy:           user._id,
+        initiatedByRole:       "agency",
+      });
+      onCreated();
+    } catch (err) {
+      setError(err.response?.data?.message || "Erreur lors de la création");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const set = (field) => (e) =>
+    setForm(prev => ({ ...prev, [field]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <motion.div className="modal-box"
+        style={{ maxWidth: 640, maxHeight: "90vh", overflowY: "auto" }}
+        initial={{ opacity: 0, scale: 0.96, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 16 }}
+        transition={{ duration: 0.25 }}>
+        <div className="modal-header">
+          <div>
+            <h2 className="modal-title">Créer un contrat</h2>
+            <p style={{ fontSize: "0.78rem", color: "#9a6060", marginTop: 2 }}>{project.title}</p>
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <form onSubmit={handleSubmit} className="dash-form">
+
+            {/* Contract type */}
+            <div className="dash-form-group">
+              <label className="dash-form-label">Type de contrat</label>
+              <select className="dash-form-select" value={form.contractType} onChange={set("contractType")}>
+                <option value="service_agreement">Convention de prestation</option>
+                <option value="collaboration">Convention de collaboration</option>
+                <option value="cdd">CDD</option>
+                <option value="cdi">CDI</option>
+                <option value="project">Projet ponctuel</option>
+              </select>
+            </div>
+
+            <div className="dash-form-group">
+              <label className="dash-form-label">Titre du contrat</label>
+              <input className="dash-form-input" value={form.title} onChange={set("title")} />
+            </div>
+
+            {/* ARTICLE 01 */}
+            <div className="dash-form-group">
+              <label className="dash-form-label">Art. 01 — Objet du contrat *</label>
+              <textarea className="dash-form-textarea" rows={3}
+                placeholder="Objet principal de la prestation..."
+                value={form.objet} onChange={set("objet")} />
+            </div>
+
+            {/* ARTICLE 02 */}
+            <div className="dash-form-group">
+              <label className="dash-form-label">Art. 02 — Nature des prestations</label>
+              <textarea className="dash-form-textarea" rows={3}
+                placeholder="Détail des services fournis..."
+                value={form.prestations} onChange={set("prestations")} />
+            </div>
+
+            {/* ARTICLE 03 */}
+            <div className="dash-form-group">
+              <label className="dash-form-label">Art. 03 — Périmètre & livrables</label>
+              <textarea className="dash-form-textarea" rows={3}
+                placeholder="Livrables attendus, périmètre du projet..."
+                value={form.livrables} onChange={set("livrables")} />
+            </div>
+
+            {/* ARTICLE 05 — Financial */}
+            <div className="dash-form-row">
+              <div className="dash-form-group">
+                <label className="dash-form-label">Art. 05 — Montant</label>
+                <input className="dash-form-input" type="number" min={0}
+                  value={form.amount} onChange={set("amount")} />
+              </div>
+              <div className="dash-form-group">
+                <label className="dash-form-label">Devise</label>
+                <select className="dash-form-select" value={form.currency} onChange={set("currency")}>
+                  <option value="DZD">DZD</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                </select>
+              </div>
+              <div className="dash-form-group">
+                <label className="dash-form-label">Mode de paiement</label>
+                <select className="dash-form-select" value={form.paymentMethod} onChange={set("paymentMethod")}>
+                  <option value="virement">Virement</option>
+                  <option value="chèque">Chèque</option>
+                  <option value="espèces">Espèces</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="dash-form-group">
+              <label className="dash-form-label">Échéancier de paiement</label>
+              <input className="dash-form-input"
+                placeholder="Ex: 50% à la signature, 50% à la livraison"
+                value={form.paymentSchedule} onChange={set("paymentSchedule")} />
+            </div>
+
+            {/* ARTICLE 08 — Duration */}
+            <div className="dash-form-row">
+              <div className="dash-form-group">
+                <label className="dash-form-label">Art. 08 — Date de début</label>
+                <input className="dash-form-input" type="date"
+                  value={form.startDate} onChange={set("startDate")} />
+              </div>
+              <div className="dash-form-group">
+                <label className="dash-form-label">Date de fin</label>
+                <input className="dash-form-input" type="date"
+                  value={form.endDate} onChange={set("endDate")} />
+              </div>
+            </div>
+
+            {/* Clauses */}
+            <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginBottom: 16 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8,
+                fontSize: "0.85rem", color: "#4a2a2a", cursor: "pointer" }}>
+                <input type="checkbox" checked={form.confidentialityClause}
+                  onChange={set("confidentialityClause")} />
+                Art. 09 — Clause de confidentialité
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 8,
+                fontSize: "0.85rem", color: "#4a2a2a", cursor: "pointer" }}>
+                <input type="checkbox" checked={form.exclusivityClause}
+                  onChange={set("exclusivityClause")} />
+                Art. 10 — Clause d'exclusivité
+              </label>
+            </div>
+
+            {/* ARTICLE 14 */}
+            <div className="dash-form-group">
+              <label className="dash-form-label">Art. 14 — Conditions de résiliation</label>
+              <textarea className="dash-form-textarea" rows={2}
+                placeholder="Modalités de résiliation anticipée..."
+                value={form.resiliationTerms} onChange={set("resiliationTerms")} />
+            </div>
+
+            <div className="dash-form-group">
+              <label className="dash-form-label">Clauses additionnelles</label>
+              <textarea className="dash-form-textarea" rows={2}
+                placeholder="Autres dispositions..."
+                value={form.additionalClauses} onChange={set("additionalClauses")} />
+            </div>
+
+            {error && <div className="dash-form-error">{error}</div>}
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button type="submit" className="dash-form-submit" style={{ flex: 2 }} disabled={saving}>
+                {saving ? "Création..." : "Créer le contrat"}
+              </button>
+              <button type="button" onClick={onClose}
+                style={{ flex: 1, padding: 12, border: "1.5px solid #f0dede",
+                  borderRadius: 9, background: "white", color: "#9a6060",
+                  fontSize: "0.9rem", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ══════════════════════════════════════════════════════════════════════════════
 const DirectorProjects = ({ user }) => {
   const [projects, setProjects] = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -314,7 +624,7 @@ const DirectorProjects = ({ user }) => {
           )}
         </>
       ) : (
-        <ProjectDetail project={selected} agencyId={user._id} />
+        <ProjectDetail project={selected} agencyId={user._id} agencyUser={user} />
       )}
     </div>
   );
