@@ -12,10 +12,12 @@ import useAuth           from "../../hooks/useAuth";
 import projectService    from "../../services/projectService";
 import contractService   from "../../services/contractService";
 import { getDeadlineColor, getDeadlineLabel } from "../../utils/deadlineColor";
+import NotificationsPage from "./NotificationsPage";
+import notificationService from "../../services/notificationService";
 import {
   IconHome, IconClipboard, IconCompass, IconInbox,
   IconBriefcase, IconFileText, IconZap, IconCheckSquare,
-  IconTrendingUp, IconPlus,
+  IconTrendingUp, IconPlus, IconBell,
 } from "../../components/ui/Icons";
 import "../../styles/Dashboard.css";
 
@@ -23,14 +25,27 @@ const ClientDashboard = () => {
   const { user } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [postCreated,     setPostCreated]     = useState(0);
+  const [unreadCount,     setUnreadCount]     = useState(0);
+
+  useEffect(() => {
+    notificationService.getUnreadCount()
+      .then(c => setUnreadCount(c || 0))
+      .catch(() => {});
+    const iv = setInterval(() =>
+      notificationService.getUnreadCount().then(c => setUnreadCount(c || 0)).catch(() => {}),
+    30000);
+    return () => clearInterval(iv);
+  }, []);
 
   const NAV = [
-    { label: "Vue d'ensemble", icon: <IconHome       size={16} />, path: "/dashboard/client"           },
-    { label: "Mes posts",      icon: <IconClipboard  size={16} />, path: "/dashboard/client/posts"     },
-    { label: "Explorer",       icon: <IconCompass    size={16} />, path: "/dashboard/client/browse"    },
-    { label: "Offres reçues",  icon: <IconInbox      size={16} />, path: "/dashboard/client/pitches"   },
-    { label: "Projets",        icon: <IconBriefcase  size={16} />, path: "/dashboard/client/projects"  },
-    { label: "Contrats",       icon: <IconFileText   size={16} />, path: "/dashboard/client/contracts" },
+    { label: "Vue d'ensemble",  icon: <IconHome       size={16} />, path: "/dashboard/client"                },
+    { label: "Mes posts",       icon: <IconClipboard  size={16} />, path: "/dashboard/client/posts"          },
+    { label: "Explorer",        icon: <IconCompass    size={16} />, path: "/dashboard/client/browse"         },
+    { label: "Offres reçues",   icon: <IconInbox      size={16} />, path: "/dashboard/client/pitches"        },
+    { label: "Projets",         icon: <IconBriefcase  size={16} />, path: "/dashboard/client/projects"       },
+    { label: "Contrats",        icon: <IconFileText   size={16} />, path: "/dashboard/client/contracts"      },
+    { label: "Notifications",   icon: <IconBell       size={16} />, path: "/dashboard/client/notifications",
+      badge: unreadCount },
   ];
 
   return (
@@ -43,11 +58,12 @@ const ClientDashboard = () => {
           <Route path="posts" element={
             <ClientPosts user={user} onCreatePost={() => setShowCreateModal(true)} refetchKey={postCreated} />
           } />
-          <Route path="browse"    element={<ClientBrowse />} />
-          <Route path="pitches"   element={<ClientPitches     user={user} />} />
-          <Route path="projects"  element={<ClientProjects    user={user} />} />
-          <Route path="contracts" element={<ClientContracts   user={user} />} />
-          <Route path="*"         element={<Navigate to="/dashboard/client" replace />} />
+          <Route path="browse"        element={<ClientBrowse />} />
+          <Route path="pitches"       element={<ClientPitches     user={user} />} />
+          <Route path="projects"      element={<ClientProjects    user={user} />} />
+          <Route path="contracts"     element={<ClientContracts   user={user} />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="*"             element={<Navigate to="/dashboard/client" replace />} />
         </Routes>
       </DashboardLayout>
 

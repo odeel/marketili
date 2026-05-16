@@ -4,8 +4,10 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import DashboardLayout    from "../../components/layout/DashboardLayout";
 import useAuth            from "../../hooks/useAuth";
-import pitchService       from "../../services/pitchService";
-import projectService     from "../../services/projectService";
+import pitchService           from "../../services/pitchService";
+import projectService         from "../../services/projectService";
+import notificationService    from "../../services/notificationService";
+import NotificationsPage      from "./NotificationsPage";
 import PitchForm          from "../../components/pitches/PitchForm";
 import "../../styles/Dashboard.css";
 
@@ -27,7 +29,7 @@ import { PostCard }         from "./agency/shared";
 import { usePosts }         from "../../hooks/usePosts";
 import {
   IconHome, IconFlag, IconTarget, IconBriefcase,
-  IconUsers, IconCompass, IconCheckSquare, IconCalendar, IconSearch, IconSend, IconFileText,
+  IconUsers, IconCompass, IconCheckSquare, IconCalendar, IconSearch, IconSend, IconFileText, IconBell,
 } from "../../components/ui/Icons";
 
 // ── Role helpers ──────────────────────────────────────────────────────────────
@@ -118,6 +120,17 @@ const AgencyDashboard = () => {
   const [flaggedPosts, setFlaggedPosts] = useState([]);
   const [projects,     setProjects]     = useState([]);
   const [dataLoading,  setDataLoading]  = useState(true);
+  const [unreadCount,  setUnreadCount]  = useState(0);
+
+  useEffect(() => {
+    notificationService.getUnreadCount()
+      .then(c => setUnreadCount(c || 0))
+      .catch(() => {});
+    const iv = setInterval(() =>
+      notificationService.getUnreadCount().then(c => setUnreadCount(c || 0)).catch(() => {}),
+    30000);
+    return () => clearInterval(iv);
+  }, []);
 
   // Director-only prefetch
   useEffect(() => {
@@ -153,7 +166,13 @@ const AgencyDashboard = () => {
     setPitchTarget(null);
   };
 
-  const NAV = agencyRole === "director" ? NAV_DIRECTOR
+  const NAV_DIRECTOR_FULL = [
+    ...NAV_DIRECTOR,
+    { label: "Notifications", icon: <IconBell size={16} />, path: "/dashboard/agency/notifications",
+      badge: unreadCount },
+  ];
+
+  const NAV = agencyRole === "director" ? NAV_DIRECTOR_FULL
     : agencyRole === "commercial" ? NAV_COMMERCIAL
     : NAV_WORKER;
 
@@ -184,9 +203,10 @@ const AgencyDashboard = () => {
             <Route path="pitches"   element={<DirectorPitches   user={user} />} />
             <Route path="clients"   element={<DirectorClients   user={user} />} />
             <Route path="projects"  element={<DirectorProjects  user={user} />} />
-            <Route path="contracts" element={<DirectorContracts user={user} />} />
-            <Route path="members"   element={<DirectorMembers   user={user} />} />
-            <Route path="browse"   element={<BrowsePosts onPitch={setPitchTarget} />} />
+            <Route path="contracts"     element={<DirectorContracts  user={user} />} />
+            <Route path="members"       element={<DirectorMembers    user={user} />} />
+            <Route path="browse"        element={<BrowsePosts onPitch={setPitchTarget} />} />
+            <Route path="notifications" element={<NotificationsPage />} />
           </>}
 
           {/* ── Commercial ── */}

@@ -1,7 +1,8 @@
 // backend/controllers/contractController.js
 
-const Contract = require("../models/Contract");
-const Project  = require("../models/Project");
+const Contract     = require("../models/Contract");
+const Project      = require("../models/Project");
+const Notification = require("../models/Notification");
 
 // ── Helpers ──
 const ok   = (res, data, code = 200) => res.status(code).json({ success: true,  ...data });
@@ -170,6 +171,18 @@ exports.sendContract = async (req, res) => {
     });
     await contract.save();
 
+    // Notify client (partyB when type is client)
+    if (contract.partyBType === "Client" && contract.partyBId) {
+      Notification.notify({
+        recipient: contract.partyBId, recipientRole: "client", recipientModel: "Client",
+        type: "contract_sent", category: "contracts",
+        title: "Nouveau contrat à signer",
+        body: `Un contrat "${contract.title}" vous a été envoyé. Veuillez envoyer un reçu.`,
+        link: `/dashboard/client/contracts`,
+        metadata: { projectId: contract.project },
+      });
+    }
+
     return ok(res, { contract, message: "Contrat envoyé au client" });
   } catch (err) {
     return fail(res, "Erreur serveur", 500);
@@ -196,6 +209,18 @@ exports.uploadReceipt = async (req, res) => {
       note: "Reçu uploadé par le client",
     });
     await contract.save();
+
+    // Notify agency director
+    if (contract.partyAType === "Agency" && contract.partyAId) {
+      Notification.notify({
+        recipient: contract.partyAId, recipientRole: "agency", recipientModel: "Agency",
+        type: "contract_acknowledged", category: "contracts",
+        title: "Reçu reçu",
+        body: `Le client a uploadé un reçu pour le contrat "${contract.title}". Envoyez le bon de commande.`,
+        link: `/dashboard/agency/contracts`,
+        metadata: { projectId: contract.project },
+      });
+    }
 
     return ok(res, { contract, message: "Reçu enregistré — en attente du bon de commande" });
   } catch (err) {
@@ -229,6 +254,28 @@ exports.sendBonDeCommande = async (req, res) => {
     });
 
     await contract.save();
+
+    // Notify both parties
+    if (contract.partyBType === "Client" && contract.partyBId) {
+      Notification.notify({
+        recipient: contract.partyBId, recipientRole: "client", recipientModel: "Client",
+        type: "contract_signed", category: "contracts",
+        title: "Contrat finalisé",
+        body: `Le bon de commande pour "${contract.title}" a été envoyé. Le contrat est signé.`,
+        link: `/dashboard/client/contracts`,
+        metadata: { projectId: contract.project },
+      });
+    }
+    if (contract.partyAType === "Agency" && contract.partyAId) {
+      Notification.notify({
+        recipient: contract.partyAId, recipientRole: "agency", recipientModel: "Agency",
+        type: "contract_signed", category: "contracts",
+        title: "Contrat finalisé",
+        body: `Le contrat "${contract.title}" est maintenant signé par les deux parties.`,
+        link: `/dashboard/agency/contracts`,
+        metadata: { projectId: contract.project },
+      });
+    }
 
     return ok(res, { contract, message: "Contrat finalisé avec succès" });
   } catch (err) {

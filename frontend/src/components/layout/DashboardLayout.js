@@ -19,13 +19,39 @@ const ROLE_META = {
   admin:         { Icon: IconUser,     label: "Administrateur",  color: "#c0152a" },
 };
 
-const NOTIF_ICON_MAP = {
-  pitch_received:  "💬",
-  pitch_accepted:  "✓",
-  pitch_rejected:  "✗",
-  post_published:  "◈",
-  project_created: "▶",
-  system:          "◉",
+const CATEGORY_COLORS = {
+  pitches:   "#7c3aed",
+  projects:  "#0891b2",
+  contracts: "#d97706",
+  tasks:     "#059669",
+  deadlines: "#ef4444",
+  messages:  "#6b7280",
+  admin:     "#c0152a",
+};
+
+const TYPE_ICON = {
+  pitch_received:      "↓",
+  pitch_accepted:      "✓",
+  pitch_rejected:      "✗",
+  project_created:     "▶",
+  project_milestone:   "★",
+  project_completed:   "◉",
+  contract_sent:       "◤",
+  contract_acknowledged: "◈",
+  contract_signed:     "✦",
+  task_overdue:        "!",
+  system:              "◎",
+};
+
+const relativeTime = (date) => {
+  const diff = Date.now() - new Date(date).getTime();
+  const mins  = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days  = Math.floor(diff / 86400000);
+  if (mins < 1)  return "à l'instant";
+  if (mins < 60) return `il y a ${mins} min`;
+  if (hours < 24) return `il y a ${hours}h`;
+  return `il y a ${days}j`;
 };
 
 const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) => {
@@ -57,8 +83,10 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
       } catch {}
     };
     load();
-    const interval = setInterval(load, 60000);
-    return () => clearInterval(interval);
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    const interval = setInterval(load, 30000);
+    return () => { clearInterval(interval); window.removeEventListener("focus", onFocus); };
   }, []);
 
   useEffect(() => {
@@ -70,15 +98,26 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleOpenNotifs = async () => {
-    setShowNotifs(o => !o);
-    if (!showNotifs && unreadCount > 0) {
+  const handleOpenNotifs = () => setShowNotifs(o => !o);
+
+  const handleMarkAllRead = async () => {
+    try {
+      await notificationService.markAllRead();
+      setUnreadCount(0);
+      setNotifs(prev => prev.map(n => ({ ...n, isRead: true })));
+    } catch {}
+  };
+
+  const handleClickNotif = async (n) => {
+    setShowNotifs(false);
+    if (!n.isRead) {
       try {
-        await notificationService.markAllRead();
-        setUnreadCount(0);
-        setNotifs(prev => prev.map(n => ({ ...n, isRead: true })));
+        await notificationService.markRead(n._id);
+        setNotifs(prev => prev.map(x => x._id === n._id ? { ...x, isRead: true } : x));
+        setUnreadCount(c => Math.max(0, c - 1));
       } catch {}
     }
+    if (n.link) navigate(n.link);
   };
 
   const handleLogout = () => { logout(); navigate("/login"); };
@@ -164,52 +203,100 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
               <button className="dash-topbar-icon-btn" title="Notifications"
                 onClick={handleOpenNotifs}>
                 <IconBell size={16} />
-                {unreadCount > 0 && <span className="dash-notif-dot" />}
+                {unreadCount > 0 && (
+                  <span className="dash-notif-dot" style={{
+                    position: "absolute", top: 4, right: 4, width: 8, height: 8,
+                    borderRadius: "50%", background: "#ef4444",
+                    border: "1.5px solid var(--d-topbar-bg, #fff)",
+                  }}>
+                    {unreadCount > 9 ? "" : ""}
+                  </span>
+                )}
               </button>
 
-              {showNotifs && (
-                <div className="dash-notif-dropdown">
-                  <div className="dash-notif-header">
-                    <span>Notifications</span>
-                    {unreadCount === 0 && notifs.length > 0 && (
-                      <span style={{ fontSize: "0.68rem", color: "var(--d-muted)", fontWeight: 400 }}>
-                        Tout lu
-                      </span>
-                    )}
-                  </div>
-
-                  {notifs.length === 0 ? (
-                    <div className="dash-notif-empty">
-                      <div className="dash-notif-empty-icon"><IconBell size={16} /></div>
-                      <p>Aucune notification</p>
-                    </div>
-                  ) : (
-                    notifs.map(n => (
-                      <div key={n._id}
-                        className={`dash-notif-item ${n.isRead ? "" : "unread"}`}
-                        onClick={() => { if (n.link) navigate(n.link); setShowNotifs(false); }}>
-                        <div className="dash-notif-item-icon">
-                          <span style={{ fontSize: "0.75rem" }}>
-                            {NOTIF_ICON_MAP[n.type] || "◉"}
+              <AnimatePresence>
+                {showNotifs && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                    className="dash-notif-dropdown">
+                    <div className="dash-notif-header">
+                      <span>
+                        Notifications
+                        {unreadCount > 0 && (
+                          <span style={{ marginLeft: 6, fontSize: "0.7rem", fontWeight: 700,
+                            background: "#ef4444", color: "#fff",
+                            borderRadius: 10, padding: "1px 6px" }}>
+                            {unreadCount}
                           </span>
-                        </div>
-                        <div className="dash-notif-item-body">
-                          <div className="dash-notif-item-title">{n.title}</div>
-                          {n.body && (
-                            <div className="dash-notif-item-desc">{n.body}</div>
-                          )}
-                          <div className="dash-notif-item-time">
-                            {new Date(n.createdAt).toLocaleDateString("fr-DZ", {
-                              day: "numeric", month: "short",
-                              hour: "2-digit", minute: "2-digit",
-                            })}
-                          </div>
-                        </div>
+                        )}
+                      </span>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        {unreadCount > 0 && (
+                          <button onClick={handleMarkAllRead} style={{
+                            background: "none", border: "none", cursor: "pointer",
+                            fontSize: "0.7rem", color: "var(--d-muted)", fontFamily: "inherit",
+                            fontWeight: 600, padding: 0,
+                          }}>
+                            Tout marquer lu
+                          </button>
+                        )}
                       </div>
-                    ))
-                  )}
-                </div>
-              )}
+                    </div>
+
+                    {notifs.length === 0 ? (
+                      <div className="dash-notif-empty">
+                        <div className="dash-notif-empty-icon"><IconBell size={16} /></div>
+                        <p>Aucune notification</p>
+                      </div>
+                    ) : (
+                      <>
+                        {notifs.map(n => {
+                          const catColor = CATEGORY_COLORS[n.category] || "#6b7280";
+                          const icon = TYPE_ICON[n.type] || "◎";
+                          return (
+                            <div key={n._id}
+                              className={`dash-notif-item${n.isRead ? "" : " unread"}`}
+                              onClick={() => handleClickNotif(n)}
+                              style={{ cursor: "pointer" }}>
+                              <div className="dash-notif-item-icon"
+                                style={{ background: catColor + "15", color: catColor }}>
+                                <span style={{ fontSize: "0.72rem", fontWeight: 700 }}>{icon}</span>
+                              </div>
+                              <div className="dash-notif-item-body">
+                                <div className="dash-notif-item-title">{n.title}</div>
+                                {n.body && (
+                                  <div className="dash-notif-item-desc"
+                                    style={{ WebkitLineClamp: 2, overflow: "hidden",
+                                      display: "-webkit-box", WebkitBoxOrient: "vertical" }}>
+                                    {n.body}
+                                  </div>
+                                )}
+                                <div className="dash-notif-item-time">{relativeTime(n.createdAt)}</div>
+                              </div>
+                              {!n.isRead && (
+                                <div style={{ width: 6, height: 6, borderRadius: "50%",
+                                  background: catColor, flexShrink: 0, marginTop: 6 }} />
+                              )}
+                            </div>
+                          );
+                        })}
+                        <div style={{ padding: "8px 12px", textAlign: "center",
+                          borderTop: "1px solid var(--d-border-soft)" }}>
+                          <button onClick={() => { navigate("notifications"); setShowNotifs(false); }}
+                            style={{ background: "none", border: "none", cursor: "pointer",
+                              fontFamily: "inherit", fontSize: "0.75rem", fontWeight: 600,
+                              color: "var(--d-muted)" }}>
+                            Voir toutes les notifications →
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </header>

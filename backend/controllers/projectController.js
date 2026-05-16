@@ -1,6 +1,7 @@
 const Project      = require("../models/Project");
 const Agency       = require("../models/Agency");
 const AgencyMember = require("../models/AgencyMember");
+const Notification = require("../models/Notification");
 
 // ── Helper ──
 const calculateProgress = (project) => {
@@ -131,9 +132,34 @@ exports.updateTask = async (req, res) => {
     const task = project.tasks.id(taskId);
     if (!task) return res.status(404).json({ message: "Task not found" });
 
+    const wasNotDone = task.status !== "done";
     Object.assign(task, updates);
     project.progress = calculateProgress(project);
     await project.save();
+
+    // Notify agency director when a task is marked done
+    if (wasNotDone && updates.status === "done" && project.providerAgency) {
+      Notification.notify({
+        recipient: project.providerAgency, recipientRole: "agency", recipientModel: "Agency",
+        type: "project_milestone", category: "tasks",
+        title: `Tâche terminée : ${task.title}`,
+        body: `La tâche a été marquée comme terminée dans le projet "${project.title}"`,
+        link: `/dashboard/agency/projects`,
+        metadata: { projectId: project._id },
+      });
+    }
+
+    // Notify client if all tasks done and project is now 100%
+    if (project.progress === 100 && project.client) {
+      Notification.notify({
+        recipient: project.client, recipientRole: "client", recipientModel: "Client",
+        type: "project_completed", category: "projects",
+        title: "Projet terminé",
+        body: `Toutes les tâches du projet "${project.title}" sont complètes.`,
+        link: `/dashboard/client/projects`,
+        metadata: { projectId: project._id },
+      });
+    }
 
     res.json({ success: true, project });
   } catch (err) {

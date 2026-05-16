@@ -1,5 +1,6 @@
-const Pitch = require("../models/Pitch");
-const Post = require("../models/Post");
+const Pitch        = require("../models/Pitch");
+const Post         = require("../models/Post");
+const Notification = require("../models/Notification");
 
 const ok = (res, data, code = 200) =>
   res.status(code).json({ success: true, ...data });
@@ -144,6 +145,16 @@ const sendPitch = async (req, res) => {
 
     await Post.findByIdAndUpdate(postId, {
       $push: { pitches: pitch._id },
+    });
+
+    // Notify client
+    Notification.notify({
+      recipient: post.client, recipientRole: "client", recipientModel: "Client",
+      type: "pitch_received", category: "pitches",
+      title: "Nouvelle offre reçue",
+      body: `Une offre a été soumise sur votre post "${post.title}"`,
+      link: `/dashboard/client/pitches`,
+      metadata: { postId: post._id, pitchId: pitch._id },
     });
 
     return ok(res, { pitch }, 201);
@@ -306,6 +317,24 @@ const acceptPitch = async (req, res) => {
       }],
     });
 
+    // Notify the pitch sender
+    const senderRecipient = pitch.senderType === "Agency"     ? pitch.senderAgency :
+                            pitch.senderType === "Team"       ? pitch.senderTeam   :
+                                                               pitch.senderFreelancer;
+    const senderModel     = pitch.senderType === "Agency"     ? "Agency"     :
+                            pitch.senderType === "Team"       ? "Team"       : "Freelancer";
+    const senderRole      = pitch.senderType === "Agency"     ? "agency"     :
+                            pitch.senderType === "Team"       ? "team"       : "freelancer";
+
+    Notification.notify({
+      recipient: senderRecipient, recipientRole: senderRole, recipientModel: senderModel,
+      type: "pitch_accepted", category: "pitches",
+      title: "Votre offre a été acceptée",
+      body: `Votre offre sur "${postDoc?.title || "un post"}" a été acceptée. Un projet a été créé.`,
+      link: `/dashboard/agency/projects`,
+      metadata: { pitchId: pitch._id, projectId: project._id },
+    });
+
     return ok(res, {
       pitch,
       project,
@@ -365,6 +394,24 @@ const rejectPitch = async (req, res) => {
     pitch.respondedAt = new Date();
     pitch.rejectionReason = reason || "";
     await pitch.save();
+
+    // Notify sender
+    const rejSenderRecipient = pitch.senderType === "Agency"     ? pitch.senderAgency :
+                               pitch.senderType === "Team"       ? pitch.senderTeam   :
+                                                                  pitch.senderFreelancer;
+    const rejSenderModel     = pitch.senderType === "Agency"     ? "Agency"     :
+                               pitch.senderType === "Team"       ? "Team"       : "Freelancer";
+    const rejSenderRole      = pitch.senderType === "Agency"     ? "agency"     :
+                               pitch.senderType === "Team"       ? "team"       : "freelancer";
+
+    Notification.notify({
+      recipient: rejSenderRecipient, recipientRole: rejSenderRole, recipientModel: rejSenderModel,
+      type: "pitch_rejected", category: "pitches",
+      title: "Votre offre n'a pas été retenue",
+      body: reason ? `Raison : ${reason}` : "Votre offre a été rejetée.",
+      link: `/dashboard/agency/pitches`,
+      metadata: { pitchId: pitch._id },
+    });
 
     return ok(res, { pitch, message: "Offre rejetée" });
   } catch (err) {

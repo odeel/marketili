@@ -8,25 +8,29 @@ const Notification = require("../models/Notification");
 // All notification routes require auth
 router.use(protect);
 
-// GET /api/notifications — get my notifications (paginated)
+// GET /api/notifications — get my notifications (paginated, filterable)
 router.get("/", async (req, res) => {
   try {
-    const { page = 1, limit = 20, unreadOnly = false } = req.query;
+    const { page = 1, limit = 20, unreadOnly = false, category } = req.query;
     const query = { recipient: req.user._id };
     if (unreadOnly === "true") query.isRead = false;
+    if (category && category !== "all") query.category = category;
+
+    const pageNum  = Math.max(1, parseInt(page, 10));
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10)));
 
     const [notifications, total, unreadCount] = await Promise.all([
       Notification.find(query)
         .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(Number(limit))
+        .skip((pageNum - 1) * limitNum)
+        .limit(limitNum)
         .lean(),
       Notification.countDocuments(query),
       Notification.countDocuments({ recipient: req.user._id, isRead: false }),
     ]);
 
     res.json({ success: true, notifications, total, unreadCount,
-      pages: Math.ceil(total / limit), page: Number(page) });
+      pages: Math.ceil(total / limitNum), page: pageNum });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

@@ -62,9 +62,24 @@ const notificationSchema = new mongoose.Schema(
         "project_milestone",    // milestone reached on a project
         "project_completed",    // project marked as completed
 
+        // Contract events
+        "contract_sent",        // agency sent contract to client
+        "contract_acknowledged", // client uploaded receipt
+        "contract_signed",      // bon de commande sent, contract finalized
+
+        // Deadline / task events
+        "task_overdue",         // a task has passed its due date
+
         // System
         "system",               // general platform announcement
       ],
+    },
+
+    // ── Category for filtering ──
+    category: {
+      type: String,
+      required: true,
+      enum: ["tasks", "projects", "contracts", "pitches", "deadlines", "admin", "messages"],
     },
 
     // ── Content ──

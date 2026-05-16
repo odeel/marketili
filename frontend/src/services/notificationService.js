@@ -3,7 +3,7 @@
 import api from "./api";
 
 const notificationService = {
-  // Get notifications (paginated)
+  // Get notifications (paginated, filterable by category)
   getAll: (params = {}) =>
     api.get("/notifications", { params }).then(r => r.data),
 
