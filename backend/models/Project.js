@@ -70,6 +70,16 @@ const taskSchema = new mongoose.Schema(
         createdAt:  { type: Date, default: Date.now },
       },
     ],
+
+    // Handover trail — populated when assignedTo changes
+    previousAssignees: [
+      {
+        memberId:   mongoose.Schema.Types.ObjectId,
+        memberName: String,
+        memberType: String,
+        removedAt:  { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );

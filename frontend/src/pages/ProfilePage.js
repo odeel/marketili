@@ -96,6 +96,69 @@ const PortfolioGrid = ({ items }) => {
   );
 };
 
+// ── Collaboration history (freelancer only) ───────────────────────────────────
+const COLLAB_STATUS_META = {
+  active: { label: "Active",   color: "#065f46", bg: "#d1fae5" },
+  ended:  { label: "Terminée", color: "#6b7280", bg: "#f3f4f6" },
+};
+
+const CollaborationHistory = ({ collaborations }) => {
+  if (!collaborations?.length) return null;
+  const sorted = [...collaborations].sort(
+    (a, b) => new Date(b.startDate) - new Date(a.startDate)
+  );
+  return (
+    <div style={{ marginTop: 28 }}>
+      <h3 style={{ fontWeight: 700, fontSize: "1rem", marginBottom: 14 }}>
+        Historique des collaborations
+      </h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {sorted.map((c, i) => {
+          const meta = COLLAB_STATUS_META[c.status] || COLLAB_STATUS_META.ended;
+          return (
+            <motion.div key={i}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              style={{ display: "flex", alignItems: "center", gap: 14,
+                padding: "12px 16px", borderRadius: 12,
+                border: "1px solid #eee", background: "#fff",
+                borderLeft: `3px solid ${meta.color}`,
+                opacity: c.status === "ended" ? 0.72 : 1 }}>
+              {/* Timeline dot */}
+              <div style={{ width: 10, height: 10, borderRadius: "50%",
+                background: meta.color, flexShrink: 0 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#1a1a1a" }}>
+                  {c.agencyName || "Agence"}
+                </div>
+                <div style={{ fontSize: "0.73rem", color: "#888", marginTop: 2 }}>
+                  {c.role || "Collaborateur"} · Depuis {c.startDate
+                    ? new Date(c.startDate).toLocaleDateString("fr-DZ", { month: "long", year: "numeric" })
+                    : "—"}
+                  {c.endDate && (
+                    <> · Fin {new Date(c.endDate).toLocaleDateString("fr-DZ", { month: "long", year: "numeric" })}</>
+                  )}
+                </div>
+                {c.endReason && (
+                  <div style={{ fontSize: "0.7rem", color: "#aaa", marginTop: 3,
+                    fontStyle: "italic" }}>
+                    Motif : {c.endReason}
+                  </div>
+                )}
+              </div>
+              <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: "0.7rem",
+                fontWeight: 700, background: meta.bg, color: meta.color, whiteSpace: "nowrap" }}>
+                {meta.label}
+              </span>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 // ── Post feed ─────────────────────────────────────────────────────────────────
 const PostFeed = ({ role, id, isOwner }) => {
   const [posts,    setPosts]    = useState([]);
@@ -402,6 +465,14 @@ const ProfilePage = () => {
         <div style={{ borderRadius: 16, border: "1px solid #eee", background: "#fff",
           boxShadow: "0 4px 20px rgba(0,0,0,0.06)", padding: "24px 28px", marginBottom: 20 }}>
           <PortfolioGrid items={profile.portfolioItems} />
+        </div>
+      )}
+
+      {/* Collaboration history — freelancer only */}
+      {role === "freelancer" && profile.agencyCollaborations?.length > 0 && (
+        <div style={{ borderRadius: 16, border: "1px solid #eee", background: "#fff",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.06)", padding: "24px 28px", marginBottom: 20 }}>
+          <CollaborationHistory collaborations={profile.agencyCollaborations} />
         </div>
       )}
 

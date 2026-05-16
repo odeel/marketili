@@ -357,11 +357,160 @@ const FreelancerSection = ({ user }) => {
 // ═════════════════════════════════════════════════════════════════════════════
 // ROOT
 // ═════════════════════════════════════════════════════════════════════════════
+// ── MemberHistory modal ───────────────────────────────────────────────────────
+const TASK_STATUS_LABEL = {
+  todo:        "À faire",
+  in_progress: "En cours",
+  in_review:   "En révision",
+  done:        "Terminé",
+};
+const TASK_STATUS_COLOR = {
+  todo:        "#6b7280",
+  in_progress: "#f59e0b",
+  in_review:   "#0891b2",
+  done:        "#10b981",
+};
+const PROJECT_STATUS_LABEL = {
+  pending:   "En attente",
+  active:    "Actif",
+  in_review: "En révision",
+  completed: "Terminé",
+  cancelled: "Annulé",
+};
+
+const MemberHistoryModal = ({ member, onClose }) => {
+  const [history,  setHistory]  = useState([]);
+  const [loading,  setLoading]  = useState(true);
+
+  useEffect(() => {
+    agencyMemberService.getMemberHistory(member._id)
+      .then(d => setHistory(d.history || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [member._id]);
+
+  const totalTasks     = history.reduce((s, p) => s + p.tasks.length, 0);
+  const completedTasks = history.reduce((s, p) => s + p.tasks.filter(t => t.status === "done").length, 0);
+
+  return (
+    <motion.div className="modal-overlay"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <motion.div className="modal-box" style={{ maxWidth: 620, maxHeight: "80vh", overflowY: "auto" }}
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">
+              Historique — {member.firstName} {member.lastName}
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "var(--d-muted)", marginTop: 2 }}>
+              {JOB_LABEL[member.jobTitle] || member.jobTitle}
+            </div>
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          {loading ? (
+            <div className="spinner-wrap"><div className="spinner" /></div>
+          ) : history.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "32px 0", color: "var(--d-muted)",
+              fontSize: "0.85rem" }}>
+              Aucune participation à des projets pour ce membre.
+            </div>
+          ) : (
+            <>
+              {/* Summary chips */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+                <div style={{ padding: "8px 14px", borderRadius: 8, background: "#f3f4f6",
+                  fontSize: "0.78rem", fontWeight: 600, color: "var(--d-ink)" }}>
+                  {history.length} projet{history.length !== 1 ? "s" : ""}
+                </div>
+                <div style={{ padding: "8px 14px", borderRadius: 8, background: "#f3f4f6",
+                  fontSize: "0.78rem", fontWeight: 600, color: "var(--d-ink)" }}>
+                  {totalTasks} tâche{totalTasks !== 1 ? "s" : ""}
+                </div>
+                <div style={{ padding: "8px 14px", borderRadius: 8, background: "#d1fae5",
+                  fontSize: "0.78rem", fontWeight: 600, color: "#065f46" }}>
+                  {completedTasks} terminée{completedTasks !== 1 ? "s" : ""}
+                </div>
+              </div>
+
+              {history.map((proj, pi) => (
+                <div key={proj._id} style={{ marginBottom: 16, borderRadius: 10,
+                  border: "1px solid var(--d-border-soft)", overflow: "hidden" }}>
+                  {/* Project header */}
+                  <div style={{ padding: "12px 16px", background: "var(--d-surface)",
+                    borderBottom: proj.tasks.length ? "1px solid var(--d-border-soft)" : "none",
+                    display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: "0.88rem", color: "var(--d-ink)" }}>
+                        {proj.title}
+                      </div>
+                      <div style={{ fontSize: "0.72rem", color: "var(--d-muted)", marginTop: 2 }}>
+                        {proj.tasks.length} tâche{proj.tasks.length !== 1 ? "s" : ""} · {proj.progress || 0}%
+                      </div>
+                    </div>
+                    <span style={{ padding: "3px 9px", borderRadius: 20, fontSize: "0.7rem",
+                      fontWeight: 700, background: "#f3f4f6", color: "var(--d-muted)" }}>
+                      {PROJECT_STATUS_LABEL[proj.status] || proj.status}
+                    </span>
+                  </div>
+
+                  {/* Tasks */}
+                  {proj.tasks.map((t, ti) => (
+                    <div key={t._id} style={{ display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 16px",
+                      borderBottom: ti < proj.tasks.length - 1 ? "1px solid var(--d-border-soft)" : "none",
+                      background: "#fff" }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+                        background: TASK_STATUS_COLOR[t.status] || "#6b7280" }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "0.82rem", fontWeight: 600,
+                          color: "var(--d-ink)", lineHeight: 1.3 }}>
+                          {t.title}
+                        </div>
+                        <div style={{ display: "flex", gap: 8, marginTop: 2, flexWrap: "wrap",
+                          alignItems: "center" }}>
+                          <span style={{ fontSize: "0.68rem", fontWeight: 600,
+                            color: TASK_STATUS_COLOR[t.status] || "#6b7280" }}>
+                            {TASK_STATUS_LABEL[t.status] || t.status}
+                          </span>
+                          {t.isPreviousAssignee && (
+                            <span style={{ fontSize: "0.65rem", color: "#9a6060",
+                              fontStyle: "italic" }}>
+                              (ex-responsable)
+                            </span>
+                          )}
+                          {t.removedAt && (
+                            <span style={{ fontSize: "0.65rem", color: "var(--d-muted)" }}>
+                              retiré le {new Date(t.removedAt).toLocaleDateString("fr-DZ")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// ═════════════════════════════════════════════════════════════════════════════
+// ROOT
+// ═════════════════════════════════════════════════════════════════════════════
 const DirectorMembers = ({ user }) => {
   const [members,      setMembers]      = useState([]);
   const [loading,      setLoading]      = useState(true);
   const [showModal,    setShowModal]    = useState(false);
   const [showInactive, setShowInactive] = useState(false);
+  const [historyMember, setHistoryMember] = useState(null);
   const [form,         setForm]         = useState({
     firstName: "", lastName: "", email: "",
     password: "", jobTitle: "commercial", phone: "",
@@ -411,6 +560,17 @@ const DirectorMembers = ({ user }) => {
     finally { setStatusBusy(null); }
   };
 
+  const handleRestore = async (id) => {
+    setStatusBusy(id);
+    try {
+      await agencyMemberService.restoreMember(id);
+      setMembers(prev => prev.map(m =>
+        m._id === id ? { ...m, accountStatus: "active" } : m
+      ));
+    } catch {}
+    finally { setStatusBusy(null); }
+  };
+
   const activeMembers   = useMemo(() => members.filter(m => (m.accountStatus || "active") === "active"), [members]);
   const inactiveMembers = useMemo(() => members.filter(m => (m.accountStatus || "active") !== "active"), [members]);
 
@@ -445,19 +605,29 @@ const DirectorMembers = ({ user }) => {
         <StatusBadge status={m.accountStatus || "active"} />
       </td>
       <td>
-        {showRestore ? (
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <button
-            disabled={statusBusy === m._id}
-            onClick={() => handleSetStatus(m._id, "active")}
-            style={{ padding: "4px 12px", borderRadius: 7, fontSize: "0.75rem",
+            onClick={() => setHistoryMember(m)}
+            style={{ padding: "4px 10px", borderRadius: 7, fontSize: "0.73rem",
               fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-              border: "1.5px solid #6ee7b7", background: "#d1fae5",
-              color: "#065f46", opacity: statusBusy === m._id ? 0.5 : 1 }}>
-            {statusBusy === m._id ? "..." : "Restaurer"}
+              border: "1.5px solid var(--d-border-soft)", background: "var(--d-surface)",
+              color: "var(--d-muted)" }}>
+            Historique
           </button>
-        ) : (
-          <StatusSelect member={m} onSet={handleSetStatus} busy={statusBusy === m._id} />
-        )}
+          {showRestore ? (
+            <button
+              disabled={statusBusy === m._id}
+              onClick={() => handleRestore(m._id)}
+              style={{ padding: "4px 12px", borderRadius: 7, fontSize: "0.75rem",
+                fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                border: "1.5px solid #6ee7b7", background: "#d1fae5",
+                color: "#065f46", opacity: statusBusy === m._id ? 0.5 : 1 }}>
+              {statusBusy === m._id ? "..." : "Restaurer"}
+            </button>
+          ) : (
+            <StatusSelect member={m} onSet={handleSetStatus} busy={statusBusy === m._id} />
+          )}
+        </div>
       </td>
     </motion.tr>
   );
@@ -557,8 +727,17 @@ const DirectorMembers = ({ user }) => {
         </>
       )}
 
-      {/* Freelancer section */}
       <FreelancerSection user={user} />
+
+      {/* Member history modal */}
+      <AnimatePresence>
+        {historyMember && (
+          <MemberHistoryModal
+            member={historyMember}
+            onClose={() => setHistoryMember(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Create member modal */}
       <AnimatePresence>

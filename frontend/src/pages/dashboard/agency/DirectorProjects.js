@@ -143,6 +143,11 @@ const DirectorTaskRow = ({ task, projectId, isLast, members, agencyUser, onStatu
                 {task.assignedTo[0].memberName}
               </span>
             )}
+            {task.previousAssignees?.length > 0 && (
+              <span style={{ fontSize: "0.66rem", color: "#9a6060", fontStyle: "italic" }}>
+                Précédemment : {task.previousAssignees.map(p => p.memberName).join(", ")}
+              </span>
+            )}
             {comments.length > 0 && (
               <span style={{ fontSize: "0.68rem", color: "var(--d-muted)" }}>
                 {comments.length} commentaire{comments.length !== 1 ? "s" : ""}

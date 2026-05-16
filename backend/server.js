@@ -21,6 +21,21 @@ app.use(cors(corsOptions));                            // 2b. cors headers on al
 app.use(express.json({ limit: "10mb" }));              // 3. body parsing
 app.use(express.urlencoded({ extended: true }));
 
+// ── Soft-delete guard — reject DELETE on business-critical resources ──
+const SOFT_DELETE_PROTECTED = [
+  "/api/pitches", "/api/projects", "/api/contracts",
+  "/api/agency-members", "/api/team-members",
+];
+app.use((req, res, next) => {
+  if (req.method === "DELETE" && SOFT_DELETE_PROTECTED.some(p => req.path.startsWith(p))) {
+    return res.status(405).json({
+      success: false,
+      message: "Suppression définitive non autorisée. Utilisez archived/cancelled/withdrawn.",
+    });
+  }
+  next();
+});
+
 // ── Routes ──
 app.use("/api/auth",           require("./routes/authRoutes"));
 app.use("/api/posts",          require("./routes/postRoutes"));

@@ -134,6 +134,26 @@ exports.updateTask = async (req, res) => {
     if (!task) return res.status(404).json({ message: "Task not found" });
 
     const wasNotDone = task.status !== "done";
+
+    // Track handover when assignedTo changes
+    if (updates.assignedTo !== undefined) {
+      const newIds = (updates.assignedTo || []).map(a => String(a.memberId));
+      const removed = task.assignedTo.filter(a => !newIds.includes(String(a.memberId)));
+      removed.forEach(a => {
+        const alreadyLogged = (task.previousAssignees || []).some(
+          p => String(p.memberId) === String(a.memberId)
+        );
+        if (!alreadyLogged) {
+          task.previousAssignees.push({
+            memberId:   a.memberId,
+            memberName: a.memberName,
+            memberType: a.memberType,
+            removedAt:  new Date(),
+          });
+        }
+      });
+    }
+
     Object.assign(task, updates);
     project.progress = calculateProgress(project);
     await project.save();
@@ -220,8 +240,8 @@ exports.addTaskComment = async (req, res) => {
 exports.getAgencyMembers = async (req, res) => {
   try {
     const { agencyId } = req.params;
-    const members = await AgencyMember.find({ agency: agencyId, isActive: true })
-      .select("firstName lastName jobTitle email avatar isActive");
+    const members = await AgencyMember.find({ agency: agencyId, accountStatus: "active" })
+      .select("firstName lastName jobTitle email avatar accountStatus");
     res.json({ success: true, members });
   } catch (err) {
     res.status(500).json({ message: err.message });

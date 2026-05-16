@@ -18,59 +18,55 @@
 ---
 
 ## Backend Tasks
-*(Most of this builds on task 07 which introduces accountStatus)*
 
-- [ ] **Add soft-delete to all controllers**
+- [x] **Add soft-delete to all controllers**
   - Never use `.deleteOne()` or `.findByIdAndDelete()` on users, pitches, projects, tasks, contracts
   - Instead: set `accountStatus: "archived"` or `status: "closed"/"cancelled"`
   - For posts: already handled via `close` endpoint
-  - For pitches: already `withdrawn`/`rejected` — confirm no delete route exists
-  - For projects: add `status: "cancelled"` path, never delete
-  - Add a middleware check: reject DELETE requests on sensitive models and return 405
+  - For pitches: already `withdrawn`/`rejected` — no delete route exists
+  - For projects: `status: "cancelled"` path, never delete
+  - Middleware guard added in `server.js`: rejects DELETE on pitches, projects,
+    contracts, agency-members, team-members with HTTP 405
 
-- [ ] **Add handover logic when replacing a worker on a task**
+- [x] **Add handover logic when replacing a worker on a task**
   - File: `backend/controllers/projectController.js`
-  - When `updateTask` changes `assignedTo`:
-    - Keep the original `assignedTo` in a new field: `previousAssignees: [{ memberId, memberName, handoverDate }]`
-    - New assignee can only see task from handover date forward (enforced on frontend)
-    - Historical task data stays linked to original assignee
+  - `updateTask` now tracks removed assignees into `previousAssignees` array
+  - `previousAssignees: [{ memberId, memberName, memberType, removedAt }]`
+  - Added to task schema in `backend/models/Project.js`
 
-- [ ] **Add collaboration history to Freelancer**
+- [x] **Add collaboration history to Freelancer**
   - File: `backend/models/Freelancer.js`
-  - `agencyCollaborations` array already exists — add: `endDate`, `endReason`, `endedBy`
-  - When detaching freelancer (task 07): set `status: "ended"`, `endDate: now`, `endReason`
-  - When restoring: push a NEW entry with `status: "active"` (keep history)
+  - Added `endDate`, `endReason`, `endedBy` to `agencyCollaborations` entries
+  - `detachFreelancer` controller now sets these fields on termination
 
-- [ ] **Add account restoration endpoint**
-  - File: `backend/routes/agencyMemberRoutes.js`
-  - `PATCH /agency-members/:id/restore` — sets `accountStatus: "active"` + logs restoration date
-  - Same for team members: `PATCH /team-members/:id/restore`
-  - Only director/lead can restore
+- [x] **Add account restoration endpoint**
+  - `PATCH /agency-members/:id/restore` → sets accountStatus: "active"
+  - `PATCH /team-members/:id/restore` → sets isActive: true
+  - Also added `GET /agency-members/:id/history` for member project/task history
 
 ---
 
 ## Frontend Tasks
 
-- [ ] **Show full worker history in director member detail view**
-  - File: `DirectorMembers.js` or a member detail modal
-  - "Historique" tab on member card:
-    - Projects they participated in (even completed)
-    - Tasks they completed
-    - Collaborations (if freelancer)
-  - Read-only — no modifications to historical data
-
-- [ ] **Show previous assignees on tasks (read-only)**
-  - File: task detail view or task row
-  - If `task.previousAssignees` is not empty: show "(Précédemment: Name)" below current assignee
-  - This gives visibility into handover history
-
-- [ ] **Archived members section in director members page**
+- [x] **Show full worker history in director member detail view**
   - File: `DirectorMembers.js`
-  - Separate collapsible section: "Anciens membres"
-  - Shows archived/ended members with their last role and end date
-  - "Restaurer" button → calls restore endpoint
+  - "Historique" button on every member row
+  - Modal shows: projects participated in, tasks assigned (current + previous),
+    completed task count, handover dates
+  - Read-only
 
-- [ ] **Show collaboration history on freelancer profile**
-  - File: `ProfilePage.js` (from task 09)
+- [x] **Show previous assignees on tasks (read-only)**
+  - File: `DirectorProjects.js`
+  - If `task.previousAssignees` is not empty: shows "Précédemment : Name" below
+    current assignee in the task row
+
+- [x] **Archived members section in director members page**
+  - File: `DirectorMembers.js`
+  - Already existed: collapsible "Anciens membres" section with Restaurer button
+  - Updated to use dedicated `PATCH /:id/restore` endpoint via `agencyMemberService.restoreMember`
+
+- [x] **Show collaboration history on freelancer profile**
+  - File: `ProfilePage.js`
   - Timeline section: each agency collaboration with dates, role, and status badge
-  - Current collaborations highlighted; ended ones shown in grey
+  - Active collaborations highlighted; ended ones shown in grey with optional end reason
+  - profileController populates `agencyCollaborations.agency` to include agencyName

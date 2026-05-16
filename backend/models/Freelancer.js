@@ -63,11 +63,14 @@ const freelancerSchema = new mongoose.Schema(
 
     clientProjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Project" }],
     agencyCollaborations: [{
-      agency:    { type: mongoose.Schema.Types.ObjectId, ref: "Agency" },
-      role:      { type: String, trim: true },
+      agency:     { type: mongoose.Schema.Types.ObjectId, ref: "Agency" },
+      role:       { type: String, trim: true },
       contractId: { type: mongoose.Schema.Types.ObjectId, ref: "Contract" },
-      startDate: { type: Date, default: Date.now },
-      status:    { type: String, enum: ["active", "ended"], default: "active" },
+      startDate:  { type: Date, default: Date.now },
+      status:     { type: String, enum: ["active", "ended"], default: "active" },
+      endDate:    { type: Date },
+      endReason:  { type: String, trim: true },
+      endedBy:    { type: mongoose.Schema.Types.ObjectId, ref: "Agency" },
     }],
 
     role: { type: String, default: "freelancer", immutable: true },

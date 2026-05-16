@@ -21,6 +21,12 @@ const agencyMemberService = {
 
   getFreelancers: () =>
     api.get("/agency-members/freelancers").then(r => r.data),
+
+  restoreMember: (id) =>
+    api.patch(`/agency-members/${id}/restore`).then(r => r.data),
+
+  getMemberHistory: (id) =>
+    api.get(`/agency-members/${id}/history`).then(r => r.data),
 };
 
 export default agencyMemberService;

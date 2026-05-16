@@ -63,6 +63,22 @@ exports.toggleMember = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────
+// RESTORE MEMBER  PATCH /api/team-members/:id/restore
+// ─────────────────────────────────────────────
+exports.restoreMember = async (req, res) => {
+  try {
+    const member = await TeamMember.findById(req.params.id);
+    if (!member) return fail(res, "Membre introuvable", 404);
+
+    member.isActive = true;
+    await member.save();
+    return ok(res, { isActive: member.isActive });
+  } catch (err) {
+    return fail(res, err.message, 500);
+  }
+};
+
+// ─────────────────────────────────────────────
 // CHANGE PASSWORD  POST /api/team-members/change-password
 // ─────────────────────────────────────────────
 exports.changePassword = async (req, res) => {

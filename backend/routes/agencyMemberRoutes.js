@@ -10,5 +10,7 @@ router.patch("/attach-freelancer",    protect, c.attachFreelancer);
 router.patch("/detach-freelancer",    protect, c.detachFreelancer);
 router.get("/freelancers",            protect, c.getFreelancers);
 router.patch("/:id/status",           protect, c.setMemberStatus);
+router.patch("/:id/restore",          protect, c.restoreMember);
+router.get("/:id/history",            protect, c.getMemberHistory);
 
 module.exports = router;

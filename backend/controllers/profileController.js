@@ -38,15 +38,29 @@ exports.getProfile = async (req, res) => {
     const Model = MODEL_MAP[role];
     if (!Model) return fail(res, "Rôle non supporté", 400);
 
-    const doc = await Model.findById(id).select(SAFE_SELECT).lean();
+    let query = Model.findById(id).select(SAFE_SELECT);
+    if (role === "freelancer") {
+      query = query.populate("agencyCollaborations.agency", "agencyName logo");
+    }
+    const doc = await query.lean();
     if (!doc) return fail(res, "Profil introuvable", 404);
 
     const completedProjects = await getCompletedProjects(role, id);
 
+    // Flatten collaboration agency names for easy frontend use
+    let agencyCollaborations = doc.agencyCollaborations;
+    if (role === "freelancer" && agencyCollaborations) {
+      agencyCollaborations = agencyCollaborations.map(c => ({
+        ...c,
+        agencyName: c.agency?.agencyName || "Agence",
+        agencyLogo: c.agency?.logo || null,
+      }));
+    }
+
     // For agencies: populate member count from the members array
     const membersCount = Array.isArray(doc.members) ? doc.members.length : undefined;
 
-    return ok(res, { profile: { ...doc, completedProjects, membersCount } });
+    return ok(res, { profile: { ...doc, completedProjects, membersCount, agencyCollaborations } });
   } catch (err) {
     console.error("getProfile:", err);
     return fail(res, "Erreur serveur", 500);

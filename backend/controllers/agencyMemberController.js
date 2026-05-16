@@ -163,7 +163,11 @@ exports.detachFreelancer = async (req, res) => {
       return res.status(404).json({ success: false, message: "Collaboration active introuvable" });
     }
 
-    collab.status = "ended";
+    const { reason } = req.body;
+    collab.status   = "ended";
+    collab.endDate  = new Date();
+    collab.endedBy  = agencyId;
+    if (reason) collab.endReason = reason;
     await freelancer.save();
 
     res.json({ success: true, message: "Collaboration terminée" });
@@ -191,6 +195,73 @@ exports.getFreelancers = async (req, res) => {
     });
 
     res.json({ success: true, freelancers: result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// RESTORE MEMBER  PATCH /api/agency-members/:id/restore
+// Sets accountStatus back to "active"
+// ─────────────────────────────────────────────
+exports.restoreMember = async (req, res) => {
+  try {
+    const member = await AgencyMember.findById(req.params.id);
+    if (!member) return res.status(404).json({ success: false, message: "Membre introuvable" });
+
+    member.accountStatus = "active";
+    await member.save();
+    res.json({ success: true, accountStatus: member.accountStatus });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// GET MEMBER HISTORY  GET /api/agency-members/:id/history
+// Returns projects + tasks the member worked on
+// ─────────────────────────────────────────────
+const Project = require("../models/Project");
+
+exports.getMemberHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const projects = await Project.find({
+      $or: [
+        { "assignedMembers.memberId": id },
+        { "tasks.assignedTo.memberId": id },
+        { "tasks.previousAssignees.memberId": id },
+      ],
+    })
+      .select("title projectStatus deadline progress tasks assignedMembers")
+      .lean();
+
+    const history = projects.map(p => {
+      const myTasks = (p.tasks || []).filter(t =>
+        (t.assignedTo || []).some(a => String(a.memberId) === id) ||
+        (t.previousAssignees || []).some(a => String(a.memberId) === id)
+      );
+      return {
+        _id:      p._id,
+        title:    p.title,
+        status:   p.projectStatus,
+        deadline: p.deadline,
+        progress: p.progress,
+        tasks: myTasks.map(t => ({
+          _id:               t._id,
+          title:             t.title,
+          status:            t.status,
+          priority:          t.priority,
+          dueDate:           t.dueDate,
+          isCurrentAssignee: (t.assignedTo || []).some(a => String(a.memberId) === id),
+          isPreviousAssignee: (t.previousAssignees || []).some(a => String(a.memberId) === id),
+          removedAt: (t.previousAssignees || []).find(a => String(a.memberId) === id)?.removedAt,
+        })),
+      };
+    });
+
+    res.json({ success: true, history });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
