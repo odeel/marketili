@@ -18,56 +18,55 @@
 
 ## Backend Tasks
 
-- [ ] **Add team member management endpoints**
-  - File: new `backend/routes/teamMemberRoutes.js` + `backend/controllers/teamMemberController.js`
-  - `POST /team-members/create` — team lead creates a member (same pattern as agencyMemberController)
+- [x] **Add team member management endpoints**
+  - File: `backend/routes/teamMemberRoutes.js` + `backend/controllers/teamMemberController.js`
+  - `POST /team-members/create` — team lead creates a member
   - `GET /team-members` — list members of the requesting team
   - `PATCH /team-members/:id/toggle` — toggle active status
   - `POST /team-members/change-password` — force password change on first login
   - Mount in `server.js`
 
-- [ ] **Add GET /projects/team/:teamId endpoint**
+- [x] **Add GET /projects/team/:teamId endpoint**
   - File: `backend/controllers/projectController.js`
-  - Same as `getAgencyProjects` but filters by `providerTeam`
+  - Filters by `providerTeam`
 
-- [ ] **Add GET /projects/team/:teamId/members endpoint**
+- [x] **Add GET /projects/team/:teamId/members endpoint**
   - Returns active team members (for task assignment)
 
 ---
 
 ## Frontend Tasks
 
-- [ ] **Build TeamDashboard layout**
+- [x] **Build TeamDashboard layout**
   - File: `frontend/src/pages/dashboard/TeamDashboard.js`
   - Replace ComingSoon in App.js for roles `team` and `team_member`
   - Role detection: `team` (lead) vs `team_member`
   - Lead sidebar: Accueil, Explorer, Mes offres, Projets, Membres, Mon profil
   - Member sidebar: Accueil, Mes tâches, Calendrier, Mon profil
 
-- [ ] **Build TeamLeadOverview**
+- [x] **Build TeamLeadOverview**
   - Stats: active pitches, active projects, members count
   - Recent pitches + recent projects
   - Quick action: Explorer les posts
 
-- [ ] **Build team member management (lead)**
-  - Reuse the same pattern as `DirectorMembers.js`
+- [x] **Build team member management (lead)**
   - Create member form, members list with toggle active
   - Force password change on first login (same logic as AgencyMember)
 
-- [ ] **Build TeamBrowse page**
+- [x] **Build TeamBrowse page**
   - Browse public posts
-  - "Envoyer une offre" triggers PitchForm with `pitchType: "team_to_client"`
+  - "Envoyer une offre" triggers PitchForm with senderType: "Team"
 
-- [ ] **Build TeamProjects page**
+- [x] **Build TeamProjects page**
   - List projects for the team (GET /projects/team/:teamId)
   - Cards with deadline urgency colors
   - Detail view: tasks, assigned members, progress bar
 
-- [ ] **Build TeamMemberOverview**
+- [x] **Build TeamMemberOverview**
   - My tasks (GET /projects/member/:memberId/tasks)
   - Tasks sorted by closest deadline with urgency colors
-  - Calendar view of task due dates
+  - Calendar view link
 
-- [ ] **Build TeamMemberTasks page**
-  - Same as WorkerTasks but for team members
+- [x] **Build TeamMemberTasks page**
+  - Reuses WorkerTasks (same endpoint, same pattern)
   - Status update (in_progress → review → done)

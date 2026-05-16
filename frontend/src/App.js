@@ -10,6 +10,7 @@ import ClientDashboard    from "./pages/dashboard/ClientDashboard";
 import AgencyDashboard    from "./pages/dashboard/AgencyDashboard";
 import AdminDashboard     from "./pages/dashboard/AdminDashboard";
 import FreelancerDashboard from "./pages/dashboard/FreelancerDashboard";
+import TeamDashboard from "./pages/dashboard/TeamDashboard";
 import ChangePasswordPage from "./pages/auth/ChangePasswordPage";
 import ProfilePage        from "./pages/ProfilePage";
 import EditProfilePage    from "./pages/EditProfilePage";
@@ -58,7 +59,7 @@ function App() {
         } />
         <Route path="/dashboard/team/*" element={
           <PrivateRoute allowedRoles={["team","team_member"]}>
-            <ComingSoon role="team" />
+            <TeamDashboard />
           </PrivateRoute>
         } />
         <Route path="/dashboard/freelancer/*" element={

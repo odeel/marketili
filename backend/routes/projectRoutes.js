@@ -13,6 +13,8 @@ router.post("/flag-post",                          protect, c.flagPost);
 router.get("/member/:memberId/tasks",              protect, c.getMemberTasks);
 router.get("/member/:memberId/projects",           protect, c.getMemberProjects);
 router.get("/client/:clientId",                    protect, c.getClientProjects);
+router.get("/team/:teamId/members",                protect, c.getTeamMembers);
+router.get("/team/:teamId",                        protect, c.getTeamProjects);
 
 // ── Generic routes after ──
 router.get("/agency/:agencyId",                              protect, c.getAgencyProjects);

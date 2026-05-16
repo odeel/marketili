@@ -41,6 +41,7 @@ const teamMemberSchema = new mongoose.Schema(
     role: { type: String, default: "team_member", immutable: true },
 
     isActive: { type: Boolean, default: true },
+    mustChangePassword: { type: Boolean, default: true },
     refreshToken: { type: String, select: false },
   },
   { timestamps: true }

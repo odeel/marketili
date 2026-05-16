@@ -29,6 +29,7 @@ app.use("/api/pitches",        require("./routes/Pitchroutes"));
 app.use("/api/projects",       require("./routes/projectRoutes"));
 app.use("/api/admin",          require("./routes/adminRoutes"));
 app.use("/api/agency-members", require("./routes/agencyMemberRoutes"));
+app.use("/api/team-members",  require("./routes/teamMemberRoutes"));
 
 app.use("/api/contracts",      require("./routes/contractRoutes"));
 app.use("/api/notifications",  require("./routes/notificationRoutes"));

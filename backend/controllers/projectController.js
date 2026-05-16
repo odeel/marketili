@@ -1,6 +1,7 @@
 const Project      = require("../models/Project");
 const Agency       = require("../models/Agency");
 const AgencyMember = require("../models/AgencyMember");
+const TeamMember   = require("../models/TeamMember");
 const Notification = require("../models/Notification");
 
 // ── Helper ──
@@ -419,6 +420,42 @@ exports.getMemberProjects = async (req, res) => {
       .sort({ deadline: 1 })
       .lean();
     res.json({ success: true, projects });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// GET TEAM PROJECTS  GET /api/projects/team/:teamId
+// ─────────────────────────────────────────────
+exports.getTeamProjects = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const { status } = req.query;
+
+    const filter = { providerTeam: teamId };
+    if (status) filter.projectStatus = status;
+
+    const projects = await Project.find(filter)
+      .populate("client", "firstName lastName companyName accountType")
+      .populate("post",   "title categories budget")
+      .sort({ deadline: 1 });
+
+    res.json({ success: true, projects });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// GET TEAM MEMBERS  GET /api/projects/team/:teamId/members
+// ─────────────────────────────────────────────
+exports.getTeamMembers = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const members = await TeamMember.find({ team: teamId, isActive: true })
+      .select("firstName lastName jobTitle email avatar isActive");
+    res.json({ success: true, members });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

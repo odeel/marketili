@@ -49,12 +49,19 @@ const projectService = {
   assignMember: (projectId, data) =>
     api.post(`/projects/${projectId}/assign`, data).then(r => r.data),
 
-  // ── Worker ──
+  // ── Worker / Team member ──
   getMemberTasks: (memberId) =>
     api.get(`/projects/member/${memberId}/tasks`).then(r => r.data),
 
   getMemberProjects: (memberId) =>
     api.get(`/projects/member/${memberId}/projects`).then(r => r.data),
+
+  // ── Team ──
+  getTeamProjects: (teamId, params = {}) =>
+    api.get(`/projects/team/${teamId}`, { params }).then(r => r.data),
+
+  getTeamMembers: (teamId) =>
+    api.get(`/projects/team/${teamId}/members`).then(r => r.data),
 };
 
 export default projectService;
