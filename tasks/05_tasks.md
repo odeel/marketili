@@ -24,23 +24,22 @@
 
 ## Backend Tasks
 
-- [ ] **Add task reassignment support to updateTask**
+- [x] **Add task reassignment support to updateTask**
   - File: `backend/controllers/projectController.js` → `updateTaskStatus`
   - Allow updating `assignedTo` field (not just status/priority/dueDate)
   - Rename the function to `updateTask` to reflect broader scope
   - Update route: `PATCH /projects/:projectId/tasks/:taskId`
 
-- [ ] **Add GET /projects/:projectId/tasks endpoint (all tasks in a project)**
+- [x] **Add GET /projects/:projectId/tasks endpoint (all tasks in a project)**
   - File: `backend/routes/projectRoutes.js`
   - Returns `project.tasks` array sorted by `dueDate` ascending
   - Used by director to see all tasks without opening each project
 
-- [ ] **Add comments array to task sub-schema**
+- [x] **Add comments array to task sub-schema**
   - File: `backend/models/Project.js` inside the task sub-schema
-  - Add: `comments: [{ author: ObjectId, authorName: String, authorRole: String, text: String, createdAt: Date }]`
-  - Add: `POST /projects/:projectId/tasks/:taskId/comments` endpoint
+  - Already present in model — Added `POST /projects/:projectId/tasks/:taskId/comments` endpoint
 
-- [ ] **Add server-side dueDate sorting to getMemberTasks**
+- [x] **Add server-side dueDate sorting to getMemberTasks**
   - File: `backend/controllers/projectController.js` → `getMemberTasks`
   - Sort tasks by `dueDate: 1` (closest first)
 
@@ -48,29 +47,29 @@
 
 ## Frontend Tasks
 
-- [ ] **Add "Create task" form in director project detail**
+- [x] **Add "Create task" form in director project detail**
   - File: project detail view (director side)
   - Form fields: title, description, assignee (dropdown of project's assignedMembers), dueDate, priority (Low / Medium / High)
   - On submit: call `projectService.createTask(projectId, data)`
 
-- [ ] **Add task reassignment in director task view**
+- [x] **Add task reassignment in director task view**
   - Next to each task: "Réassigner" button → dropdown of project members
   - On select: call `projectService.updateTask(projectId, taskId, { assignedTo: newMemberId })`
 
-- [ ] **Add deadline urgency colors to task rows/cards**
+- [x] **Add deadline urgency colors to task rows/cards**
   - Use `getDeadlineColor(task.dueDate)` utility from task 02
   - Apply as colored left border or dot indicator on task rows
 
-- [ ] **Sort task lists by closest deadline**
+- [x] **Sort task lists by closest deadline**
   - In WorkerTasks, director task view, and project detail task list
   - Sort by `dueDate` ascending; tasks with no dueDate go last
 
-- [ ] **Add basic comment thread per task**
+- [x] **Add basic comment thread per task**
   - File: task detail view or expandable row
   - Input at bottom: text field + "Envoyer" button
   - Call POST /projects/:projectId/tasks/:taskId/comments
   - Display existing comments with author name, role, date
 
-- [ ] **Show task priority badge**
+- [x] **Show task priority badge**
   - File: all task list components
   - Low → grey badge, Medium → yellow badge, High → red badge

@@ -15,13 +15,15 @@ router.get("/member/:memberId/projects",           protect, c.getMemberProjects)
 router.get("/client/:clientId",                    protect, c.getClientProjects);
 
 // ── Generic routes after ──
-router.get("/agency/:agencyId",                    protect, c.getAgencyProjects);
-router.post("/",                                   protect, c.createProject);
-router.get("/:projectId",                          protect, c.getProject);
-router.patch("/:projectId",                        protect, c.updateProject);
-router.post("/:projectId/assign",                  protect, c.assignMember);
-router.post("/:projectId/tasks",                   protect, c.createTask);
-router.patch("/:projectId/tasks/:taskId",          protect, c.updateTaskStatus);
-router.post("/:projectId/deliverables",            protect, c.addDeliverable);
+router.get("/agency/:agencyId",                              protect, c.getAgencyProjects);
+router.post("/",                                             protect, c.createProject);
+router.get("/:projectId",                                    protect, c.getProject);
+router.patch("/:projectId",                                  protect, c.updateProject);
+router.post("/:projectId/assign",                            protect, c.assignMember);
+router.get("/:projectId/tasks",                              protect, c.getProjectTasks);
+router.post("/:projectId/tasks",                             protect, c.createTask);
+router.patch("/:projectId/tasks/:taskId",                    protect, c.updateTask);
+router.post("/:projectId/tasks/:taskId/comments",            protect, c.addTaskComment);
+router.post("/:projectId/deliverables",                      protect, c.addDeliverable);
 
 module.exports = router;

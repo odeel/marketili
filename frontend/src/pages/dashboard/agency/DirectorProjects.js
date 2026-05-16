@@ -76,6 +76,198 @@ const TASK_STATUS = {
   done:        { label: "Terminé",     color: "#10b981" },
 };
 
+// ── Director task row: urgency color + reassign + comment thread ──────────────
+const DirectorTaskRow = ({ task, projectId, isLast, members, agencyUser, onStatusChange, onReassign }) => {
+  const [showReassign, setShowReassign] = useState(false);
+  const [reassignId,   setReassignId]   = useState(task.assignedTo?.[0]?.memberId || "");
+  const [open,         setOpen]         = useState(false);
+  const [comments,     setComments]     = useState(task.comments || []);
+  const [commentText,  setCommentText]  = useState("");
+  const [sending,      setSending]      = useState(false);
+
+  const dlColor = task.dueDate ? getDeadlineColor(task.dueDate) : "#9e9e9e";
+
+  const handleReassign = async () => {
+    await onReassign(task._id, reassignId);
+    setShowReassign(false);
+  };
+
+  const handleComment = async (e) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    setSending(true);
+    try {
+      const d = await projectService.addTaskComment(projectId, task._id, {
+        authorId:   agencyUser._id,
+        authorName: agencyUser.firstName
+          ? `${agencyUser.firstName} ${agencyUser.lastName}`
+          : agencyUser.agencyName || "Directeur",
+        authorRole: agencyUser.jobTitle || "director",
+        text:       commentText.trim(),
+      });
+      setComments(d.task?.comments || [...comments, {
+        authorName: agencyUser.firstName
+          ? `${agencyUser.firstName} ${agencyUser.lastName}`
+          : agencyUser.agencyName,
+        authorRole: agencyUser.jobTitle || "director",
+        text:       commentText.trim(),
+        createdAt:  new Date().toISOString(),
+      }]);
+      setCommentText("");
+    } catch {}
+    finally { setSending(false); }
+  };
+
+  return (
+    <div style={{ borderBottom: isLast ? "none" : "1px solid var(--d-border-soft)" }}>
+      {/* Main row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12,
+        padding: "12px 22px", borderLeft: `3px solid ${dlColor}` }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%",
+          background: dlColor, flexShrink: 0 }} />
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 600, fontSize: "0.87rem", color: "var(--d-ink)" }}>
+            {task.title}
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 4, flexWrap: "wrap",
+            alignItems: "center" }}>
+            <PriorityBadge priority={task.priority} />
+            {task.dueDate && (
+              <span style={{ fontSize: "0.72rem", color: dlColor, fontWeight: 600 }}>
+                {new Date(task.dueDate).toLocaleDateString("fr-DZ")}
+              </span>
+            )}
+            {task.assignedTo?.[0]?.memberName && (
+              <span style={{ fontSize: "0.72rem", color: "var(--d-muted)" }}>
+                {task.assignedTo[0].memberName}
+              </span>
+            )}
+            {comments.length > 0 && (
+              <span style={{ fontSize: "0.68rem", color: "var(--d-muted)" }}>
+                {comments.length} commentaire{comments.length !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+          <select value={task.status}
+            onChange={e => onStatusChange(task._id, e.target.value)}
+            style={{ padding: "5px 10px", borderRadius: 8, border: "1.5px solid var(--d-border-soft)",
+              fontSize: "0.78rem", color: TASK_STATUS[task.status]?.color || "#6b7280",
+              background: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
+            {Object.entries(TASK_STATUS).map(([v, s]) => (
+              <option key={v} value={v}>{s.label}</option>
+            ))}
+          </select>
+          <button onClick={() => setShowReassign(v => !v)}
+            style={{ fontSize: "0.72rem", color: "var(--d-muted)", background: "none",
+              border: "1px solid var(--d-border-soft)", borderRadius: 6,
+              padding: "5px 9px", cursor: "pointer", fontFamily: "inherit",
+              whiteSpace: "nowrap" }}>
+            Réassigner
+          </button>
+          <button onClick={() => setOpen(v => !v)}
+            style={{ fontSize: "0.72rem", color: "var(--d-muted)", background: "none",
+              border: "1px solid var(--d-border-soft)", borderRadius: 6,
+              padding: "5px 9px", cursor: "pointer", fontFamily: "inherit" }}>
+            {open ? "−" : "+"}
+          </button>
+        </div>
+      </div>
+
+      {/* Reassign inline row */}
+      {showReassign && (
+        <div style={{ display: "flex", gap: 8, padding: "8px 22px 10px",
+          background: "var(--d-surface-alt)", borderTop: "1px solid var(--d-border-soft)",
+          alignItems: "center" }}>
+          <select value={reassignId}
+            onChange={e => setReassignId(e.target.value)}
+            style={{ flex: 1, padding: "6px 10px", borderRadius: 8,
+              border: "1.5px solid var(--d-border-soft)", fontSize: "0.82rem",
+              fontFamily: "inherit", background: "#fff" }}>
+            <option value="">Non assigné</option>
+            {members.map(m => (
+              <option key={m._id} value={m._id}>
+                {m.firstName} {m.lastName} — {m.jobTitle}
+              </option>
+            ))}
+          </select>
+          <button onClick={handleReassign} className="section-cta-btn"
+            style={{ padding: "7px 14px", fontSize: "0.8rem" }}>
+            Confirmer
+          </button>
+          <button onClick={() => setShowReassign(false)}
+            style={{ fontSize: "0.8rem", color: "var(--d-muted)", background: "none",
+              border: "1px solid var(--d-border-soft)", borderRadius: 6,
+              padding: "7px 12px", cursor: "pointer", fontFamily: "inherit" }}>
+            Annuler
+          </button>
+        </div>
+      )}
+
+      {/* Comment thread */}
+      {open && (
+        <div style={{ padding: "12px 22px 16px", background: "var(--d-surface-alt)",
+          borderTop: "1px solid var(--d-border-soft)" }}>
+          {comments.length === 0 ? (
+            <div style={{ fontSize: "0.78rem", color: "var(--d-muted)", marginBottom: 10 }}>
+              Aucun commentaire.
+            </div>
+          ) : (
+            <div style={{ marginBottom: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+              {comments.map((c, i) => (
+                <div key={i} style={{ display: "flex", gap: 10 }}>
+                  <div style={{ width: 26, height: 26, borderRadius: "50%",
+                    background: "#c0152a", color: "#fff", fontSize: "0.6rem",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontWeight: 700, flexShrink: 0 }}>
+                    {c.authorName?.[0]?.toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", gap: 8, alignItems: "baseline",
+                      flexWrap: "wrap", marginBottom: 2 }}>
+                      <span style={{ fontWeight: 700, fontSize: "0.78rem", color: "var(--d-ink)" }}>
+                        {c.authorName}
+                      </span>
+                      {c.authorRole && (
+                        <span style={{ fontSize: "0.68rem", color: "var(--d-muted)" }}>
+                          {c.authorRole}
+                        </span>
+                      )}
+                      {c.createdAt && (
+                        <span style={{ fontSize: "0.68rem", color: "var(--d-muted)" }}>
+                          {new Date(c.createdAt).toLocaleDateString("fr-DZ")}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: "0.82rem", color: "var(--d-ink)", lineHeight: 1.5 }}>
+                      {c.text}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <form onSubmit={handleComment} style={{ display: "flex", gap: 8 }}>
+            <input value={commentText} onChange={e => setCommentText(e.target.value)}
+              placeholder="Ajouter un commentaire..."
+              style={{ flex: 1, padding: "8px 12px", borderRadius: 8,
+                border: "1.5px solid var(--d-border-soft)", fontSize: "0.82rem",
+                fontFamily: "inherit", background: "#fff", color: "var(--d-ink)" }} />
+            <button type="submit" className="section-cta-btn"
+              style={{ padding: "8px 14px", fontSize: "0.82rem" }}
+              disabled={sending || !commentText.trim()}>
+              {sending ? "..." : "Envoyer"}
+            </button>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
   const [project,        setProject]        = useState(initial);
   const [members,        setMembers]        = useState([]);
@@ -550,38 +742,36 @@ const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
               <div className="empty-state-icon"><IconCheckSquare size={20} /></div>
               <div className="empty-state-title">Aucune tâche pour l'instant</div>
             </div>
-          ) : project.tasks.map((task) => (
-            <div key={task._id} style={{ display: "flex", alignItems: "center",
-              gap: 12, padding: "12px 22px", borderBottom: "1px solid var(--d-border-soft)" }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: "0.87rem", color: "var(--d-ink)" }}>
-                  {task.title}
-                </div>
-                <div style={{ display: "flex", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
-                  <PriorityBadge priority={task.priority} />
-                  {task.dueDate && (
-                    <span style={{ fontSize: "0.72rem", color: "var(--d-muted)" }}>
-                      {new Date(task.dueDate).toLocaleDateString("fr-DZ")}
-                    </span>
-                  )}
-                  {task.assignedTo?.[0]?.memberName && (
-                    <span style={{ fontSize: "0.72rem", color: "var(--d-muted)" }}>
-                      {task.assignedTo[0].memberName}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <select value={task.status}
-                onChange={e => handleTaskStatusChange(task._id, e.target.value)}
-                style={{ padding: "5px 10px", borderRadius: 8, border: "1.5px solid var(--d-border-soft)",
-                  fontSize: "0.78rem", color: TASK_STATUS[task.status]?.color || "#6b7280",
-                  background: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
-                {Object.entries(TASK_STATUS).map(([v, s]) => (
-                  <option key={v} value={v}>{s.label}</option>
-                ))}
-              </select>
-            </div>
-          ))}
+          ) : [...project.tasks]
+              .sort((a, b) => {
+                if (!a.dueDate && !b.dueDate) return 0;
+                if (!a.dueDate) return 1;
+                if (!b.dueDate) return -1;
+                return new Date(a.dueDate) - new Date(b.dueDate);
+              })
+              .map((task, i, arr) => (
+                <DirectorTaskRow
+                  key={task._id}
+                  task={task}
+                  projectId={project._id}
+                  isLast={i === arr.length - 1}
+                  members={members}
+                  agencyUser={agencyUser}
+                  onStatusChange={(taskId, status) => handleTaskStatusChange(taskId, status)}
+                  onReassign={async (taskId, memberId) => {
+                    const found = members.find(m => m._id === memberId);
+                    const assignedTo = memberId
+                      ? [{ memberType: "AgencyMember", memberId,
+                           memberName: found ? `${found.firstName} ${found.lastName}` : "" }]
+                      : [];
+                    try {
+                      const d = await projectService.updateTask(project._id, taskId, { assignedTo });
+                      setProject(d.project);
+                    } catch {}
+                  }}
+                />
+              ))
+          }
         </div>
       </div>
 

@@ -37,8 +37,14 @@ const projectService = {
   createTask: (projectId, data) =>
     api.post(`/projects/${projectId}/tasks`, data).then(r => r.data),
 
+  getProjectTasks: (projectId) =>
+    api.get(`/projects/${projectId}/tasks`).then(r => r.data),
+
   updateTask: (projectId, taskId, data) =>
     api.patch(`/projects/${projectId}/tasks/${taskId}`, data).then(r => r.data),
+
+  addTaskComment: (projectId, taskId, data) =>
+    api.post(`/projects/${projectId}/tasks/${taskId}/comments`, data).then(r => r.data),
 
   assignMember: (projectId, data) =>
     api.post(`/projects/${projectId}/assign`, data).then(r => r.data),

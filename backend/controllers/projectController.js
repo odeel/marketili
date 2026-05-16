@@ -120,10 +120,10 @@ exports.createTask = async (req, res) => {
 // ─────────────────────────────────────────────
 // UPDATE TASK  PATCH /api/projects/:projectId/tasks/:taskId
 // ─────────────────────────────────────────────
-exports.updateTaskStatus = async (req, res) => {
+exports.updateTask = async (req, res) => {
   try {
     const { projectId, taskId } = req.params;
-    const updates = req.body; // status, priority, dueDate, etc.
+    const updates = req.body; // status, priority, dueDate, assignedTo, etc.
 
     const project = await Project.findById(projectId);
     if (!project) return res.status(404).json({ message: "Project not found" });
@@ -136,6 +136,52 @@ exports.updateTaskStatus = async (req, res) => {
     await project.save();
 
     res.json({ success: true, project });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// GET PROJECT TASKS  GET /api/projects/:projectId/tasks
+// ─────────────────────────────────────────────
+exports.getProjectTasks = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.projectId).select("tasks");
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    const sorted = [...project.tasks].sort((a, b) => {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    });
+
+    res.json({ success: true, tasks: sorted });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// ADD TASK COMMENT  POST /api/projects/:projectId/tasks/:taskId/comments
+// ─────────────────────────────────────────────
+exports.addTaskComment = async (req, res) => {
+  try {
+    const { projectId, taskId } = req.params;
+    const { authorId, authorName, authorRole, text } = req.body;
+
+    if (!text?.trim()) return res.status(400).json({ message: "text requis" });
+
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    const task = project.tasks.id(taskId);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    task.comments.push({ authorId, authorName, authorRole, text: text.trim() });
+    await project.save();
+
+    res.json({ success: true, task });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -250,6 +296,14 @@ exports.getMemberTasks = async (req, res) => {
           });
         }
       });
+    });
+
+    // Sort by dueDate ascending — no dueDate goes last
+    tasks.sort((a, b) => {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate) - new Date(b.dueDate);
     });
 
     res.json({ success: true, tasks });
