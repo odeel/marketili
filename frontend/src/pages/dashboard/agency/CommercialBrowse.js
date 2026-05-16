@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PostCard } from "./shared";
 import { usePosts } from "../../../hooks/usePosts";
 import projectService from "../../../services/projectService";
+import { IconSearch } from "../../../components/ui/Icons";
 
 const CommercialBrowse = ({ user }) => {
   const { posts, loading, applyFilters } = usePosts({ status: "open", limit: 12 });
@@ -49,7 +50,7 @@ const CommercialBrowse = ({ user }) => {
       : posts.length === 0 ? (
         <div className="card">
           <div className="empty-state" style={{ padding: "64px 24px" }}>
-            <div className="empty-state-icon">🔍</div>
+            <div className="empty-state-icon"><IconSearch size={20} /></div>
             <div className="empty-state-title">Aucun post trouvé</div>
           </div>
         </div>

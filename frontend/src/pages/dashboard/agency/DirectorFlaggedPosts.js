@@ -1,6 +1,7 @@
 // src/pages/dashboard/agency/DirectorFlaggedPosts.jsx
 import React from "react";
 import { PostCard } from "./shared";
+import { IconFlag } from "../../../components/ui/Icons";
 
 const DirectorFlaggedPosts = ({ user, onPitch, flaggedPosts = [], loading }) => (
   <div>
@@ -15,7 +16,7 @@ const DirectorFlaggedPosts = ({ user, onPitch, flaggedPosts = [], loading }) => 
     ) : flaggedPosts.length === 0 ? (
       <div className="card">
         <div className="empty-state" style={{ padding: "64px 24px" }}>
-          <div className="empty-state-icon">🚩</div>
+          <div className="empty-state-icon"><IconFlag size={20} /></div>
           <div className="empty-state-title">Aucun post signalé</div>
           <div className="empty-state-desc">Vos commerciaux n'ont pas encore signalé de posts.</div>
         </div>
@@ -33,7 +34,7 @@ const DirectorFlaggedPosts = ({ user, onPitch, flaggedPosts = [], loading }) => 
             />
             <div style={{ padding: "0 20px 16px", fontSize: "0.73rem",
               color: "#9a6060", marginTop: -8 }}>
-              🚩 Signalé par {f.flaggedByName || "commercial"}
+              ↳ Signalé par {f.flaggedByName || "commercial"}
               {f.note && <> · <em>{f.note}</em></>}
             </div>
           </div>

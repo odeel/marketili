@@ -1,48 +1,42 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import postService from "../../services/postService";
-import { getDeadlineColor } from "../../utils/deadlineColor";
+import { getDeadlineColor, getDeadlineLabel } from "../../utils/deadlineColor";
+import { IconSearch, IconFilter, IconClipboard } from "../ui/Icons";
 
-/**
- * PostsDataGrid — reusable filterable/sortable table for posts.
- *
- * Props:
- *   posts       — array of post objects
- *   loading     — boolean
- *   onRefetch   — callback to reload data
- *   clientId    — needed for status-change actions
- *   showActions — show Close / Reactivate / Delete buttons (client view only)
- *   onRowClick  — callback when a row is clicked
- */
-const STATUS_LABELS = {
-  open:        { label: "Ouvert",       class: "open"        },
-  in_progress: { label: "En cours",     class: "in_progress" },
-  closed:      { label: "Fermé",        class: "closed"      },
-  reactivated: { label: "Réactivé",     class: "reactivated" },
+const STATUS_META = {
+  open:        { label: "Ouvert",   cls: "open"        },
+  in_progress: { label: "En cours", cls: "in_progress" },
+  closed:      { label: "Fermé",    cls: "closed"      },
+  reactivated: { label: "Réactivé", cls: "reactivated" },
 };
 
-const deadlineClass = (dateStr) => {
-  if (!dateStr) return "";
-  const days = Math.ceil((new Date(dateStr) - new Date()) / 86400000);
-  if (days < 0)  return "deadline-red";
-  if (days <= 7)  return "deadline-red";
+const COLLAB_FR = {
+  service:     "Service",
+  partnership: "Partenariat",
+  sponsorship: "Sponsoring",
+  exposure:    "Exposition",
+};
+
+const fmt = (d) =>
+  new Date(d).toLocaleDateString("fr-DZ", { day: "2-digit", month: "short", year: "numeric" });
+
+const deadlineClass = (d) => {
+  if (!d) return "";
+  const days = Math.ceil((new Date(d) - new Date()) / 86400000);
+  if (days < 0 || days <= 7) return "deadline-red";
   if (days <= 14) return "deadline-orange";
   if (days <= 30) return "deadline-yellow";
   return "deadline-green";
 };
 
-const formatDate = (d) =>
-  new Date(d).toLocaleDateString("fr-DZ", { day: "2-digit", month: "short", year: "numeric" });
-
 const PostsDataGrid = ({ posts = [], loading, onRefetch, clientId, showActions = true, onRowClick }) => {
-  const [search,     setSearch]     = useState("");
-  const [statusF,    setStatusF]    = useState("all");
-  const [categoryF,  setCategoryF]  = useState("all");
-  const [sortField,  setSortField]  = useState("createdAt");
-  const [sortDir,    setSortDir]    = useState("desc");
-  const [actionLoad, setActionLoad] = useState(null); // postId being actioned
+  const [search,    setSearch]    = useState("");
+  const [statusF,   setStatusF]   = useState("all");
+  const [sortField, setSortField] = useState("deadline");
+  const [sortDir,   setSortDir]   = useState("asc");
+  const [actionLoad,setActionLoad]= useState(null);
 
-  // ── Client-side filtering + sorting ──
   const filtered = useMemo(() => {
     let data = [...posts];
 
@@ -50,131 +44,114 @@ const PostsDataGrid = ({ posts = [], loading, onRefetch, clientId, showActions =
       const q = search.toLowerCase();
       data = data.filter(p =>
         p.title.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q)
+        p.description?.toLowerCase().includes(q)
       );
     }
 
-    if (statusF !== "all")   data = data.filter(p => p.status   === statusF);
-    if (categoryF !== "all") data = data.filter(p => p.categories?.includes(categoryF));
+    if (statusF !== "all") data = data.filter(p => p.status === statusF);
 
     data.sort((a, b) => {
       let av = a[sortField], bv = b[sortField];
-      if (sortField === "deadline" || sortField === "createdAt") {
-        av = new Date(av); bv = new Date(bv);
-      }
+      if (sortField === "deadline" || sortField === "createdAt") { av = new Date(av); bv = new Date(bv); }
       if (sortField === "pitchCount") { av = a.pitchCount || 0; bv = b.pitchCount || 0; }
       return sortDir === "asc" ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
     });
 
     return data;
-  }, [posts, search, statusF, categoryF, sortField, sortDir]);
-
-  const allCategories = useMemo(() => {
-    const cats = new Set();
-    posts.forEach(p => (p.categories || []).forEach(c => cats.add(c)));
-    return [...cats];
-  }, [posts]);
+  }, [posts, search, statusF, sortField, sortDir]);
 
   const handleSort = (field) => {
     if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
-    else { setSortField(field); setSortDir("desc"); }
+    else { setSortField(field); setSortDir("asc"); }
   };
 
-  const SortIcon = ({ field }) => (
-    <span style={{ fontSize: "0.65rem", marginLeft: 4, opacity: sortField === field ? 1 : 0.3 }}>
+  const SortIndicator = ({ field }) => (
+    <span style={{ fontSize: "0.62rem", marginLeft: 3, opacity: sortField === field ? 1 : 0.3 }}>
       {sortField === field ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
     </span>
   );
 
-  // ── Actions ──
   const doClose = async (e, postId) => {
     e.stopPropagation();
-    if (!window.confirm("Fermer ce post ? Les offres en attente seront rejetées automatiquement.")) return;
+    if (!window.confirm("Fermer ce post ? Les offres en attente seront rejetées.")) return;
     setActionLoad(postId);
-    try {
-      await postService.close(postId, clientId);
-      onRefetch();
-    } catch (err) {
-      alert(err.response?.data?.message || "Erreur");
-    } finally {
-      setActionLoad(null);
-    }
+    try { await postService.close(postId, clientId); onRefetch(); }
+    catch (err) { alert(err.response?.data?.message || "Erreur"); }
+    finally { setActionLoad(null); }
   };
 
   const doReactivate = async (e, postId) => {
     e.stopPropagation();
     setActionLoad(postId);
-    try {
-      await postService.reactivate(postId, clientId);
-      onRefetch();
-    } catch (err) {
-      alert(err.response?.data?.message || "Erreur");
-    } finally {
-      setActionLoad(null);
-    }
+    try { await postService.reactivate(postId, clientId); onRefetch(); }
+    catch (err) { alert(err.response?.data?.message || "Erreur"); }
+    finally { setActionLoad(null); }
   };
 
   const doDelete = async (e, postId) => {
     e.stopPropagation();
     if (!window.confirm("Supprimer définitivement ce post ?")) return;
     setActionLoad(postId);
-    try {
-      await postService.delete(postId, clientId);
-      onRefetch();
-    } catch (err) {
-      alert(err.response?.data?.message || "Erreur");
-    } finally {
-      setActionLoad(null);
-    }
+    try { await postService.delete(postId, clientId); onRefetch(); }
+    catch (err) { alert(err.response?.data?.message || "Erreur"); }
+    finally { setActionLoad(null); }
   };
 
   return (
     <div>
-      {/* Filters bar */}
+      {/* ── Filter row ── */}
       <div className="filters-bar">
-        <input
-          className="filter-input"
-          placeholder="🔍  Rechercher un post..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        {/* Search */}
+        <div style={{ position: "relative", flex: 1, minWidth: 180 }}>
+          <span style={{
+            position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)",
+            color: "var(--d-muted)", pointerEvents: "none", display: "flex",
+          }}>
+            <IconSearch size={14} />
+          </span>
+          <input
+            className="filter-input"
+            style={{ paddingLeft: 32 }}
+            placeholder="Rechercher un post..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
 
-        <select
-          className="filter-select"
-          value={statusF}
-          onChange={e => setStatusF(e.target.value)}
-        >
-          <option value="all">Tous les statuts</option>
-          <option value="open">Ouvert</option>
-          <option value="in_progress">En cours</option>
-          <option value="reactivated">Réactivé</option>
-          <option value="closed">Fermé</option>
-        </select>
+        {/* Status tabs */}
+        <div style={{ display: "flex", gap: 4 }}>
+          {[
+            { v: "all",        l: "Tous" },
+            { v: "open",       l: "Ouverts" },
+            { v: "in_progress",l: "En cours" },
+            { v: "closed",     l: "Fermés" },
+          ].map(o => (
+            <button key={o.v}
+              className={`filter-btn${statusF === o.v ? " active" : ""}`}
+              onClick={() => setStatusF(o.v)}
+              style={{ padding: "7px 12px", fontSize: "0.78rem" }}>
+              {o.l}
+            </button>
+          ))}
+        </div>
 
-        {allCategories.length > 0 && (
-          <select
-            className="filter-select"
-            value={categoryF}
-            onChange={e => setCategoryF(e.target.value)}
-          >
-            <option value="all">Toutes catégories</option>
-            {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-        )}
-
-        <span style={{ fontSize: "0.76rem", color: "#9a6060", marginLeft: "auto", whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: "0.73rem", color: "var(--d-muted)", marginLeft: "auto", whiteSpace: "nowrap" }}>
           {filtered.length} résultat{filtered.length !== 1 ? "s" : ""}
         </span>
       </div>
 
-      {/* Table */}
+      {/* ── Table ── */}
       {loading ? (
         <div className="spinner-wrap"><div className="spinner" /></div>
       ) : filtered.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">📭</div>
-          <div className="empty-state-title">Aucun post trouvé</div>
-          <div className="empty-state-desc">Essayez d'autres filtres ou créez un nouveau besoin.</div>
+        <div className="card">
+          <div className="empty-state">
+            <div className="empty-state-icon"><IconClipboard size={20} /></div>
+            <div className="empty-state-title">Aucun post trouvé</div>
+            <div className="empty-state-desc">
+              {search ? "Essayez d'autres termes de recherche." : "Créez votre premier brief."}
+            </div>
+          </div>
         </div>
       ) : (
         <div className="card" style={{ overflow: "auto" }}>
@@ -182,131 +159,141 @@ const PostsDataGrid = ({ posts = [], loading, onRefetch, clientId, showActions =
             <thead>
               <tr>
                 <th style={{ cursor: "pointer" }} onClick={() => handleSort("title")}>
-                  Titre <SortIcon field="title" />
+                  Titre <SortIndicator field="title" />
                 </th>
                 <th>Statut</th>
-                <th>Catégories</th>
+                <th>Type</th>
                 <th style={{ cursor: "pointer" }} onClick={() => handleSort("pitchCount")}>
-                  Offres <SortIcon field="pitchCount" />
+                  Offres <SortIndicator field="pitchCount" />
                 </th>
                 <th style={{ cursor: "pointer" }} onClick={() => handleSort("deadline")}>
-                  Échéance <SortIcon field="deadline" />
+                  Échéance <SortIndicator field="deadline" />
                 </th>
                 <th style={{ cursor: "pointer" }} onClick={() => handleSort("createdAt")}>
-                  Créé le <SortIcon field="createdAt" />
+                  Créé le <SortIndicator field="createdAt" />
                 </th>
                 {showActions && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
               <AnimatePresence>
-                {filtered.map((post, i) => (
-                  <motion.tr
-                    key={post._id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                    onClick={() => onRowClick && onRowClick(post)}
-                    style={{
-                      cursor: onRowClick ? "pointer" : "default",
-                      borderLeft: `3px solid ${getDeadlineColor(post.deadline)}`,
-                    }}
-                  >
-                    <td>
-                      <div className="td-title">{post.title}</div>
-                      {post.location?.region && (
-                        <div className="td-muted">📍 {post.location.region}</div>
-                      )}
-                    </td>
-
-                    <td>
-                      <span className={`status-badge ${STATUS_LABELS[post.status]?.class || post.status}`}>
-                        {STATUS_LABELS[post.status]?.label || post.status}
-                      </span>
-                    </td>
-
-                    <td>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                        {(post.categories || []).slice(0, 2).map(c => (
-                          <span key={c} style={{
-                            fontSize: "0.68rem", fontWeight: 600,
-                            background: "#fff0f0", color: "#c0152a",
-                            padding: "2px 8px", borderRadius: 20,
-                          }}>{c}</span>
-                        ))}
-                        {(post.categories || []).length > 2 && (
-                          <span style={{ fontSize: "0.68rem", color: "#9a6060" }}>
-                            +{post.categories.length - 2}
-                          </span>
+                {filtered.map((post, i) => {
+                  const dlColor = getDeadlineColor(post.deadline);
+                  const dlLabel = getDeadlineLabel(post.deadline);
+                  const meta    = STATUS_META[post.status] || {};
+                  return (
+                    <motion.tr
+                      key={post._id}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.025 }}
+                      onClick={() => onRowClick && onRowClick(post)}
+                      style={{
+                        cursor: onRowClick ? "pointer" : "default",
+                        borderLeft: `3px solid ${dlColor}`,
+                      }}
+                    >
+                      {/* Title + location */}
+                      <td>
+                        <div className="td-title">{post.title}</div>
+                        {post.location?.region && (
+                          <div className="td-sub">
+                            <span style={{ color: "var(--d-muted)", fontSize: "0.7rem" }}>◎</span>
+                            {post.location.region}
+                          </div>
                         )}
-                      </div>
-                    </td>
+                      </td>
 
-                    <td>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontWeight: 700 }}>{post.pitchCount || 0}</span>
-                        {post.acceptedPitchCount > 0 && (
-                          <span style={{
-                            fontSize: "0.68rem", background: "#d1fae5", color: "#065f46",
-                            padding: "1px 6px", borderRadius: 20, fontWeight: 600,
-                          }}>
-                            {post.acceptedPitchCount} accepté{post.acceptedPitchCount > 1 ? "s" : ""}
-                          </span>
-                        )}
-                      </div>
-                    </td>
+                      {/* Status badge */}
+                      <td>
+                        <span className={`status-badge ${meta.cls || post.status}`}>
+                          {meta.label || post.status}
+                        </span>
+                      </td>
 
-                    <td>
-                      <span className={deadlineClass(post.deadline)}>
-                        {formatDate(post.deadline)}
-                      </span>
-                    </td>
-
-                    <td className="td-muted">{formatDate(post.createdAt)}</td>
-
-                    {showActions && (
-                      <td onClick={e => e.stopPropagation()}>
-                        <div style={{ display: "flex", gap: 5 }}>
-                          {/* Close button — only for open/in_progress/reactivated */}
-                          {["open", "in_progress", "reactivated"].includes(post.status) && (
-                            <button
-                              onClick={e => doClose(e, post._id)}
-                              disabled={actionLoad === post._id}
-                              style={actionBtn("#fef3c7", "#92400e")}
-                              title="Fermer"
-                            >
-                              🔒
-                            </button>
+                      {/* Marketing type + collab type */}
+                      <td>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                          {post.marketingType && (
+                            <span style={{
+                              fontSize: "0.7rem", fontWeight: 600,
+                              color: "var(--d-ink-soft)",
+                            }}>{post.marketingType}</span>
                           )}
-
-                          {/* Reactivate — only for closed */}
-                          {post.status === "closed" && (
-                            <button
-                              onClick={e => doReactivate(e, post._id)}
-                              disabled={actionLoad === post._id}
-                              style={actionBtn("#dbeafe", "#1e40af")}
-                              title="Réactiver"
-                            >
-                              🔄
-                            </button>
+                          {post.collaborationType && (
+                            <span style={{
+                              fontSize: "0.68rem", color: "var(--d-muted)",
+                            }}>{COLLAB_FR[post.collaborationType] || post.collaborationType}</span>
                           )}
-
-                          {/* Delete — only if no pitches */}
-                          {(post.pitchCount || 0) === 0 && (
-                            <button
-                              onClick={e => doDelete(e, post._id)}
-                              disabled={actionLoad === post._id}
-                              style={actionBtn("#fee2e2", "#991b1b")}
-                              title="Supprimer"
-                            >
-                              🗑️
-                            </button>
+                          {!post.marketingType && !post.collaborationType && (
+                            <span className="td-muted">—</span>
                           )}
                         </div>
                       </td>
-                    )}
-                  </motion.tr>
-                ))}
+
+                      {/* Offer count */}
+                      <td>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>
+                            {post.pitchCount || 0}
+                          </span>
+                          {post.acceptedPitchCount > 0 && (
+                            <span style={{
+                              fontSize: "0.67rem", background: "#d1fae5",
+                              color: "#065f46", padding: "2px 7px",
+                              borderRadius: 20, fontWeight: 600,
+                            }}>
+                              {post.acceptedPitchCount} acc.
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Deadline with urgency */}
+                      <td>
+                        <div style={{ fontWeight: 600, fontSize: "0.8rem", color: dlColor }}>
+                          {post.deadline ? fmt(post.deadline) : "—"}
+                        </div>
+                        <div style={{ fontSize: "0.7rem", color: dlColor, opacity: 0.8 }}>
+                          {post.deadline ? dlLabel : ""}
+                        </div>
+                      </td>
+
+                      <td className="td-muted">{fmt(post.createdAt)}</td>
+
+                      {showActions && (
+                        <td onClick={e => e.stopPropagation()}>
+                          <div style={{ display: "flex", gap: 4 }}>
+                            {["open","in_progress","reactivated"].includes(post.status) && (
+                              <ActionBtn
+                                onClick={e => doClose(e, post._id)}
+                                disabled={actionLoad === post._id}
+                                bg="#fef3c7" color="#92400e" title="Fermer"
+                                label="Fermer"
+                              />
+                            )}
+                            {post.status === "closed" && (
+                              <ActionBtn
+                                onClick={e => doReactivate(e, post._id)}
+                                disabled={actionLoad === post._id}
+                                bg="#dbeafe" color="#1e40af" title="Réactiver"
+                                label="Réactiver"
+                              />
+                            )}
+                            {(post.pitchCount || 0) === 0 && (
+                              <ActionBtn
+                                onClick={e => doDelete(e, post._id)}
+                                disabled={actionLoad === post._id}
+                                bg="#fee2e2" color="#991b1b" title="Supprimer"
+                                label="Sup."
+                              />
+                            )}
+                          </div>
+                        </td>
+                      )}
+                    </motion.tr>
+                  );
+                })}
               </AnimatePresence>
             </tbody>
           </table>
@@ -316,11 +303,17 @@ const PostsDataGrid = ({ posts = [], loading, onRefetch, clientId, showActions =
   );
 };
 
-// Helper for icon action buttons
-const actionBtn = (bg, color) => ({
-  padding: "5px 8px", borderRadius: 6, border: "none",
-  background: bg, color, cursor: "pointer", fontSize: "0.85rem",
-  transition: "opacity 0.15s",
-});
+const ActionBtn = ({ onClick, disabled, bg, color, title, label }) => (
+  <button onClick={onClick} disabled={disabled} title={title} style={{
+    padding: "4px 10px", borderRadius: 6, border: "none",
+    background: bg, color, cursor: disabled ? "not-allowed" : "pointer",
+    fontSize: "0.72rem", fontWeight: 600,
+    opacity: disabled ? 0.5 : 1,
+    fontFamily: "inherit",
+    transition: "opacity 0.13s",
+  }}>
+    {label}
+  </button>
+);
 
 export default PostsDataGrid;

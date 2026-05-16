@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { ProgressBar } from "./shared";
 import projectService from "../../../services/projectService";
+import { IconTarget } from "../../../components/ui/Icons";
 
 const clientName = (c) =>
   c.accountType === "company" ? c.companyName : `${c.firstName} ${c.lastName}`;
@@ -99,7 +100,7 @@ const DirectorClients = ({ user }) => {
         clients.length === 0 ? (
           <div className="card">
             <div className="empty-state" style={{ padding: "64px 24px" }}>
-              <div className="empty-state-icon">🎯</div>
+              <div className="empty-state-icon"><IconTarget size={20} /></div>
               <div className="empty-state-title">Aucun client pour l'instant</div>
               <div className="empty-state-desc">Les clients apparaissent ici lorsqu'un projet démarre.</div>
             </div>

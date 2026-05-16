@@ -2,6 +2,7 @@
 import React from "react";
 import { StatCard, ProgressBar } from "./shared";
 import { useMyPitches } from "../../../hooks/usePitches";
+import { IconBriefcase, IconInbox, IconCheckSquare, IconFlag, IconZap } from "../../../components/ui/Icons";
 
 const DirectorOverview = ({ user, flaggedPosts = [], projects = [] }) => {
   const { pitches } = useMyPitches(user?._id, "Agency");
@@ -12,10 +13,10 @@ const DirectorOverview = ({ user, flaggedPosts = [], projects = [] }) => {
   return (
     <div>
       <div className="stats-row">
-        <StatCard icon="🚀" label="Projets actifs"    value={activeProjects}      sub="en cours"             color="#7c3aed" />
-        <StatCard icon="⏳" label="Offres en attente" value={pendingPitches}      sub="sans réponse"         color="#f59e0b" />
-        <StatCard icon="✅" label="Offres acceptées"  value={acceptedPitches}     sub="succès"               color="#10b981" />
-        <StatCard icon="🚩" label="Posts flaggés"     value={flaggedPosts.length} sub="par les commerciaux"  color="#ef4444" />
+        <StatCard icon={<IconBriefcase size={16} />} label="Projets actifs"    value={activeProjects}      sub="en cours"             color="#7c3aed" />
+        <StatCard icon={<IconInbox    size={16} />} label="Offres en attente" value={pendingPitches}      sub="sans réponse"         color="#f59e0b" />
+        <StatCard icon={<IconCheckSquare size={16} />} label="Offres acceptées"  value={acceptedPitches}  sub="succès"               color="#10b981" />
+        <StatCard icon={<IconFlag     size={16} />} label="Posts flaggés"     value={flaggedPosts.length} sub="par les commerciaux"  color="#ef4444" />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20 }}>
@@ -32,7 +33,7 @@ const DirectorOverview = ({ user, flaggedPosts = [], projects = [] }) => {
           <div className="card-body" style={{ padding: "12px 0 0" }}>
             {flaggedPosts.length === 0 ? (
               <div className="empty-state" style={{ padding: "32px 24px" }}>
-                <div className="empty-state-icon">🚩</div>
+                <div className="empty-state-icon"><IconFlag size={20} /></div>
                 <div className="empty-state-title">Aucun post signalé</div>
               </div>
             ) : flaggedPosts.slice(0, 4).map((f, i) => (
@@ -80,7 +81,7 @@ const DirectorOverview = ({ user, flaggedPosts = [], projects = [] }) => {
             ))}
             {projects.filter(p => p.projectStatus === "active").length === 0 && (
               <div className="empty-state" style={{ padding: "32px 24px" }}>
-                <div className="empty-state-icon">🚀</div>
+                <div className="empty-state-icon"><IconZap size={20} /></div>
                 <div className="empty-state-title">Aucun projet actif</div>
               </div>
             )}

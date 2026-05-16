@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { StatCard } from "./shared";
 import projectService from "../../../services/projectService";
+import { IconFlag, IconClipboard, IconSearch } from "../../../components/ui/Icons";
 
 const CommercialOverview = ({ user }) => {
   const [flaggedPosts, setFlaggedPosts] = useState([]);
@@ -28,9 +29,9 @@ const CommercialOverview = ({ user }) => {
   return (
     <div>
       <div className="stats-row" style={{ gridTemplateColumns: "repeat(2,1fr)" }}>
-        <StatCard icon="🚩" label="Signalés cette semaine" value={thisWeek}
+        <StatCard icon={<IconFlag      size={16} />} label="Signalés cette semaine" value={thisWeek}
           sub="7 derniers jours" color="#f59e0b" />
-        <StatCard icon="📋" label="Total signalés" value={flaggedPosts.length}
+        <StatCard icon={<IconClipboard size={16} />} label="Total signalés" value={flaggedPosts.length}
           sub="au total" color="#7c3aed" />
       </div>
       <div className="card">
@@ -46,7 +47,7 @@ const CommercialOverview = ({ user }) => {
           {loading ? <div className="spinner-wrap"><div className="spinner" /></div>
           : flaggedPosts.length === 0 ? (
             <div className="empty-state" style={{ padding: "32px 24px" }}>
-              <div className="empty-state-icon">🔍</div>
+              <div className="empty-state-icon"><IconSearch size={20} /></div>
               <div className="empty-state-title">Aucun post signalé</div>
               <div className="empty-state-desc">Parcourez les posts et signalez les opportunités.</div>
             </div>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { usePosts } from "../../hooks/usePosts";
 import { getDeadlineColor, getDeadlineLabel } from "../../utils/deadlineColor";
+import { IconSearch, IconCompass, IconFilter, IconMapPin } from "../../components/ui/Icons";
 
 const WILAYAT = [
   "Adrar","Chlef","Laghouat","Oum El Bouaghi","Batna","Béjaïa","Biskra",
@@ -15,28 +16,28 @@ const WILAYAT = [
 ];
 
 const MARKETING_TYPES = [
-  { value: "", label: "Tous les types" },
-  { value: "Events",         label: "Événementiel" },
-  { value: "360 Marketing",  label: "Marketing 360°" },
-  { value: "ATL",            label: "ATL" },
-  { value: "BTL",            label: "BTL" },
-  { value: "Production",     label: "Production" },
-  { value: "Brand Marketing",label: "Brand Marketing" },
+  { value: "", label: "Tout type" },
+  { value: "Events",          label: "Événementiel" },
+  { value: "360 Marketing",   label: "Marketing 360°" },
+  { value: "ATL",             label: "ATL" },
+  { value: "BTL",             label: "BTL" },
+  { value: "Production",      label: "Production" },
+  { value: "Brand Marketing", label: "Brand Marketing" },
 ];
 
 const COLLAB_TYPES = [
-  { value: "",             label: "Toutes collaborations" },
-  { value: "service",      label: "Service" },
-  { value: "partnership",  label: "Partenariat" },
-  { value: "sponsorship",  label: "Sponsoring" },
-  { value: "exposure",     label: "Exposition" },
+  { value: "",            label: "Toutes" },
+  { value: "service",     label: "Service" },
+  { value: "partnership", label: "Partenariat" },
+  { value: "sponsorship", label: "Sponsoring" },
+  { value: "exposure",    label: "Exposition" },
 ];
 
-const STATUS_OPTS = [
-  { value: "open",        label: "Ouvert" },
-  { value: "in_progress", label: "En cours" },
-  { value: "reactivated", label: "Réactivé" },
-  { value: "closed",      label: "Fermé" },
+const STATUS_TABS = [
+  { value: "open",        label: "Ouverts",   color: "#10b981" },
+  { value: "in_progress", label: "En cours",  color: "#f59e0b" },
+  { value: "reactivated", label: "Réactivés", color: "#3b82f6" },
+  { value: "closed",      label: "Fermés",    color: "#6b7280" },
 ];
 
 const STATUS_LABELS = {
@@ -47,25 +48,21 @@ const STATUS_LABELS = {
 };
 
 const COLLAB_FR = {
-  service:     "Service",
-  partnership: "Partenariat",
-  sponsorship: "Sponsoring",
-  exposure:    "Exposition",
+  service: "Service", partnership: "Partenariat",
+  sponsorship: "Sponsoring", exposure: "Exposition",
 };
 
 const COMP_FR = {
-  monetary: "Monétaire",
-  benefits: "Avantages",
-  mixed:    "Mixte",
+  monetary: "Monétaire", benefits: "Avantages", mixed: "Mixte",
 };
 
 const ClientBrowse = () => {
-  const [search,        setSearch]        = useState("");
-  const [marketingType, setMarketingType] = useState("");
-  const [collabType,    setCollabType]    = useState("");
-  const [region,        setRegion]        = useState("");
-  const [statusFilter,  setStatusFilter]  = useState("open");
-  const [selected,      setSelected]      = useState(null);
+  const [search,    setSearch]    = useState("");
+  const [mktType,   setMktType]   = useState("");
+  const [collab,    setCollab]    = useState("");
+  const [region,    setRegion]    = useState("");
+  const [status,    setStatus]    = useState("open");
+  const [selected,  setSelected]  = useState(null);
 
   const { posts, pagination, loading, error, applyFilters, nextPage, prevPage } = usePosts({
     status: "open",
@@ -74,150 +71,172 @@ const ClientBrowse = () => {
     limit:  12,
   });
 
-  const handleSearch = () => {
+  const doSearch = () => {
     applyFilters({
-      search:        search || undefined,
-      marketingType: marketingType || undefined,
-      collaborationType: collabType || undefined,
-      region:        region || undefined,
-      status:        statusFilter || "open",
+      search:            search || undefined,
+      marketingType:     mktType || undefined,
+      collaborationType: collab  || undefined,
+      region:            region  || undefined,
+      status:            status  || "open",
     });
   };
 
-  const handleReset = () => {
-    setSearch(""); setMarketingType(""); setCollabType(""); setRegion(""); setStatusFilter("open");
-    applyFilters({ search: undefined, marketingType: undefined, collaborationType: undefined,
-      region: undefined, status: "open" });
+  const doReset = () => {
+    setSearch(""); setMktType(""); setCollab(""); setRegion(""); setStatus("open");
+    applyFilters({ search: undefined, marketingType: undefined,
+      collaborationType: undefined, region: undefined, status: "open" });
   };
 
-  if (selected) {
-    return <PostDetail post={selected} onBack={() => setSelected(null)} />;
-  }
+  const handleStatusTab = (v) => {
+    setStatus(v);
+    applyFilters({
+      search:            search || undefined,
+      marketingType:     mktType || undefined,
+      collaborationType: collab  || undefined,
+      region:            region  || undefined,
+      status:            v,
+    });
+  };
+
+  if (selected) return <PostDetail post={selected} onBack={() => setSelected(null)} />;
 
   return (
     <div>
+      {/* Section header */}
       <div className="section-header">
         <div className="section-header-left">
           <h2>Explorer les posts</h2>
           <p>Découvrez les briefs publiés sur la plateforme</p>
         </div>
+        {pagination && (
+          <span style={{ fontSize: "0.78rem", color: "var(--d-muted)", fontWeight: 500 }}>
+            {pagination.total} post{pagination.total !== 1 ? "s" : ""}
+          </span>
+        )}
       </div>
 
       {/* ── Filter panel ── */}
-      <div className="card" style={{ padding: "18px 22px", marginBottom: 20 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
-          {/* Search */}
-          <div style={{ gridColumn: "1 / -1" }}>
-            <input className="dash-form-input"
-              placeholder="Rechercher un post (titre, description)..."
-              value={search} onChange={e => setSearch(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleSearch()}
-              style={{ width: "100%" }} />
-          </div>
-
-          {/* Status pills */}
-          <div style={{ gridColumn: "1 / -1", display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {STATUS_OPTS.map(o => {
-              const isActive = statusFilter === o.value;
-              const meta = STATUS_LABELS[o.value];
-              return (
-                <button key={o.value} type="button"
-                  onClick={() => setStatusFilter(o.value)}
-                  style={{
-                    padding: "5px 14px", borderRadius: 20, fontSize: "0.77rem",
-                    fontWeight: 700, border: "1.5px solid", cursor: "pointer",
-                    fontFamily: "inherit", transition: "all 0.15s",
-                    borderColor: isActive ? meta.color : "#f0dede",
-                    background:  isActive ? meta.color + "22" : "white",
-                    color:       isActive ? meta.color : "#9a6060",
-                  }}>
-                  {o.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Marketing type */}
-          <select className="dash-form-select" value={marketingType}
-            onChange={e => setMarketingType(e.target.value)}>
-            {MARKETING_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-
-          {/* Collaboration type */}
-          <select className="dash-form-select" value={collabType}
-            onChange={e => setCollabType(e.target.value)}>
-            {COLLAB_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-
-          {/* Wilaya */}
-          <select className="dash-form-select" value={region}
-            onChange={e => setRegion(e.target.value)}>
-            <option value="">Toute l'Algérie</option>
-            {WILAYAT.map(w => <option key={w} value={w}>{w}</option>)}
-          </select>
-
-          {/* Actions */}
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" className="section-cta-btn" style={{ flex: 1 }}
-              onClick={handleSearch}>
-              Rechercher
-            </button>
-            <button type="button" onClick={handleReset} style={{
-              padding: "0 14px", borderRadius: 9, border: "1.5px solid #f0dede",
-              background: "white", color: "#9a6060", fontSize: "0.82rem",
-              fontWeight: 600, cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
+      <div className="card" style={{ marginBottom: 20, overflow: "visible" }}>
+        {/* Status tabs — top bar */}
+        <div style={{
+          display: "flex", gap: 0, borderBottom: "1px solid var(--d-border-soft)",
+          overflow: "hidden",
+        }}>
+          {STATUS_TABS.map(t => (
+            <button key={t.value} onClick={() => handleStatusTab(t.value)} style={{
+              flex: 1, padding: "12px 8px",
+              border: "none", background: "none",
+              fontFamily: "inherit", cursor: "pointer",
+              fontSize: "0.8rem", fontWeight: status === t.value ? 700 : 500,
+              color:  status === t.value ? t.color : "var(--d-muted)",
+              borderBottom: status === t.value ? `2px solid ${t.color}` : "2px solid transparent",
+              transition: "all 0.15s",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
             }}>
-              Réinitialiser
+              <span style={{
+                width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+                background: status === t.value ? t.color : "transparent",
+                border: `1.5px solid ${t.color}`,
+              }} />
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Search + filters row */}
+        <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+          {/* Search */}
+          <div style={{ position: "relative" }}>
+            <span style={{
+              position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)",
+              color: "var(--d-muted)", pointerEvents: "none", display: "flex",
+            }}>
+              <IconSearch size={14} />
+            </span>
+            <input className="dash-form-input"
+              style={{ paddingLeft: 34, width: "100%" }}
+              placeholder="Rechercher par titre ou description..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && doSearch()}
+            />
+          </div>
+
+          {/* Filter dropdowns */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto auto", gap: 10 }}>
+            <select className="dash-form-select" value={mktType}
+              onChange={e => setMktType(e.target.value)}>
+              {MARKETING_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+
+            <select className="dash-form-select" value={collab}
+              onChange={e => setCollab(e.target.value)}>
+              {COLLAB_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+
+            <select className="dash-form-select" value={region}
+              onChange={e => setRegion(e.target.value)}>
+              <option value="">Toute l'Algérie</option>
+              {WILAYAT.map(w => <option key={w} value={w}>{w}</option>)}
+            </select>
+
+            <button type="button" className="section-cta-btn" onClick={doSearch}
+              style={{ whiteSpace: "nowrap" }}>
+              <IconFilter size={13} /> Filtrer
+            </button>
+
+            <button type="button" onClick={doReset} style={{
+              padding: "0 14px", borderRadius: 8, border: "1.5px solid var(--d-border)",
+              background: "var(--d-bg)", color: "var(--d-muted)", fontSize: "0.82rem",
+              fontWeight: 600, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
+            }}>
+              Réinit.
             </button>
           </div>
         </div>
-
-        {pagination && (
-          <div style={{ fontSize: "0.75rem", color: "#9a6060" }}>
-            {pagination.total} post{pagination.total !== 1 ? "s" : ""} trouvé{pagination.total !== 1 ? "s" : ""}
-            {pagination.totalPages > 1 && ` · Page ${pagination.page}/${pagination.totalPages}`}
-          </div>
-        )}
       </div>
 
       {/* ── Results ── */}
       {loading ? (
-        <div className="spinner-wrap" style={{ padding: 60 }}><div className="spinner" /></div>
+        <div className="spinner-wrap"><div className="spinner" /></div>
       ) : error ? (
         <div className="card">
-          <div className="empty-state" style={{ padding: "48px 24px" }}>
+          <div className="empty-state">
             <div className="empty-state-title">Erreur de chargement</div>
             <div className="empty-state-desc">{error}</div>
           </div>
         </div>
       ) : posts.length === 0 ? (
         <div className="card">
-          <div className="empty-state" style={{ padding: "64px 24px" }}>
-            <div className="empty-state-icon">-</div>
+          <div className="empty-state">
+            <div className="empty-state-icon"><IconCompass size={20} /></div>
             <div className="empty-state-title">Aucun post trouvé</div>
-            <div className="empty-state-desc">Essayez d'autres filtres ou revenez plus tard.</div>
+            <div className="empty-state-desc">Ajustez les filtres ou revenez plus tard.</div>
           </div>
         </div>
       ) : (
         <>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px,1fr))", gap: 16, marginBottom: 24 }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+            gap: 14, marginBottom: 22,
+          }}>
             {posts.map((post, i) => (
-              <BrowsePostCard key={post._id} post={post} index={i} onClick={() => setSelected(post)} />
+              <BrowseCard key={post._id} post={post} index={i}
+                onClick={() => setSelected(post)} />
             ))}
           </div>
 
-          {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12 }}>
-              <button onClick={prevPage} disabled={!pagination.hasPrev} style={paginBtn}>
-                ← Précédent
-              </button>
-              <span style={{ fontSize: "0.82rem", color: "#9a6060" }}>
-                Page {pagination.page} / {pagination.totalPages}
+            <div style={{ display: "flex", justifyContent: "center",
+              alignItems: "center", gap: 12 }}>
+              <button onClick={prevPage} disabled={!pagination.hasPrev}
+                className="pagination-btn">← Précédent</button>
+              <span style={{ fontSize: "0.8rem", color: "var(--d-muted)" }}>
+                {pagination.page} / {pagination.totalPages}
               </span>
-              <button onClick={nextPage} disabled={!pagination.hasNext} style={paginBtn}>
-                Suivant →
-              </button>
+              <button onClick={nextPage} disabled={!pagination.hasNext}
+                className="pagination-btn">Suivant →</button>
             </div>
           )}
         </>
@@ -226,191 +245,209 @@ const ClientBrowse = () => {
   );
 };
 
-// ── Post card for browse view ─────────────────────────────────────────────────
-const BrowsePostCard = ({ post, index, onClick }) => {
-  const dlColor = getDeadlineColor(post.deadline);
-  const dlLabel = getDeadlineLabel(post.deadline);
-  const statusMeta = STATUS_LABELS[post.status] || { label: post.status, color: "#6b7280" };
+/* ── Browse card ─────────────────────────────────────────────────── */
+const BrowseCard = ({ post, index, onClick }) => {
+  const dlColor  = getDeadlineColor(post.deadline);
+  const dlLabel  = getDeadlineLabel(post.deadline);
+  const sMeta    = STATUS_LABELS[post.status] || { label: post.status, color: "#6b7280" };
 
   return (
     <motion.div
       className="card"
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
+      transition={{ delay: index * 0.035 }}
       onClick={onClick}
-      style={{
-        cursor: "pointer",
-        borderLeft: `3px solid ${dlColor}`,
-        transition: "box-shadow 0.2s, transform 0.15s",
-      }}
-      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(192,21,42,0.1)"; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+      style={{ cursor: "pointer", borderLeft: `3px solid ${dlColor}` }}
+      onMouseEnter={e => Object.assign(e.currentTarget.style, {
+        transform: "translateY(-2px)",
+        boxShadow: "0 6px 24px rgba(0,0,0,0.09)",
+      })}
+      onMouseLeave={e => Object.assign(e.currentTarget.style, {
+        transform: "",
+        boxShadow: "",
+      })}
     >
-      <div style={{ padding: "18px 20px" }}>
-        {/* Row 1: status + deadline */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+      <div style={{ padding: "16px 18px" }}>
+        {/* Status + deadline */}
+        <div style={{ display: "flex", justifyContent: "space-between",
+          alignItems: "center", marginBottom: 10 }}>
           <span style={{
-            padding: "3px 10px", borderRadius: 20, fontSize: "0.7rem", fontWeight: 700,
-            background: statusMeta.color + "22", color: statusMeta.color,
-          }}>{statusMeta.label}</span>
-          <span style={{ fontSize: "0.72rem", fontWeight: 700, color: dlColor }}>
+            display: "inline-flex", alignItems: "center", gap: 5,
+            fontSize: "0.69rem", fontWeight: 600,
+            color: sMeta.color, background: sMeta.color + "18",
+            padding: "3px 9px", borderRadius: 20,
+          }}>
+            <span style={{ width: 5, height: 5, borderRadius: "50%",
+              background: sMeta.color, display: "inline-block" }} />
+            {sMeta.label}
+          </span>
+          <span style={{ fontSize: "0.71rem", fontWeight: 700, color: dlColor }}>
             {dlLabel}
           </span>
         </div>
 
         {/* Title */}
-        <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#1a0a0a", marginBottom: 6 }}>
+        <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--d-ink)",
+          marginBottom: 5, lineHeight: 1.3 }}>
           {post.title}
         </div>
 
-        {/* Description excerpt */}
-        <div style={{
-          fontSize: "0.8rem", color: "#7a4a4a", lineHeight: 1.5, marginBottom: 12,
-          overflow: "hidden", display: "-webkit-box",
-          WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
-        }}>
+        {/* Description */}
+        <div style={{ fontSize: "0.78rem", color: "var(--d-ink-muted)", lineHeight: 1.55,
+          marginBottom: 12, overflow: "hidden", display: "-webkit-box",
+          WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
           {post.description}
         </div>
 
-        {/* Tags: categories + marketingType */}
+        {/* Tags */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 12 }}>
           {post.marketingType && (
-            <span style={{
-              padding: "2px 9px", borderRadius: 20, fontSize: "0.68rem", fontWeight: 700,
-              background: "#1a0a0a11", color: "#4a2a2a",
-            }}>{post.marketingType}</span>
-          )}
-          {(post.categories || []).slice(0, 2).map(c => (
-            <span key={c} style={{
-              padding: "2px 9px", borderRadius: 20, fontSize: "0.68rem",
-              fontWeight: 600, background: "#fff0f0", color: "#c0152a",
-            }}>{c}</span>
-          ))}
-          {(post.categories || []).length > 2 && (
-            <span style={{ fontSize: "0.68rem", color: "#9a6060" }}>
-              +{post.categories.length - 2}
+            <span style={{ padding: "2px 8px", borderRadius: 20, fontSize: "0.67rem",
+              fontWeight: 600, background: "#f3f4f6", color: "#374151" }}>
+              {post.marketingType}
             </span>
           )}
+          {post.collaborationType && (
+            <span style={{ padding: "2px 8px", borderRadius: 20, fontSize: "0.67rem",
+              fontWeight: 600, background: "#ede9fe", color: "#5b21b6" }}>
+              {COLLAB_FR[post.collaborationType] || post.collaborationType}
+            </span>
+          )}
+          {(post.categories || []).slice(0, 2).map(c => (
+            <span key={c} style={{ padding: "2px 8px", borderRadius: 20, fontSize: "0.67rem",
+              fontWeight: 600, background: "#fff0f0", color: "#c0152a" }}>{c}</span>
+          ))}
         </div>
 
-        {/* Footer: budget + collab + region */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          paddingTop: 12, borderTop: "1px solid #faeaea", gap: 8, flexWrap: "wrap",
-        }}>
-          <div style={{ fontSize: "0.75rem", color: "#9a6060" }}>
+        {/* Footer */}
+        <div style={{ display: "flex", alignItems: "center",
+          justifyContent: "space-between",
+          paddingTop: 11, borderTop: "1px solid var(--d-border-soft)",
+          gap: 8 }}>
+          <div style={{ fontSize: "0.73rem", color: "var(--d-muted)" }}>
             {post.compensationType === "benefits"
               ? "Avantages uniquement"
               : post.budget?.min || post.budget?.max
-                ? `${post.budget.min?.toLocaleString() || "?"} – ${post.budget.max?.toLocaleString() || "?"} DZD`
+                ? `${(post.budget.min || 0).toLocaleString()}–${(post.budget.max || 0).toLocaleString()} DZD`
                 : "Budget ouvert"}
           </div>
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            {post.collaborationType && (
-              <span style={{
-                fontSize: "0.68rem", fontWeight: 600, color: "#6366f1",
-                background: "#6366f111", padding: "2px 8px", borderRadius: 20,
-              }}>{COLLAB_FR[post.collaborationType] || post.collaborationType}</span>
-            )}
-            {post.location?.region && (
-              <span style={{ fontSize: "0.73rem", color: "#9a6060" }}>
-                {post.location.region}
-              </span>
-            )}
-          </div>
+          {post.location?.region && (
+            <div style={{ display: "flex", alignItems: "center", gap: 3,
+              fontSize: "0.71rem", color: "var(--d-muted)" }}>
+              <IconMapPin size={11} />
+              {post.location.region}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
   );
 };
 
-// ── Post detail (read-only for client browse) ─────────────────────────────────
+/* ── Post detail view ────────────────────────────────────────────── */
 const PostDetail = ({ post, onBack }) => {
   const dlColor = getDeadlineColor(post.deadline);
   const dlLabel = getDeadlineLabel(post.deadline);
+  const sMeta   = STATUS_LABELS[post.status] || { label: post.status, color: "#6b7280" };
+
+  const facts = [
+    { label: "Statut",                 value: sMeta.label },
+    { label: "Type de marketing",      value: post.marketingType },
+    { label: "Type de collaboration",  value: COLLAB_FR[post.collaborationType] },
+    { label: "Compensation",           value: COMP_FR[post.compensationType] },
+    { label: "Région",                 value: post.location?.region },
+    { label: "Date limite",            value: post.deadline
+        ? new Date(post.deadline).toLocaleDateString("fr-DZ") : null },
+    { label: "Budget",                 value: post.budget?.min || post.budget?.max
+        ? `${(post.budget.min || 0).toLocaleString()}–${(post.budget.max || 0).toLocaleString()} DZD`
+        : post.compensationType === "benefits" ? "Non monétaire" : null },
+  ].filter(f => f.value);
 
   return (
     <div>
+      {/* Back */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <button onClick={onBack} style={{
-          background: "none", border: "1.5px solid #f0dede", borderRadius: 8,
-          padding: "6px 14px", cursor: "pointer", fontSize: "0.82rem",
-          color: "#9a6060", fontFamily: "inherit", fontWeight: 600,
+          background: "none", border: "1.5px solid var(--d-border)", borderRadius: 7,
+          padding: "6px 14px", cursor: "pointer", fontSize: "0.8rem",
+          color: "var(--d-muted)", fontFamily: "inherit", fontWeight: 600,
+          transition: "border-color 0.13s",
         }}>
           ← Retour
         </button>
         <div>
-          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#1a0a0a" }}>{post.title}</h2>
-          <span style={{ fontSize: "0.75rem", fontWeight: 700, color: dlColor }}>{dlLabel}</span>
+          <h2 style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--d-ink)" }}>
+            {post.title}
+          </h2>
+          <span style={{ fontSize: "0.72rem", fontWeight: 700, color: dlColor }}>{dlLabel}</span>
         </div>
       </div>
 
-      <div className="card" style={{ padding: "22px 24px", marginBottom: 16 }}>
-        <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#9a6060",
-          textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
+      {/* Description */}
+      <div className="card" style={{ padding: "20px 22px", marginBottom: 14 }}>
+        <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--d-muted)",
+          textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
           Description
         </div>
-        <p style={{ fontSize: "0.88rem", color: "#1a0a0a", lineHeight: 1.7 }}>{post.description}</p>
+        <p style={{ fontSize: "0.86rem", color: "var(--d-ink)", lineHeight: 1.7 }}>
+          {post.description}
+        </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px,1fr))", gap: 12, marginBottom: 16 }}>
-        {[
-          { label: "Type de marketing",     value: post.marketingType },
-          { label: "Type de collaboration", value: COLLAB_FR[post.collaborationType] || post.collaborationType },
-          { label: "Compensation",          value: COMP_FR[post.compensationType] || post.compensationType },
-          { label: "Région",                value: post.location?.region },
-          { label: "Date limite",           value: post.deadline
-            ? new Date(post.deadline).toLocaleDateString("fr-DZ") : null },
-          { label: "Budget",                value: post.budget?.min || post.budget?.max
-            ? `${post.budget.min?.toLocaleString() || "?"} – ${post.budget.max?.toLocaleString() || "?"} DZD`
-            : post.compensationType === "benefits" ? "Non monétaire" : "Non défini" },
-        ].filter(i => i.value).map(({ label, value }) => (
-          <div key={label} style={{ background: "#fdf8f8", borderRadius: 8, padding: "10px 12px" }}>
-            <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#9a6060",
-              textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>
+      {/* Facts grid */}
+      <div style={{ display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(190px,1fr))",
+        gap: 10, marginBottom: 14 }}>
+        {facts.map(({ label, value }) => (
+          <div key={label} style={{
+            background: "var(--d-bg)", borderRadius: 9, padding: "11px 14px",
+            border: "1px solid var(--d-border-soft)",
+          }}>
+            <div style={{ fontSize: "0.66rem", fontWeight: 700, color: "var(--d-muted)",
+              textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
               {label}
             </div>
-            <div style={{ fontSize: "0.85rem", color: "#1a0a0a", fontWeight: 600 }}>{value}</div>
+            <div style={{ fontSize: "0.84rem", color: "var(--d-ink)", fontWeight: 600 }}>
+              {value}
+            </div>
           </div>
         ))}
       </div>
 
+      {/* Benefits */}
       {post.benefits && (
-        <div className="card" style={{ padding: "18px 22px", marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#9a6060",
-            textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+        <div className="card" style={{ padding: "18px 22px", marginBottom: 14 }}>
+          <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--d-muted)",
+            textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
             Avantages proposés
           </div>
-          <p style={{ fontSize: "0.85rem", color: "#1a0a0a", lineHeight: 1.6 }}>{post.benefits}</p>
+          <p style={{ fontSize: "0.85rem", color: "var(--d-ink)", lineHeight: 1.65 }}>
+            {post.benefits}
+          </p>
         </div>
       )}
 
+      {/* Skills */}
       {post.requiredSkills?.length > 0 && (
-        <div className="card" style={{ padding: "18px 22px", marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#9a6060",
-            textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
+        <div className="card" style={{ padding: "18px 22px" }}>
+          <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--d-muted)",
+            textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
             Compétences requises
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {post.requiredSkills.map(skill => (
-              <span key={skill} style={{
-                padding: "4px 12px", borderRadius: 20, fontSize: "0.78rem",
+            {post.requiredSkills.map(s => (
+              <span key={s} style={{
+                padding: "4px 12px", borderRadius: 20, fontSize: "0.77rem",
                 fontWeight: 600, background: "#fff0f0", color: "#c0152a",
                 border: "1px solid #f0dede",
-              }}>{skill}</span>
+              }}>{s}</span>
             ))}
           </div>
         </div>
       )}
     </div>
   );
-};
-
-const paginBtn = {
-  padding: "8px 18px", borderRadius: 9, border: "1.5px solid #f0dede",
-  background: "white", color: "#4a2a2a", fontSize: "0.82rem", fontWeight: 600,
-  cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
 };
 
 export default ClientBrowse;

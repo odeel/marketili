@@ -29,6 +29,11 @@ const createPost = async (req, res) => {
       location,
       categories,
       targetProviders,
+      requiredSkills,
+      marketingType,
+      collaborationType,
+      compensationType,
+      benefits,
     } = body;
 
     const clientId = body.clientId;
@@ -58,6 +63,11 @@ const createPost = async (req, res) => {
       location,
       categories: categories || [],
       targetProviders: targetProviders || ["all"],
+      requiredSkills: requiredSkills || [],
+      marketingType,
+      collaborationType,
+      compensationType,
+      benefits,
       file,
     });
 
@@ -87,9 +97,11 @@ const getPosts = async (req, res) => {
       country,
       category,
       targetProvider,
+      marketingType,
+      collaborationType,
       search,
-      sort = "createdAt",
-      order = "desc",
+      sort = "deadline",
+      order = "asc",
       page = 1,
       limit = 12,
     } = req.query;
@@ -106,6 +118,9 @@ const getPosts = async (req, res) => {
     if (targetProvider) {
       filter.targetProviders = { $in: [targetProvider, "all"] };
     }
+
+    if (marketingType)    filter.marketingType    = marketingType;
+    if (collaborationType) filter.collaborationType = collaborationType;
 
     if (search) {
       filter.$or = [
@@ -210,7 +225,11 @@ const getPost = async (req, res) => {
 
 const updatePost = async (req, res) => {
   try {
-    const { clientId, title, description, budget, deadline, location, categories, targetProviders } = req.body;
+    const {
+      clientId, title, description, budget, deadline, location,
+      categories, targetProviders,
+      requiredSkills, marketingType, collaborationType, compensationType, benefits,
+    } = req.body;
 
     const post = await Post.findById(req.params.id);
     if (!post) return fail(res, "Post introuvable", 404);
@@ -223,13 +242,24 @@ const updatePost = async (req, res) => {
       return fail(res, "Ce post ne peut plus être modifié dans son état actuel");
     }
 
-    if (title) post.title = title;
-    if (description) post.description = description;
-    if (budget) post.budget = budget;
-    if (deadline) post.deadline = deadline;
-    if (location) post.location = location;
-    if (categories) post.categories = categories;
-    if (targetProviders) post.targetProviders = targetProviders;
+    if (budget && budget.min !== undefined && budget.max !== undefined) {
+      if (Number(budget.min) > Number(budget.max)) {
+        return fail(res, "Le budget minimum ne peut pas dépasser le budget maximum");
+      }
+    }
+
+    if (title)             post.title             = title;
+    if (description)       post.description       = description;
+    if (budget)            post.budget            = budget;
+    if (deadline)          post.deadline          = deadline;
+    if (location)          post.location          = location;
+    if (categories)        post.categories        = categories;
+    if (targetProviders)   post.targetProviders   = targetProviders;
+    if (requiredSkills)    post.requiredSkills    = requiredSkills;
+    if (marketingType)     post.marketingType     = marketingType;
+    if (collaborationType) post.collaborationType = collaborationType;
+    if (compensationType)  post.compensationType  = compensationType;
+    if (benefits !== undefined) post.benefits     = benefits;
 
     await post.save();
     return ok(res, { post });

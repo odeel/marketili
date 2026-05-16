@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { StatCard, TaskRow } from "./shared";
 import projectService from "../../../services/projectService";
+import { IconClipboard, IconCheckSquare, IconCalendar, IconArrowUp } from "../../../components/ui/Icons";
 
 const WorkerOverview = ({ user }) => {
   const [tasks,   setTasks]   = useState([]);
@@ -26,10 +27,10 @@ const WorkerOverview = ({ user }) => {
   return (
     <div>
       <div className="stats-row">
-        <StatCard icon="📋" label="Tâches assignées"      value={tasks.length} sub="au total"    color="#7c3aed" />
-        <StatCard icon="✅" label="Terminées"             value={done}         sub="complétées"  color="#10b981" />
-        <StatCard icon="📅" label="Échéance aujourd'hui" value={dueToday}     sub="à livrer"    color="#f59e0b" />
-        <StatCard icon="⚠️" label="En retard"            value={overdue}      sub="dépassées"   color="#ef4444" />
+        <StatCard icon={<IconClipboard   size={16} />} label="Tâches assignées"      value={tasks.length} sub="au total"    color="#7c3aed" />
+        <StatCard icon={<IconCheckSquare size={16} />} label="Terminées"             value={done}         sub="complétées"  color="#10b981" />
+        <StatCard icon={<IconCalendar    size={16} />} label="Échéance aujourd'hui" value={dueToday}     sub="à livrer"    color="#f59e0b" />
+        <StatCard icon={<IconArrowUp     size={16} />} label="En retard"            value={overdue}      sub="dépassées"   color="#ef4444" />
       </div>
       <div className="card">
         <div className="card-header">
@@ -44,7 +45,7 @@ const WorkerOverview = ({ user }) => {
           {loading ? <div className="spinner-wrap"><div className="spinner" /></div>
           : tasks.length === 0 ? (
             <div className="empty-state" style={{ padding: "32px 24px" }}>
-              <div className="empty-state-icon">✅</div>
+              <div className="empty-state-icon"><IconCheckSquare size={20} /></div>
               <div className="empty-state-title">Aucune tâche assignée</div>
             </div>
           ) : tasks.slice(0, 5).map((t, i) => <TaskRow key={t._id || i} task={t} />)}

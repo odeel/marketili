@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ProgressBar, PriorityBadge } from "./shared";
 import projectService from "../../../services/projectService";
 import contractService from "../../../services/contractService";
+import { IconCheckSquare, IconZap, IconCalendar } from "../../../components/ui/Icons";
 
 const STATUS_COLOR = {
   pending: "#f59e0b", active: "#7c3aed",
@@ -256,7 +257,7 @@ const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
         <div className="card-body" style={{ padding: "8px 0 0" }}>
           {!project.tasks?.length ? (
             <div className="empty-state" style={{ padding: "32px 24px" }}>
-              <div className="empty-state-icon">✅</div>
+              <div className="empty-state-icon"><IconCheckSquare size={20} /></div>
               <div className="empty-state-title">Aucune tâche pour l'instant</div>
             </div>
           ) : project.tasks.map((task) => (
@@ -270,12 +271,12 @@ const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
                   <PriorityBadge priority={task.priority} />
                   {task.dueDate && (
                     <span style={{ fontSize: "0.72rem", color: "#9a6060" }}>
-                      📅 {new Date(task.dueDate).toLocaleDateString("fr-DZ")}
+                      {new Date(task.dueDate).toLocaleDateString("fr-DZ")}
                     </span>
                   )}
                   {task.assignedTo?.[0]?.memberName && (
                     <span style={{ fontSize: "0.72rem", color: "#9a6060" }}>
-                      👤 {task.assignedTo[0].memberName}
+                      {task.assignedTo[0].memberName}
                     </span>
                   )}
                 </div>
@@ -609,7 +610,7 @@ const DirectorProjects = ({ user }) => {
           : filtered.length === 0 ? (
             <div className="card">
               <div className="empty-state" style={{ padding: "64px 24px" }}>
-                <div className="empty-state-icon">🚀</div>
+                <div className="empty-state-icon"><IconZap size={20} /></div>
                 <div className="empty-state-title">Aucun projet</div>
               </div>
             </div>

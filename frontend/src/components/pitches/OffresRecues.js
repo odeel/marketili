@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { usePitchesForPost } from "../../hooks/usePitches";
 import { useMyPosts } from "../../hooks/usePosts";
 import pitchService from "../../services/pitchService";
+import { IconInbox, IconClipboard } from "../ui/Icons";
 import "../../styles/OffresRecues.css";
 
 const OffresRecues = ({ user }) => {
@@ -39,7 +40,7 @@ const OffresRecues = ({ user }) => {
       ) : postsWithPitches.length === 0 ? (
         <div className="card">
           <div className="empty-state offres-recues-empty">
-            <div className="empty-state-icon">💡</div>
+            <div className="empty-state-icon"><IconInbox size={20} /></div>
             <div className="empty-state-title">Aucune offre reçue</div>
             <div className="empty-state-desc">
               Dès qu'une agence, équipe ou freelancer répond à l'un de vos posts, l'offre apparaîtra ici.
@@ -195,7 +196,7 @@ const PitchDetail = ({ post, clientId, onBack }) => {
       ) : pitches.length === 0 ? (
         <div className="card">
           <div className="empty-state offres-recues-empty-pitches">
-            <div className="empty-state-icon">📭</div>
+            <div className="empty-state-icon"><IconClipboard size={20} /></div>
             <div className="empty-state-title">Aucune offre pour ce post</div>
           </div>
         </div>

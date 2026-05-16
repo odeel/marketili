@@ -11,6 +11,11 @@ import { useMyPosts }    from "../../hooks/usePosts";
 import useAuth           from "../../hooks/useAuth";
 import projectService    from "../../services/projectService";
 import contractService   from "../../services/contractService";
+import {
+  IconHome, IconClipboard, IconCompass, IconInbox,
+  IconBriefcase, IconFileText, IconZap, IconCheckSquare,
+  IconTrendingUp, IconPlus,
+} from "../../components/ui/Icons";
 import "../../styles/Dashboard.css";
 
 const ClientDashboard = () => {
@@ -19,12 +24,12 @@ const ClientDashboard = () => {
   const [postCreated,     setPostCreated]     = useState(0);
 
   const NAV = [
-    { label: "Vue d'ensemble",    icon: "🏠", path: "/dashboard/client"           },
-    { label: "Mes posts",         icon: "📋", path: "/dashboard/client/posts"     },
-    { label: "Explorer",          icon: "🔍", path: "/dashboard/client/browse"    },
-    { label: "Offres reçues",     icon: "💡", path: "/dashboard/client/pitches"   },
-    { label: "Projets",           icon: "🚀", path: "/dashboard/client/projects"  },
-    { label: "Contrats",          icon: "📄", path: "/dashboard/client/contracts" },
+    { label: "Vue d'ensemble", icon: <IconHome       size={16} />, path: "/dashboard/client"           },
+    { label: "Mes posts",      icon: <IconClipboard  size={16} />, path: "/dashboard/client/posts"     },
+    { label: "Explorer",       icon: <IconCompass    size={16} />, path: "/dashboard/client/browse"    },
+    { label: "Offres reçues",  icon: <IconInbox      size={16} />, path: "/dashboard/client/pitches"   },
+    { label: "Projets",        icon: <IconBriefcase  size={16} />, path: "/dashboard/client/projects"  },
+    { label: "Contrats",       icon: <IconFileText   size={16} />, path: "/dashboard/client/contracts" },
   ];
 
   return (
@@ -78,10 +83,10 @@ const ClientOverview = ({ user, onCreatePost }) => {
   return (
     <div>
       <div className="stats-row">
-        <StatCard icon="📋" label="Total posts"   value={stats.total}        sub="publiés"       color="#c0152a" />
-        <StatCard icon="🟢" label="Actifs"        value={stats.open}         sub="en attente"    color="#10b981" />
-        <StatCard icon="⚡" label="En cours"      value={stats.inProgress}   sub="collaboration" color="#f59e0b" />
-        <StatCard icon="💡" label="Offres reçues" value={stats.totalPitches} sub="au total"      color="#6366f1" />
+        <StatCard icon={<IconClipboard   size={16} />} label="Total posts"   value={stats.total}        sub="publiés"       color="#c0152a" />
+        <StatCard icon={<IconCheckSquare size={16} />} label="Actifs"        value={stats.open}         sub="en attente"    color="#10b981" />
+        <StatCard icon={<IconZap         size={16} />} label="En cours"      value={stats.inProgress}   sub="collaboration" color="#f59e0b" />
+        <StatCard icon={<IconTrendingUp  size={16} />} label="Offres reçues" value={stats.totalPitches} sub="au total"      color="#6366f1" />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20, marginBottom: 24 }}>
@@ -99,7 +104,7 @@ const ClientOverview = ({ user, onCreatePost }) => {
               <div className="spinner-wrap"><div className="spinner" /></div>
             ) : recent.length === 0 ? (
               <div className="empty-state" style={{ padding: "32px 24px" }}>
-                <div className="empty-state-icon">📭</div>
+                <div className="empty-state-icon"><IconClipboard size={20} /></div>
                 <div className="empty-state-title">Aucun post publié</div>
                 <div className="empty-state-desc">Créez votre premier post pour recevoir des offres.</div>
                 <button className="empty-state-btn" onClick={onCreatePost}>+ Créer un post</button>
@@ -111,7 +116,9 @@ const ClientOverview = ({ user, onCreatePost }) => {
         </div>
 
         <div className="card" style={{ display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", textAlign:"center", padding:32 }}>
-          <div style={{ fontSize:"2.5rem", marginBottom:14 }}>🚀</div>
+          <div style={{ width:48, height:48, borderRadius:12, background:"#fff0f0", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:14, color:"#c0152a" }}>
+            <IconPlus size={22} />
+          </div>
           <div style={{ fontWeight:700, color:"#1a0a0a", marginBottom:8 }}>Nouveau post</div>
           <div style={{ fontSize:"0.82rem", color:"#9a6060", lineHeight:1.5, marginBottom:20 }}>
             Publiez un brief et recevez des offres de nos prestataires.
@@ -240,7 +247,7 @@ const ClientProjects = ({ user }) => {
       ) : filtered.length === 0 ? (
         <div className="card">
           <div className="empty-state" style={{ padding: "64px 24px" }}>
-            <div className="empty-state-icon">🚀</div>
+            <div className="empty-state-icon"><IconBriefcase size={20} /></div>
             <div className="empty-state-title">Aucun projet</div>
             <div className="empty-state-desc">
               Acceptez une offre pour démarrer un projet avec un prestataire.
@@ -391,7 +398,7 @@ const ClientProjectDetail = ({ project: initial, onBack, onRefresh }) => {
 
         {!project.tasks?.length ? (
           <div className="empty-state" style={{ padding: "32px 24px" }}>
-            <div className="empty-state-icon">✅</div>
+            <div className="empty-state-icon"><IconCheckSquare size={20} /></div>
             <div className="empty-state-title">Aucune tâche définie</div>
           </div>
         ) : project.tasks.map((task, i) => (

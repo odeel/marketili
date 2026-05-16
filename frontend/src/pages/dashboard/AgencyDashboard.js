@@ -22,6 +22,10 @@ import WorkerTasks          from "./agency/WorkerTasks";
 import WorkerCalendar       from "./agency/WorkerCalendar";
 import { PostCard }         from "./agency/shared";
 import { usePosts }         from "../../hooks/usePosts";
+import {
+  IconHome, IconFlag, IconTarget, IconBriefcase,
+  IconUsers, IconCompass, IconCheckSquare, IconCalendar, IconSearch,
+} from "../../components/ui/Icons";
 
 // ── Role helpers ──────────────────────────────────────────────────────────────
 const WORKER_TITLES = ["strategist", "designer", "editor", "smm", "community_manager"];
@@ -38,21 +42,21 @@ const getAgencyRole = (user) => {
 
 // ── Nav configs ───────────────────────────────────────────────────────────────
 const NAV_DIRECTOR = [
-  { label: "Vue d'ensemble",  icon: "🏠", path: "/dashboard/agency"          },
-  { label: "Posts flaggés",   icon: "🚩", path: "/dashboard/agency/flagged"  },
-  { label: "Clients",         icon: "🎯", path: "/dashboard/agency/clients"  },
-  { label: "Projets",         icon: "🚀", path: "/dashboard/agency/projects" },
-  { label: "Membres",         icon: "👥", path: "/dashboard/agency/members"  },
-  { label: "Parcourir posts", icon: "🔍", path: "/dashboard/agency/browse"   },
+  { label: "Vue d'ensemble",  icon: <IconHome        size={16} />, path: "/dashboard/agency"          },
+  { label: "Posts flaggés",   icon: <IconFlag        size={16} />, path: "/dashboard/agency/flagged"  },
+  { label: "Clients",         icon: <IconTarget      size={16} />, path: "/dashboard/agency/clients"  },
+  { label: "Projets",         icon: <IconBriefcase   size={16} />, path: "/dashboard/agency/projects" },
+  { label: "Membres",         icon: <IconUsers       size={16} />, path: "/dashboard/agency/members"  },
+  { label: "Parcourir posts", icon: <IconCompass     size={16} />, path: "/dashboard/agency/browse"   },
 ];
 const NAV_COMMERCIAL = [
-  { label: "Vue d'ensemble",  icon: "🏠", path: "/dashboard/agency"         },
-  { label: "Parcourir posts", icon: "🔍", path: "/dashboard/agency/browse"  },
+  { label: "Vue d'ensemble",  icon: <IconHome        size={16} />, path: "/dashboard/agency"         },
+  { label: "Parcourir posts", icon: <IconCompass     size={16} />, path: "/dashboard/agency/browse"  },
 ];
 const NAV_WORKER = [
-  { label: "Vue d'ensemble", icon: "🏠", path: "/dashboard/agency"          },
-  { label: "Mes tâches",     icon: "✅", path: "/dashboard/agency/tasks"    },
-  { label: "Calendrier",     icon: "📅", path: "/dashboard/agency/calendar" },
+  { label: "Vue d'ensemble", icon: <IconHome         size={16} />, path: "/dashboard/agency"          },
+  { label: "Mes tâches",     icon: <IconCheckSquare  size={16} />, path: "/dashboard/agency/tasks"    },
+  { label: "Calendrier",     icon: <IconCalendar     size={16} />, path: "/dashboard/agency/calendar" },
 ];
 
 // ── Browse posts (director version with pitch action) ─────────────────────────
@@ -81,7 +85,7 @@ const BrowsePosts = ({ onPitch }) => {
         ? <div className="spinner-wrap" style={{ padding: 60 }}><div className="spinner" /></div>
         : posts.length === 0
           ? <div className="card"><div className="empty-state" style={{ padding: "64px 24px" }}>
-              <div className="empty-state-icon">🔍</div>
+              <div className="empty-state-icon"><IconSearch size={20} /></div>
               <div className="empty-state-title">Aucun post trouvé</div>
             </div></div>
           : <div style={{ display: "grid",

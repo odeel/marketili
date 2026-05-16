@@ -152,7 +152,7 @@ const PitchForm = ({ post, senderType, onSubmit, onClose, loading }) => {
         transition={{ duration: 0.25 }}>
         <div className="modal-header">
           <div>
-            <h2 className="modal-title">💡 Soumettre une offre</h2>
+            <h2 className="modal-title">Soumettre une offre</h2>
             <p className="pitch-form-post-title">{post?.title}</p>
           </div>
           <div className="pitch-form-header-right">
@@ -386,7 +386,7 @@ const PitchForm = ({ post, senderType, onSubmit, onClose, loading }) => {
                     </button>
                   )}
                   <button type="button" className="pitch-form-submit-btn" disabled={isBusy} onClick={handleSubmit}>
-                    {isBusy ? "Envoi en cours..." : "Envoyer l'offre 🚀"}
+                    {isBusy ? "Envoi en cours..." : "Envoyer l'offre"}
                   </button>
                 </div>
               </motion.div>

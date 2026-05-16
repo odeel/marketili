@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { PriorityBadge } from "./shared";
 import projectService from "../../../services/projectService";
+import { IconCheckSquare } from "../../../components/ui/Icons";
 
 const WorkerTasks = ({ user }) => {
   const [tasks,   setTasks]   = useState([]);
@@ -45,7 +46,7 @@ const WorkerTasks = ({ user }) => {
       : grouped.length === 0 ? (
         <div className="card">
           <div className="empty-state" style={{ padding: "64px 24px" }}>
-            <div className="empty-state-icon">✅</div>
+            <div className="empty-state-icon"><IconCheckSquare size={20} /></div>
             <div className="empty-state-title">Aucune tâche assignée</div>
           </div>
         </div>
@@ -68,7 +69,7 @@ const WorkerTasks = ({ user }) => {
                     <PriorityBadge priority={task.priority} />
                     {task.dueDate && (
                       <span style={{ fontSize: "0.72rem", color: "#9a6060" }}>
-                        📅 {new Date(task.dueDate).toLocaleDateString("fr-DZ")}
+                        {new Date(task.dueDate).toLocaleDateString("fr-DZ")}
                       </span>
                     )}
                   </div>

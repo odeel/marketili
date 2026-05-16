@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import useAuth         from "../../hooks/useAuth";
 import adminService    from "../../services/adminService";
+import { IconUsers, IconUser } from "../../components/ui/Icons";
 import "../../styles/Dashboard.css";
 
 const roles = ["", "client", "agency", "agency_member", "team", "team_member", "freelancer"];
@@ -46,7 +47,7 @@ const AdminDashboard = () => {
       role="admin"
       user={user}
       navItems={[
-        { label: "Utilisateurs", icon: "👥", path: "/admin" },
+        { label: "Utilisateurs", icon: <IconUsers size={16} />, path: "/admin" },
       ]}
       topbarTitle="Admin Dashboard"
     >
@@ -128,7 +129,7 @@ const UsersPanel = () => {
           <div className="spinner-wrap"><div className="spinner" /></div>
         ) : users.length === 0 ? (
           <div className="empty-state" style={{ padding: "64px 24px" }}>
-            <div className="empty-state-icon">👤</div>
+            <div className="empty-state-icon"><IconUser size={20} /></div>
             <div className="empty-state-title">Aucun utilisateur trouvé</div>
             <div className="empty-state-desc">Essayez d'ajuster les filtres</div>
           </div>

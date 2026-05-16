@@ -3,27 +3,42 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuth from "../../hooks/useAuth";
 import notificationService from "../../services/notificationService";
+import {
+  IconBell, IconLogOut, IconChevronLeft, IconChevronRight,
+  IconTarget, IconBuilding, IconUsers, IconZap, IconUser,
+} from "../ui/Icons";
 import "../../styles/Dashboard.css";
+
+const ROLE_META = {
+  client:        { Icon: IconTarget,   label: "Client",          color: "#c0152a" },
+  agency:        { Icon: IconBuilding, label: "Agence",          color: "#7c3aed" },
+  team:          { Icon: IconUsers,    label: "Équipe",          color: "#0891b2" },
+  freelancer:    { Icon: IconZap,      label: "Freelancer",      color: "#d97706" },
+  agency_member: { Icon: IconUser,     label: "Membre d'agence", color: "#7c3aed" },
+  team_member:   { Icon: IconUser,     label: "Membre d'équipe", color: "#0891b2" },
+  admin:         { Icon: IconUser,     label: "Administrateur",  color: "#c0152a" },
+};
+
+const NOTIF_ICON_MAP = {
+  pitch_received:  "💬",
+  pitch_accepted:  "✓",
+  pitch_rejected:  "✗",
+  post_published:  "◈",
+  project_created: "▶",
+  system:          "◉",
+};
 
 const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) => {
   const navigate   = useNavigate();
   const { logout } = useAuth();
-  const [collapsed,    setCollapsed]    = useState(false);
-  const [showNotifs,   setShowNotifs]   = useState(false);
-  const [notifs,       setNotifs]       = useState([]);
-  const [unreadCount,  setUnreadCount]  = useState(0);
+  const [collapsed,   setCollapsed]   = useState(false);
+  const [showNotifs,  setShowNotifs]  = useState(false);
+  const [notifs,      setNotifs]      = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const notifRef = useRef();
 
-  const ROLE_META = {
-    client:       { icon: "🎯", label: "Client",          color: "#c0152a" },
-    agency:       { icon: "🏢", label: "Agence",          color: "#7c3aed" },
-    team:         { icon: "👥", label: "Équipe",          color: "#0891b2" },
-    freelancer:   { icon: "⚡", label: "Freelancer",      color: "#d97706" },
-    agency_member:{ icon: "👤", label: "Membre d'agence", color: "#7c3aed" },
-    team_member:  { icon: "👤", label: "Membre d'équipe", color: "#0891b2" },
-  };
-
   const meta = ROLE_META[role] || ROLE_META.client;
+  const RoleIcon = meta.Icon;
 
   const displayName =
     user?.companyName ||
@@ -33,28 +48,23 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
   const initials = displayName.split(" ").slice(0, 2)
     .map(w => w[0]?.toUpperCase()).join("");
 
-  // ── Fetch notifications on mount + every 60s ──
   useEffect(() => {
-    const fetchNotifs = async () => {
+    const load = async () => {
       try {
         const data = await notificationService.getAll({ limit: 10 });
         setNotifs(data.notifications || []);
         setUnreadCount(data.unreadCount || 0);
-      } catch {
-        // Silently fail — notifications are non-critical
-      }
+      } catch {}
     };
-    fetchNotifs();
-    const interval = setInterval(fetchNotifs, 60000);
+    load();
+    const interval = setInterval(load, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // ── Close dropdown on outside click ──
   useEffect(() => {
     const handler = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
+      if (notifRef.current && !notifRef.current.contains(e.target))
         setShowNotifs(false);
-      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -71,51 +81,50 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  const NOTIF_ICONS = {
-    pitch_received:  "💡",
-    pitch_accepted:  "✅",
-    pitch_rejected:  "❌",
-    post_published:  "📋",
-    project_created: "🚀",
-    system:          "📢",
-  };
+  const handleLogout = () => { logout(); navigate("/login"); };
 
   return (
     <div className={`dash-layout ${collapsed ? "sidebar-collapsed" : "sidebar-open"}`}>
 
       {/* ── SIDEBAR ── */}
       <aside className="dash-sidebar">
+
+        {/* Logo */}
         <div className="dash-sidebar-logo">
-          <span className="dash-logo-text">
-            {collapsed
-              ? <span style={{ color: "#e0253f" }}>M</span>
-              : <>Market<span>ili</span></>
-            }
-          </span>
-          <button className="dash-sidebar-toggle"
-            onClick={() => setCollapsed(o => !o)}
+          {!collapsed && (
+            <span className="dash-logo-text">Market<span>ili</span></span>
+          )}
+          {collapsed && (
+            <span className="dash-logo-text"><span>M</span></span>
+          )}
+          <button className="dash-sidebar-toggle" onClick={() => setCollapsed(o => !o)}
             title={collapsed ? "Agrandir" : "Réduire"}>
-            {collapsed ? "→" : "←"}
+            {collapsed
+              ? <IconChevronRight size={13} />
+              : <IconChevronLeft  size={13} />
+            }
           </button>
         </div>
 
+        {/* Role tag */}
         <div className="dash-role-tag" style={{ "--role-color": meta.color }}>
-          <span>{meta.icon}</span>
+          <span className="dash-role-tag-icon" style={{ color: meta.color }}>
+            <RoleIcon size={13} />
+          </span>
           {!collapsed && <span>{meta.label}</span>}
         </div>
 
+        {/* Nav */}
         <nav className="dash-nav">
           {navItems.map((item) => (
             <NavLink key={item.path} to={item.path}
               end={item.path.split("/").length === 3}
               className={({ isActive }) => `dash-nav-item${isActive ? " active" : ""}`}
               title={collapsed ? item.label : ""}>
-              <span className="dash-nav-icon">{item.icon}</span>
+              <span className="dash-nav-icon">
+                {/* item.icon is a React element (JSX) — render as-is */}
+                {item.icon}
+              </span>
               {!collapsed && <span className="dash-nav-label">{item.label}</span>}
               {!collapsed && item.badge > 0 && (
                 <span className="dash-nav-badge">{item.badge}</span>
@@ -124,8 +133,9 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
           ))}
         </nav>
 
+        {/* Footer: user + logout */}
         <div className="dash-sidebar-footer">
-          <div className="dash-user-chip" style={{ "--role-color": meta.color }}>
+          <div className="dash-user-chip">
             <div className="dash-user-avatar">{initials}</div>
             {!collapsed && (
               <div className="dash-user-info">
@@ -135,7 +145,7 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
             )}
           </div>
           <button className="dash-logout-btn" onClick={handleLogout} title="Se déconnecter">
-            <span className="dash-logout-icon">⏏</span>
+            <span className="dash-logout-icon"><IconLogOut size={15} /></span>
             {!collapsed && <span>Déconnexion</span>}
           </button>
         </div>
@@ -148,21 +158,13 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
             <h1 className="dash-topbar-title">{topbarTitle}</h1>
           </div>
           <div className="dash-topbar-right">
+
+            {/* Notification bell */}
             <div style={{ position: "relative" }} ref={notifRef}>
               <button className="dash-topbar-icon-btn" title="Notifications"
                 onClick={handleOpenNotifs}>
-                🔔
-                {unreadCount > 0 && (
-                  <span className="dash-notif-dot" style={{
-                    width: unreadCount > 9 ? "auto" : 6,
-                    height: unreadCount > 9 ? "auto" : 6,
-                    padding: unreadCount > 9 ? "1px 4px" : 0,
-                    fontSize: "0.6rem", fontWeight: 700,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    {unreadCount > 9 ? "9+" : ""}
-                  </span>
-                )}
+                <IconBell size={16} />
+                {unreadCount > 0 && <span className="dash-notif-dot" />}
               </button>
 
               {showNotifs && (
@@ -170,30 +172,41 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
                   <div className="dash-notif-header">
                     <span>Notifications</span>
                     {unreadCount === 0 && notifs.length > 0 && (
-                      <span style={{ fontSize: "0.7rem", color: "var(--d-muted)", fontWeight: 400 }}>Tout lu</span>
+                      <span style={{ fontSize: "0.68rem", color: "var(--d-muted)", fontWeight: 400 }}>
+                        Tout lu
+                      </span>
                     )}
                   </div>
+
                   {notifs.length === 0 ? (
                     <div className="dash-notif-empty">
-                      <span>🔔</span>
-                      <p>Aucune notification pour le moment</p>
+                      <div className="dash-notif-empty-icon"><IconBell size={16} /></div>
+                      <p>Aucune notification</p>
                     </div>
                   ) : (
-                    <div>
-                      {notifs.map(n => (
-                        <div key={n._id} className={`dash-notif-item ${n.isRead ? "" : "unread"}`}
-                          onClick={() => { if (n.link) navigate(n.link); setShowNotifs(false); }}>
-                          <div className="dash-notif-item-icon">{NOTIF_ICONS[n.type] || "📢"}</div>
-                          <div className="dash-notif-item-body">
-                            <div className="dash-notif-item-title">{n.title}</div>
-                            {n.body && <div className="dash-notif-item-desc">{n.body}</div>}
-                            <div className="dash-notif-item-time">
-                              {new Date(n.createdAt).toLocaleDateString("fr-DZ", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" })}
-                            </div>
+                    notifs.map(n => (
+                      <div key={n._id}
+                        className={`dash-notif-item ${n.isRead ? "" : "unread"}`}
+                        onClick={() => { if (n.link) navigate(n.link); setShowNotifs(false); }}>
+                        <div className="dash-notif-item-icon">
+                          <span style={{ fontSize: "0.75rem" }}>
+                            {NOTIF_ICON_MAP[n.type] || "◉"}
+                          </span>
+                        </div>
+                        <div className="dash-notif-item-body">
+                          <div className="dash-notif-item-title">{n.title}</div>
+                          {n.body && (
+                            <div className="dash-notif-item-desc">{n.body}</div>
+                          )}
+                          <div className="dash-notif-item-time">
+                            {new Date(n.createdAt).toLocaleDateString("fr-DZ", {
+                              day: "numeric", month: "short",
+                              hour: "2-digit", minute: "2-digit",
+                            })}
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))
                   )}
                 </div>
               )}
@@ -204,9 +217,9 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
         <main className="dash-content">
           <AnimatePresence mode="wait">
             <motion.div key={topbarTitle}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}>
+              transition={{ duration: 0.22 }}>
               {children}
             </motion.div>
           </AnimatePresence>

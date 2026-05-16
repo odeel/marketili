@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import agencyMemberService from "../../../services/agencyMemberService";
+import { IconUsers } from "../../../components/ui/Icons";
 
 const JOB_OPTIONS = [
   { value: "commercial",        label: "Commercial"        },
@@ -94,7 +95,7 @@ const DirectorMembers = ({ user }) => {
       : members.length === 0 ? (
         <div className="card">
           <div className="empty-state" style={{ padding: "64px 24px" }}>
-            <div className="empty-state-icon">👥</div>
+            <div className="empty-state-icon"><IconUsers size={20} /></div>
             <div className="empty-state-title">Aucun membre</div>
             <div className="empty-state-desc">Créez des comptes pour votre équipe.</div>
             <button className="empty-state-btn" onClick={() => setShowModal(true)}>
