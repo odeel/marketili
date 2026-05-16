@@ -112,6 +112,7 @@ const postSchema = new mongoose.Schema(
       enum: ["open", "in_progress", "closed", "reactivated"],
       default: "open",
     },
+    adminNote: { type: String, trim: true },
 
     // ── Pitches received ──
     // Only pitch IDs are stored here — populated when needed.

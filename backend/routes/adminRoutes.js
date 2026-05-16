@@ -1,17 +1,28 @@
 const express = require("express");
-const router = express.Router();
-const adminController = require("../controllers/adminController");
-
-// ✅ IMPORT MIDDLEWARE
+const router  = express.Router();
+const c       = require("../controllers/adminController");
 const { protect, adminOnly } = require("../middleware/auth");
 
-// 🔐 Protect ALL admin routes
 router.use(protect, adminOnly);
 
-// Get all users
-router.get("/users", adminController.getAllUsers);
+// ── Users ──
+router.get("/users",                    c.getAllUsers);
+router.patch("/users/:role/:id/toggle", c.toggleUserStatus);
 
-// Toggle user
-router.patch("/users/:role/:id/toggle", adminController.toggleUserStatus);
+// ── Stats ──
+router.get("/stats",    c.getStats);
+
+// ── Activity ──
+router.get("/activity", c.getRecentActivity);
+
+// ── Posts moderation ──
+router.get("/posts",              c.getAdminPosts);
+router.patch("/posts/:id/remove", c.removePost);
+
+// ── Options ──
+router.get("/options",                     c.getAllOptions);
+router.get("/options/:key",                c.getOptions);
+router.post("/options/:key/add",           c.addOptionValue);
+router.delete("/options/:key/:value",      c.deleteOptionValue);
 
 module.exports = router;

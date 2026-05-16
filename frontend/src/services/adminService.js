@@ -1,16 +1,35 @@
 import api from "./api";
 
-// Get all users
-const getUsers = (params = {}) => {
-  return api.get("/admin/users", { params });
+const adminService = {
+  getUsers: (params = {}) =>
+    api.get("/admin/users", { params }),
+
+  toggleUser: (role, id) =>
+    api.patch(`/admin/users/${role}/${id}/toggle`),
+
+  getStats: () =>
+    api.get("/admin/stats").then(r => r.data),
+
+  getActivity: () =>
+    api.get("/admin/activity").then(r => r.data),
+
+  getPosts: (params = {}) =>
+    api.get("/admin/posts", { params }).then(r => r.data),
+
+  removePost: (id, reason) =>
+    api.patch(`/admin/posts/${id}/remove`, { reason }).then(r => r.data),
+
+  getAllOptions: () =>
+    api.get("/admin/options").then(r => r.data),
+
+  getOptions: (key) =>
+    api.get(`/admin/options/${key}`).then(r => r.data),
+
+  addOptionValue: (key, value) =>
+    api.post(`/admin/options/${key}/add`, { value }).then(r => r.data),
+
+  deleteOptionValue: (key, value) =>
+    api.delete(`/admin/options/${key}/${encodeURIComponent(value)}`).then(r => r.data),
 };
 
-// Toggle user status
-const toggleUser = (role, id) => {
-  return api.patch(`/admin/users/${role}/${id}/toggle`);
-};
-
-export default {
-  getUsers,
-  toggleUser,
-};
+export default adminService;
