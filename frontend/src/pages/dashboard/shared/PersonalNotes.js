@@ -46,8 +46,10 @@ const NoteCard = ({ note, onToggleDone, onTogglePin, onDelete, busy }) => (
           {note.text}
         </div>
         {note.isReminder && note.reminderDate && (
-          <div style={{ fontSize: "0.7rem", color: "#7c3aed", marginTop: 3, fontWeight: 600 }}>
-            Rappel : {fmt(note.reminderDate)}
+          <div style={{ fontSize: "0.7rem", color: "#8b5cf6", marginTop: 3, fontWeight: 600,
+            display: "flex", alignItems: "center", gap: 4 }}>
+            <span>📅</span>
+            <span>Rappel : {fmt(note.reminderDate)}</span>
           </div>
         )}
       </div>

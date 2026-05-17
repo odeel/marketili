@@ -1,22 +1,36 @@
 import React, { useState, useEffect, useMemo } from "react";
 import calendarService from "../../../services/calendarService";
+import noteService from "../../../services/noteService";
 
 const MONTHS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin",
   "Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const DAYS_FR = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
 
 const TYPE_LABEL = { project: "Projet", task: "Tâche", reminder: "Rappel" };
-const TYPE_COLOR = { project: "#c0152a", task: "#7c3aed", reminder: "#f59e0b" };
+const TYPE_COLOR = { project: "#c0152a", task: "#7c3aed", reminder: "#8b5cf6" };
 
 const fmt = (d) => d
   ? new Date(d).toLocaleDateString("fr-DZ", { day: "2-digit", month: "short", year: "numeric" })
   : "";
 
 const SharedCalendar = ({ user, role }) => {
-  const [events,  setEvents]  = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [current, setCurrent] = useState(new Date());
+  const [events,   setEvents]   = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [current,  setCurrent]  = useState(new Date());
   const [selected, setSelected] = useState(null);
+  const [markingDone, setMarkingDone] = useState(null);
+
+  const handleMarkReminderDone = async (e) => {
+    if (!e.noteId) return;
+    setMarkingDone(e.noteId);
+    try {
+      await noteService.updateNote(e.noteId, { isDone: true });
+      setEvents(prev => prev.map(ev =>
+        ev.noteId?.toString() === e.noteId?.toString() ? { ...ev, isDone: true } : ev
+      ));
+    } catch {}
+    setMarkingDone(null);
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -194,9 +208,13 @@ const SharedCalendar = ({ user, role }) => {
                       background: "var(--d-surface)",
                       border: "1px solid var(--d-border-soft)",
                       borderLeft: `3px solid ${e.color || TYPE_COLOR[e.type] || "#64748b"}`,
+                      opacity: e.isDone ? 0.6 : 1,
                     }}>
                       <div style={{ display: "flex", alignItems: "center",
                         gap: 6, marginBottom: 4 }}>
+                        {e.type === "reminder" && (
+                          <span style={{ fontSize: "0.9rem" }}>🔔</span>
+                        )}
                         <span style={{
                           fontSize: "0.65rem", fontWeight: 700,
                           padding: "2px 6px", borderRadius: 4,
@@ -207,12 +225,13 @@ const SharedCalendar = ({ user, role }) => {
                         </span>
                         {e.isDone && (
                           <span style={{ fontSize: "0.65rem", color: "#10b981",
-                            fontWeight: 600 }}>Fait</span>
+                            fontWeight: 600 }}>✓ Fait</span>
                         )}
                       </div>
                       <div style={{ fontSize: "0.82rem", fontWeight: 600,
                         color: "var(--d-ink)", marginBottom: e.projectTitle ? 3 : 0,
-                        lineHeight: 1.4 }}>
+                        lineHeight: 1.4,
+                        textDecoration: e.isDone ? "line-through" : "none" }}>
                         {e.title}
                       </div>
                       {e.projectTitle && (
@@ -230,6 +249,20 @@ const SharedCalendar = ({ user, role }) => {
                         marginTop: 3 }}>
                         {fmt(e.date)}
                       </div>
+                      {e.type === "reminder" && !e.isDone && e.noteId && (
+                        <button
+                          onClick={() => handleMarkReminderDone(e)}
+                          disabled={markingDone === e.noteId}
+                          style={{
+                            marginTop: 8, padding: "4px 10px", borderRadius: 6,
+                            fontSize: "0.68rem", fontWeight: 700, cursor: "pointer",
+                            border: "1.5px solid #8b5cf6", color: "#8b5cf6",
+                            background: "transparent", fontFamily: "inherit",
+                            opacity: markingDone === e.noteId ? 0.5 : 1,
+                          }}>
+                          {markingDone === e.noteId ? "..." : "Marquer comme fait"}
+                        </button>
+                      )}
                     </div>
                   ))
                 )}

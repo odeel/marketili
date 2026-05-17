@@ -215,7 +215,16 @@ const ProjectCard = ({ project: p, index, onClick }) => {
       whileHover={{ y: -3, boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}
       onClick={onClick}
       style={{ padding: "20px 22px", borderLeft: `3px solid ${dlColor}`,
-        opacity: isDone ? 0.65 : 1, cursor: "pointer" }}>
+        opacity: isDone ? 0.65 : 1, cursor: "pointer",
+        position: "relative", overflow: "hidden" }}>
+      {isDone && (
+        <div style={{ position: "absolute", top: 10, right: -22, transform: "rotate(25deg)",
+          background: p.projectStatus === "completed" ? "#10b981" : "#6b7280",
+          color: "#fff", fontSize: "0.52rem", fontWeight: 800, letterSpacing: "0.07em",
+          padding: "2px 30px", zIndex: 2, userSelect: "none" }}>
+          {p.projectStatus === "completed" ? "TERMINÉ" : "ANNULÉ"}
+        </div>
+      )}
       <div style={{ display: "flex", justifyContent: "space-between",
         alignItems: "flex-start", marginBottom: 8 }}>
         <div style={{ fontWeight: 700, fontSize: "0.92rem", flex: 1, paddingRight: 8 }}>

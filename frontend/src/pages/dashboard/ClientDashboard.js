@@ -300,8 +300,16 @@ const ClientProjects = ({ user }) => {
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
               style={{ cursor: "pointer", borderLeft: `3px solid ${dlColor}`,
-                opacity: isDone ? 0.62 : 1 }}
+                opacity: isDone ? 0.62 : 1, position: "relative", overflow: "hidden" }}
               onClick={() => setSelected(p)}>
+              {isDone && (
+                <div style={{ position: "absolute", top: 10, right: -22, transform: "rotate(25deg)",
+                  background: p.projectStatus === "completed" ? "#10b981" : "#6b7280",
+                  color: "#fff", fontSize: "0.52rem", fontWeight: 800, letterSpacing: "0.07em",
+                  padding: "2px 30px", zIndex: 2, userSelect: "none" }}>
+                  {p.projectStatus === "completed" ? "TERMINÉ" : "ANNULÉ"}
+                </div>
+              )}
               <div style={{ padding: "20px 22px" }}>
                 {/* Header row */}
                 <div style={{ display: "flex", justifyContent: "space-between",
