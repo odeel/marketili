@@ -24,7 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 // ── Soft-delete guard — reject DELETE on business-critical resources ──
 const SOFT_DELETE_PROTECTED = [
   "/api/pitches", "/api/projects", "/api/contracts",
-  "/api/agency-members", "/api/team-members",
+  "/api/agency-members", "/api/team-members", "/api/chat",
 ];
 app.use((req, res, next) => {
   if (req.method === "DELETE" && SOFT_DELETE_PROTECTED.some(p => req.path.startsWith(p))) {
@@ -52,6 +52,7 @@ app.use("/api/profile",        require("./routes/profileRoutes"));
 app.use("/api/freelancer",     require("./routes/freelancerRoutes"));
 app.use("/api/notes",          require("./routes/noteRoutes"));
 app.use("/api/calendar",       require("./routes/calendarRoutes"));
+app.use("/api/chat",           require("./routes/chatRoutes"));
 
 // ── Health check ──
 app.get("/api/health", (req, res) => {

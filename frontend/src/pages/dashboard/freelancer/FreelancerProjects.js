@@ -4,6 +4,7 @@ import freelancerService from "../../../services/freelancerService";
 import { getDeadlineColor, getDeadlineLabel } from "../../../utils/deadlineColor";
 import { ProgressBar } from "../agency/shared";
 import { IconBriefcase, IconCheckSquare } from "../../../components/ui/Icons";
+import ChatWindow from "../../../components/chat/ChatWindow";
 
 const STATUS_META = {
   pending:    { label: "En attente",  color: "#f59e0b", bg: "#fffbeb" },
@@ -25,7 +26,8 @@ const fmt = (d) => d
   : "—";
 
 const ProjectDetail = ({ project: p, userId, onBack }) => {
-  const myTasks = (p.tasks || []).filter(t =>
+  const [activeTab, setActiveTab] = useState("detail");
+  const myTasks  = (p.tasks || []).filter(t =>
     t.assignedTo?.some(a => a.memberId?.toString() === userId?.toString())
   );
   const allTasks = p.tasks || [];
@@ -40,6 +42,29 @@ const ProjectDetail = ({ project: p, userId, onBack }) => {
         ← Retour aux projets
       </button>
 
+      {/* ── Tab bar ── */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 18 }}>
+        {[
+          { id: "detail",     label: "Détail du projet" },
+          { id: "messagerie", label: "Messagerie" },
+        ].map(tab => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+            style={{
+              padding: "8px 20px", borderRadius: 8, fontFamily: "inherit",
+              fontWeight: 700, fontSize: "0.82rem", cursor: "pointer",
+              border: activeTab === tab.id ? "2px solid #c0152a" : "1.5px solid var(--d-border-soft)",
+              background: activeTab === tab.id ? "#c0152a" : "transparent",
+              color: activeTab === tab.id ? "#fff" : "var(--d-muted)",
+              transition: "all 0.15s",
+            }}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "messagerie" && <ChatWindow projectId={p._id} />}
+
+      {activeTab === "detail" && <>
       <div className="card" style={{ padding: "24px 26px", marginBottom: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between",
           alignItems: "flex-start", marginBottom: 16, gap: 12 }}>
@@ -165,6 +190,7 @@ const ProjectDetail = ({ project: p, userId, onBack }) => {
           Aucune tâche dans ce projet
         </div>
       )}
+      </> /* end detail tab */}
     </div>
   );
 };

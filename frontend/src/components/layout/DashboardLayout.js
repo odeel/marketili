@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuth from "../../hooks/useAuth";
 import notificationService from "../../services/notificationService";
+import chatService from "../../services/chatService";
 import {
   IconBell, IconLogOut, IconChevronLeft, IconChevronRight,
   IconTarget, IconBuilding, IconUsers, IconZap, IconUser,
@@ -57,10 +58,11 @@ const relativeTime = (date) => {
 const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) => {
   const navigate   = useNavigate();
   const { logout } = useAuth();
-  const [collapsed,   setCollapsed]   = useState(false);
-  const [showNotifs,  setShowNotifs]  = useState(false);
-  const [notifs,      setNotifs]      = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [collapsed,        setCollapsed]        = useState(false);
+  const [showNotifs,       setShowNotifs]       = useState(false);
+  const [notifs,           setNotifs]           = useState([]);
+  const [unreadCount,      setUnreadCount]      = useState(0);
+  const [chatUnreadCount,  setChatUnreadCount]  = useState(0);
   const notifRef = useRef();
 
   const meta = ROLE_META[role] || ROLE_META.client;
@@ -82,10 +84,17 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
         setUnreadCount(data.unreadCount || 0);
       } catch {}
     };
+    const loadChat = async () => {
+      try {
+        const data = await chatService.getUnreadCount();
+        setChatUnreadCount(data.count || 0);
+      } catch {}
+    };
     load();
-    const onFocus = () => load();
+    loadChat();
+    const onFocus = () => { load(); loadChat(); };
     window.addEventListener("focus", onFocus);
-    const interval = setInterval(load, 30000);
+    const interval = setInterval(() => { load(); loadChat(); }, 30000);
     return () => { clearInterval(interval); window.removeEventListener("focus", onFocus); };
   }, []);
 
@@ -197,6 +206,23 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
             <h1 className="dash-topbar-title">{topbarTitle}</h1>
           </div>
           <div className="dash-topbar-right">
+
+            {/* Notification bell */}
+              {/* Chat unread badge */}
+            {chatUnreadCount > 0 && (
+              <div style={{ position: "relative" }}>
+                <button className="dash-topbar-icon-btn" title="Messagerie"
+                  style={{ fontSize: "1rem" }}>
+                  ✉
+                  <span style={{
+                    position: "absolute", top: 4, right: 4,
+                    minWidth: 8, height: 8, borderRadius: "50%",
+                    background: "#0891b2",
+                    border: "1.5px solid var(--d-topbar-bg, #fff)",
+                  }} />
+                </button>
+              </div>
+            )}
 
             {/* Notification bell */}
             <div style={{ position: "relative" }} ref={notifRef}>

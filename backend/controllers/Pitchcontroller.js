@@ -317,6 +317,18 @@ const acceptPitch = async (req, res) => {
       }],
     });
 
+    // Auto-create the conversation for this project
+    const Conversation = require("../models/Conversation");
+    const participants = [
+      { participantType: "Client", participantId: pitch.client },
+      { participantType: pitch.senderType, participantId: providerId },
+    ];
+    const conversation = await Conversation.create({
+      project: project._id,
+      participants,
+    });
+    await Project.findByIdAndUpdate(project._id, { conversationId: conversation._id });
+
     // Notify the pitch sender
     const senderRecipient = pitch.senderType === "Agency"     ? pitch.senderAgency :
                             pitch.senderType === "Team"       ? pitch.senderTeam   :

@@ -21,6 +21,7 @@ import {
   IconBriefcase, IconFileText, IconZap, IconCheckSquare,
   IconTrendingUp, IconPlus, IconBell, IconUser, IconCalendar, IconNote,
 } from "../../components/ui/Icons";
+import ChatWindow from "../../components/chat/ChatWindow";
 import "../../styles/Dashboard.css";
 
 const ClientDashboard = () => {
@@ -354,6 +355,7 @@ const ClientProjects = ({ user }) => {
 
 // ── Client project detail — read-only view ────────────────────────────────────
 const ClientProjectDetail = ({ project: initial, onBack, onRefresh }) => {
+  const [activeTab, setActiveTab] = useState("detail");
   const [project, setProject] = useState(initial);
 
   useEffect(() => { onRefresh && onRefresh(); }, []);
@@ -394,6 +396,30 @@ const ClientProjectDetail = ({ project: initial, onBack, onRefresh }) => {
           </p>
         </div>
       </div>
+
+      {/* ── Tab bar ── */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 18 }}>
+        {[
+          { id: "detail",     label: "Détail du projet" },
+          { id: "messagerie", label: "Messagerie" },
+        ].map(tab => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+            style={{
+              padding: "8px 20px", borderRadius: 8, fontFamily: "inherit",
+              fontWeight: 700, fontSize: "0.82rem", cursor: "pointer",
+              border: activeTab === tab.id ? "2px solid #c0152a" : "1.5px solid #f0dede",
+              background: activeTab === tab.id ? "#c0152a" : "transparent",
+              color: activeTab === tab.id ? "#fff" : "#9a6060",
+              transition: "all 0.15s",
+            }}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "messagerie" && <ChatWindow projectId={project._id} />}
+
+      {activeTab === "detail" && <>
 
       {/* Progress card */}
       <div className="card" style={{ padding: "20px 22px", marginBottom: 16 }}>
@@ -512,6 +538,7 @@ const ClientProjectDetail = ({ project: initial, onBack, onRefresh }) => {
           </div>
         ))}
       </div>
+      </> /* end detail tab */}
     </div>
   );
 };

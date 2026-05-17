@@ -6,6 +6,7 @@ import projectService from "../../../services/projectService";
 import contractService from "../../../services/contractService";
 import { getDeadlineColor, getDeadlineLabel } from "../../../utils/deadlineColor";
 import { IconCheckSquare, IconZap, IconUsers, IconSend } from "../../../components/ui/Icons";
+import ChatWindow from "../../../components/chat/ChatWindow";
 
 const STATUS_COLOR = {
   pending: "#f59e0b", active: "#7c3aed",
@@ -274,6 +275,7 @@ const DirectorTaskRow = ({ task, projectId, isLast, members, agencyUser, onStatu
 };
 
 const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
+  const [activeTab,      setActiveTab]       = useState("detail");
   const [project,        setProject]        = useState(initial);
   const [members,        setMembers]        = useState([]);
   const [showAddTask,    setShowAddTask]     = useState(false);
@@ -415,6 +417,36 @@ const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
 
   return (
     <div>
+      {/* ── Tab bar ── */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 18 }}>
+        {[
+          { id: "detail",     label: "Détail du projet" },
+          { id: "messagerie", label: "Messagerie" },
+        ].map(tab => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+            style={{
+              padding: "8px 20px", borderRadius: 8, fontFamily: "inherit",
+              fontWeight: 700, fontSize: "0.82rem", cursor: "pointer",
+              border: activeTab === tab.id
+                ? "2px solid #c0152a"
+                : "1.5px solid var(--d-border-soft)",
+              background: activeTab === tab.id ? "#c0152a" : "transparent",
+              color: activeTab === tab.id ? "#fff" : "var(--d-muted)",
+              transition: "all 0.15s",
+            }}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Messagerie tab ── */}
+      {activeTab === "messagerie" && (
+        <ChatWindow projectId={project._id} />
+      )}
+
+      {/* ── Detail tab ── */}
+      {activeTab === "detail" && <>
+
       {/* ── Header: title + status + deadline ── */}
       <div className="card" style={{ marginBottom: 16, padding: "20px 22px" }}>
         <div style={{ display: "flex", justifyContent: "space-between",
@@ -796,6 +828,8 @@ const ProjectDetail = ({ project: initial, agencyId, agencyUser }) => {
           />
         )}
       </AnimatePresence>
+
+      </> /* end detail tab */}
     </div>
   );
 };
