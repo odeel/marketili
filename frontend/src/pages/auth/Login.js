@@ -72,37 +72,10 @@ const Login = () => {
             Bienvenue sur<br /><em>Marketili.</em>
           </h2>
           <p className="auth-left-desc">
-            Connectez-vous pour accéder à votre espace de travail et gérer vos collaborations marketing.
+            Connectez-vous pour accéder à votre espace de travail.
           </p>
         </div>
 
-        <div className="auth-left-stats">
-          <div className="auth-stat">
-            <div className="auth-stat-num">2 400+</div>
-            <div className="auth-stat-label">Experts<br />inscrits</div>
-          </div>
-          <div className="auth-stat">
-            <div className="auth-stat-num">850+</div>
-            <div className="auth-stat-label">Projets<br />réalisés</div>
-          </div>
-          <div className="auth-stat">
-            <div className="auth-stat-num">98%</div>
-            <div className="auth-stat-label">Taux de<br />satisfaction</div>
-          </div>
-        </div>
-
-        <div className="auth-left-steps">
-          {[
-            { n: "01", t: "Publiez votre besoin en quelques minutes"      },
-            { n: "02", t: "Recevez des offres d'experts qualifiés"        },
-            { n: "03", t: "Collaborez et suivez vos projets en temps réel"},
-          ].map(s => (
-            <div className="auth-step" key={s.n}>
-              <div className="auth-step-num">{s.n}</div>
-              <div className="auth-step-text">{s.t}</div>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* ── Right panel ── */}

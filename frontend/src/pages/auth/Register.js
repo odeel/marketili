@@ -236,37 +236,10 @@ const Register = () => {
             La plateforme qui connecte les marques aux <em>experts marketing.</em>
           </h2>
           <p className="auth-left-desc">
-            Rejoignez plus de 2 400 professionnels et développez vos collaborations en Algérie.
+            Créez votre compte et développez vos collaborations en Algérie.
           </p>
         </div>
 
-        <div className="auth-left-stats">
-          <div className="auth-stat">
-            <div className="auth-stat-num">2 400+</div>
-            <div className="auth-stat-label">Experts<br />inscrits</div>
-          </div>
-          <div className="auth-stat">
-            <div className="auth-stat-num">850+</div>
-            <div className="auth-stat-label">Projets<br />réalisés</div>
-          </div>
-          <div className="auth-stat">
-            <div className="auth-stat-num">4</div>
-            <div className="auth-stat-label">Types de<br />prestataires</div>
-          </div>
-        </div>
-
-        <div className="auth-left-steps">
-          {[
-            { n: "01", t: "Créez votre compte gratuitement"       },
-            { n: "02", t: "Explorez les opportunités et postulez"  },
-            { n: "03", t: "Lancez vos collaborations"              },
-          ].map(s => (
-            <div className="auth-step" key={s.n}>
-              <div className="auth-step-num">{s.n}</div>
-              <div className="auth-step-text">{s.t}</div>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* ── Right panel ────────────────────────────────────────────── */}

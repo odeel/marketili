@@ -15,6 +15,7 @@ import { getDeadlineColor, getDeadlineLabel } from "../../utils/deadlineColor";
 import NotificationsPage from "./NotificationsPage";
 import notificationService from "../../services/notificationService";
 import ClientCalendar  from "./client/ClientCalendar";
+import ClientProfile   from "./client/ClientProfile";
 import PersonalNotes   from "./shared/PersonalNotes";
 import {
   IconHome, IconClipboard, IconCompass, IconInbox,
@@ -52,7 +53,7 @@ const ClientDashboard = () => {
     { label: "Notes",           icon: <IconNote       size={16} />, path: "/dashboard/client/notes"           },
     { label: "Notifications",   icon: <IconBell       size={16} />, path: "/dashboard/client/notifications",
       badge: unreadCount },
-    { label: "Mon profil",      icon: <IconUser       size={16} />, path: `/profile/client/${user?._id}` },
+    { label: "Mon profil",      icon: <IconUser       size={16} />, path: "/dashboard/client/profile"   },
   ];
 
   return (
@@ -72,6 +73,7 @@ const ClientDashboard = () => {
           <Route path="calendar"      element={<ClientCalendar  user={user} />} />
           <Route path="notes"         element={<PersonalNotes />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="profile"       element={<ClientProfile />} />
           <Route path="*"             element={<Navigate to="/dashboard/client" replace />} />
         </Routes>
       </DashboardLayout>

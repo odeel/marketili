@@ -824,6 +824,77 @@ body {
   line-height: 1.4;
 }
 
+/* ── CONTACT FORM ── */
+.lp-contact-form-wrap {
+  max-width: 720px;
+  margin: 0 auto 32px;
+  padding: 32px 36px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+}
+
+.lp-contact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lp-contact-label-field {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+}
+
+.lp-contact-input {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 9px;
+  padding: 11px 14px;
+  font-size: 0.875rem;
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.lp-contact-input::placeholder { color: rgba(255,255,255,0.28); }
+.lp-contact-input:focus {
+  border-color: rgba(192,21,42,0.6);
+  background: rgba(255,255,255,0.09);
+}
+
+.lp-contact-input option {
+  background: #1a0a10;
+  color: #fff;
+}
+
+.lp-contact-quick {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.lp-contact-quick-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  transition: color 0.18s;
+}
+.lp-contact-quick-item:hover { color: rgba(255,255,255,0.85); }
+.lp-contact-quick-wa         { color: rgba(37,211,102,0.7); }
+.lp-contact-quick-wa:hover   { color: #25d366; }
+
 /* ── FLOATING WHATSAPP BUTTON ── */
 .lp-wa-float {
   position: fixed;
@@ -974,6 +1045,8 @@ body {
   .lp-role-grid     { grid-template-columns: 1fr; max-width: 560px; }
   .lp-quotes        { grid-template-columns: 1fr; }
   .lp-contact-cards { grid-template-columns: 1fr; max-width: 420px; }
+  .lp-contact-form-wrap { padding: 22px 18px; }
+  .lp-contact-form-wrap > form > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
   .lp-footer-grid   { grid-template-columns: 1fr 1fr; }
 }
 
