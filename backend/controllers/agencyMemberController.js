@@ -1,6 +1,7 @@
 const AgencyMember = require("../models/AgencyMember");
 const Freelancer   = require("../models/Freelancer");
 const Agency       = require("../models/Agency");
+const logActivity  = require("../utils/logActivity");
 
 // ─────────────────────────────────────────────
 // CREATE MEMBER  POST /api/agency-members/create
@@ -25,6 +26,11 @@ exports.createMember = async (req, res) => {
 
     const safe = member.toObject();
     delete safe.password;
+    logActivity({
+      actorId: req.user._id, actorRole: "agency", actorName: String(req.user._id),
+      actionType: "member_created", targetId: member._id, targetType: "AgencyMember",
+      description: `Membre créé : ${member.firstName} ${member.lastName} (${member.jobTitle})`,
+    });
     res.status(201).json({ success: true, member: safe });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -114,6 +120,13 @@ exports.setMemberStatus = async (req, res) => {
       });
     }
 
+    if (status === "active" && prevStatus && prevStatus !== "active") {
+      logActivity({
+        actorId: req.user._id, actorRole: req.userRole || "agency", actorName: String(req.user._id),
+        actionType: "account_restored", targetId: member._id, targetType: "AgencyMember",
+        description: `Compte restauré : ${member.firstName} ${member.lastName}`,
+      });
+    }
     res.json({ success: true, accountStatus: member.accountStatus });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

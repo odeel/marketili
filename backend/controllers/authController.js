@@ -7,6 +7,7 @@ const Team         = require("../models/Team");
 const TeamMember   = require("../models/TeamMember");
 const Freelancer   = require("../models/Freelancer");
 const Admin        = require("../models/Admin");
+const logActivity  = require("../utils/logActivity");
 
 const generateToken = (id, role) => {
   return jwt.sign(
@@ -63,6 +64,17 @@ const register = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: "Lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    const actorName = role === "client"
+      ? (data.firstName ? `${data.firstName} ${data.lastName}` : data.companyName)
+      : role === "agency" ? data.agencyName
+      : role === "team" ? data.teamName
+      : `${data.firstName || ""} ${data.lastName || ""}`.trim();
+    logActivity({
+      actorId: user._id, actorRole: role, actorName,
+      actionType: "user_registered", targetId: user._id, targetType: "User",
+      description: `Nouveau compte ${role} : ${actorName || user.email}`,
     });
 
     return res.status(201).json({ success: true, user: formatUser(user, role) });

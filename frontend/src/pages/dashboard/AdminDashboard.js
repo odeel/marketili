@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import useAuth         from "../../hooks/useAuth";
 import adminService    from "../../services/adminService";
+import adService       from "../../services/adService";
 import {
   IconUsers, IconUser, IconBriefcase, IconSend,
   IconFlag, IconTarget, IconSearch,
@@ -15,6 +16,8 @@ const TABS = [
   { id: "stats",    label: "Statistiques"  },
   { id: "posts",    label: "Posts"         },
   { id: "activity", label: "Activité"      },
+  { id: "ads",      label: "Publicités"    },
+  { id: "log",      label: "Journal"       },
   { id: "options",  label: "Options"       },
 ];
 
@@ -693,6 +696,269 @@ const OptionsPanel = () => (
 );
 
 // ═════════════════════════════════════════════════════════════════════════════
+// ADS PANEL
+// ═════════════════════════════════════════════════════════════════════════════
+const TARGET_ROLES = ["all","client","agency","agency_member","team","team_member","freelancer"];
+const PLACEMENTS   = ["banner","sidebar","card"];
+
+const AdsPanel = () => {
+  const [ads,       setAds]       = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [showForm,  setShowForm]  = useState(false);
+  const [form,      setForm]      = useState({ title: "", imageUrl: "", linkUrl: "", placement: "banner", targetRoles: ["all"], isActive: true });
+  const [saving,    setSaving]    = useState(false);
+
+  const load = useCallback(() => {
+    adService.getAdminAds()
+      .then(d => setAds(d.ads || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await adService.createAd(form);
+      setShowForm(false);
+      setForm({ title: "", imageUrl: "", linkUrl: "", placement: "banner", targetRoles: ["all"], isActive: true });
+      load();
+    } catch {}
+    setSaving(false);
+  };
+
+  const toggleRole = (r) => {
+    setForm(prev => ({
+      ...prev,
+      targetRoles: prev.targetRoles.includes(r)
+        ? prev.targetRoles.filter(x => x !== r)
+        : [...prev.targetRoles, r],
+    }));
+  };
+
+  if (loading) return <div className="spinner-wrap"><div className="spinner" /></div>;
+
+  return (
+    <div>
+      <div className="section-header">
+        <div className="section-header-left">
+          <h2>Publicités</h2>
+          <p style={{ color: "var(--d-muted)" }}>{ads.length} publicité{ads.length !== 1 ? "s" : ""} au total</p>
+        </div>
+        <button className="section-cta-btn" onClick={() => setShowForm(s => !s)}>
+          {showForm ? "Annuler" : "+ Nouvelle publicité"}
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="card" style={{ padding: "20px 22px", marginBottom: 20 }}>
+          <form onSubmit={handleCreate}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+              <div>
+                <label className="dash-form-label">Titre *</label>
+                <input className="dash-form-input" required value={form.title}
+                  onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
+              </div>
+              <div>
+                <label className="dash-form-label">URL image</label>
+                <input className="dash-form-input" placeholder="https://..." value={form.imageUrl}
+                  onChange={e => setForm(p => ({ ...p, imageUrl: e.target.value }))} />
+              </div>
+              <div>
+                <label className="dash-form-label">URL lien (clic)</label>
+                <input className="dash-form-input" placeholder="https://..." value={form.linkUrl}
+                  onChange={e => setForm(p => ({ ...p, linkUrl: e.target.value }))} />
+              </div>
+              <div>
+                <label className="dash-form-label">Emplacement</label>
+                <select className="dash-form-input" value={form.placement}
+                  onChange={e => setForm(p => ({ ...p, placement: e.target.value }))}>
+                  {PLACEMENTS.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label className="dash-form-label">Rôles ciblés</label>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+                {TARGET_ROLES.map(r => (
+                  <label key={r} style={{ display: "flex", alignItems: "center", gap: 4,
+                    fontSize: "0.78rem", cursor: "pointer" }}>
+                    <input type="checkbox" checked={form.targetRoles.includes(r)}
+                      onChange={() => toggleRole(r)} />
+                    {r}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <button type="submit" className="section-cta-btn" disabled={saving}>
+              {saving ? "Création..." : "Créer la publicité"}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {ads.length === 0 ? (
+        <div className="card" style={{ padding: "48px 24px", textAlign: "center",
+          color: "var(--d-muted)", fontSize: "0.82rem" }}>
+          Aucune publicité créée
+        </div>
+      ) : (
+        <div style={{ display: "grid", gap: 12 }}>
+          {ads.map(ad => (
+            <div key={ad._id} className="card" style={{ padding: "16px 20px",
+              display: "flex", alignItems: "center", gap: 16,
+              opacity: ad.isActive ? 1 : 0.55 }}>
+              {ad.imageUrl && (
+                <img src={ad.imageUrl} alt={ad.title}
+                  style={{ height: 44, width: 80, objectFit: "cover", borderRadius: 6 }} />
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{ad.title}</div>
+                <div style={{ fontSize: "0.72rem", color: "var(--d-muted)", marginTop: 2 }}>
+                  {ad.placement} · {(ad.targetRoles || []).join(", ")}
+                  {ad.linkUrl && ` · ${ad.linkUrl}`}
+                </div>
+              </div>
+              <span style={{ fontSize: "0.68rem", fontWeight: 700, padding: "3px 10px",
+                borderRadius: 20,
+                background: ad.isActive ? "#d1fae5" : "#f3f4f6",
+                color: ad.isActive ? "#065f46" : "#6b7280" }}>
+                {ad.isActive ? "Actif" : "Inactif"}
+              </span>
+              <button onClick={async () => { await adService.toggleAd(ad._id); load(); }}
+                style={{ padding: "4px 12px", borderRadius: 6, fontSize: "0.72rem",
+                  fontWeight: 700, cursor: "pointer", border: "1.5px solid #ddd",
+                  background: "transparent", fontFamily: "inherit" }}>
+                {ad.isActive ? "Désactiver" : "Activer"}
+              </button>
+              <button onClick={async () => { await adService.deleteAd(ad._id); load(); }}
+                style={{ padding: "4px 12px", borderRadius: 6, fontSize: "0.72rem",
+                  fontWeight: 700, cursor: "pointer", border: "1.5px solid #fca5a5",
+                  color: "#ef4444", background: "transparent", fontFamily: "inherit" }}>
+                Supprimer
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ═════════════════════════════════════════════════════════════════════════════
+// ACTIVITY LOG PANEL
+// ═════════════════════════════════════════════════════════════════════════════
+const ACTION_TYPES = [
+  "user_registered","user_disabled","user_enabled",
+  "post_created","post_closed",
+  "pitch_sent","pitch_accepted",
+  "project_created","project_completed",
+  "contract_signed","ad_created","member_created","account_restored",
+];
+const ACTION_ICONS = {
+  user_registered: "👤", user_disabled: "🚫", user_enabled: "✅",
+  post_created: "📝", post_closed: "🔒",
+  pitch_sent: "📨", pitch_accepted: "🤝",
+  project_created: "📁", project_completed: "🏁",
+  contract_signed: "📃", ad_created: "📢",
+  member_created: "👥", account_restored: "🔓",
+};
+
+const ActivityLogPanel = () => {
+  const [logs,    setLogs]    = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page,    setPage]    = useState(1);
+  const [total,   setTotal]   = useState(0);
+  const [filter,  setFilter]  = useState("");
+  const LIMIT = 30;
+
+  const load = useCallback((p = 1, f = filter) => {
+    setLoading(true);
+    const params = { page: p, limit: LIMIT };
+    if (f) params.actionType = f;
+    adService.getActivityLog(params)
+      .then(d => { setLogs(d.logs || []); setTotal(d.total || 0); setPage(p); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [filter]); // eslint-disable-line
+
+  useEffect(() => { load(1, filter); }, [filter]); // eslint-disable-line
+
+  const fmtDate = (d) => d
+    ? new Date(d).toLocaleString("fr-DZ", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    : "";
+
+  return (
+    <div>
+      <div className="section-header">
+        <div className="section-header-left">
+          <h2>Journal d'activité</h2>
+          <p style={{ color: "var(--d-muted)" }}>{total} événement{total !== 1 ? "s" : ""}</p>
+        </div>
+        <select className="dash-form-input" value={filter}
+          onChange={e => setFilter(e.target.value)}
+          style={{ width: "auto", padding: "6px 12px", fontSize: "0.78rem" }}>
+          <option value="">Tous les types</option>
+          {ACTION_TYPES.map(a => <option key={a} value={a}>{a}</option>)}
+        </select>
+      </div>
+
+      {loading ? <div className="spinner-wrap"><div className="spinner" /></div> : (
+        <>
+          <div className="card" style={{ padding: 0 }}>
+            {logs.length === 0 ? (
+              <div style={{ padding: "48px 24px", textAlign: "center", color: "var(--d-muted)", fontSize: "0.82rem" }}>
+                Aucune activité enregistrée
+              </div>
+            ) : logs.map((log, i) => (
+              <div key={log._id || i} style={{
+                padding: "12px 20px", borderBottom: "1px solid var(--d-border-soft)",
+                display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <span style={{ fontSize: "1.1rem", flexShrink: 0, marginTop: 1 }}>
+                  {ACTION_ICONS[log.actionType] || "📌"}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--d-ink)" }}>
+                    {log.description}
+                  </div>
+                  <div style={{ fontSize: "0.7rem", color: "var(--d-muted)", marginTop: 2 }}>
+                    {log.actorName && <span>{log.actorName} · </span>}
+                    <span style={{ fontStyle: "italic" }}>{log.actionType}</span>
+                  </div>
+                </div>
+                <div style={{ fontSize: "0.68rem", color: "var(--d-muted)", whiteSpace: "nowrap", flexShrink: 0 }}>
+                  {fmtDate(log.createdAt)}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {total > LIMIT && (
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 16 }}>
+              <button disabled={page <= 1} onClick={() => load(page - 1)}
+                className="section-cta-btn"
+                style={{ background: "transparent", border: "1.5px solid #ddd", color: "var(--d-muted)" }}>
+                ← Précédent
+              </button>
+              <span style={{ padding: "9px 16px", fontSize: "0.82rem", color: "var(--d-muted)" }}>
+                {page} / {Math.ceil(total / LIMIT)}
+              </span>
+              <button disabled={page >= Math.ceil(total / LIMIT)} onClick={() => load(page + 1)}
+                className="section-cta-btn"
+                style={{ background: "transparent", border: "1.5px solid #ddd", color: "var(--d-muted)" }}>
+                Suivant →
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+// ═════════════════════════════════════════════════════════════════════════════
 // ROOT
 // ═════════════════════════════════════════════════════════════════════════════
 const AdminDashboard = () => {
@@ -730,6 +996,8 @@ const AdminDashboard = () => {
     stats:    <StatsPanel />,
     posts:    <PostsPanel />,
     activity: <ActivityPanel />,
+    ads:      <AdsPanel />,
+    log:      <ActivityLogPanel />,
     options:  <OptionsPanel />,
   };
 

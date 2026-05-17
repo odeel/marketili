@@ -9,6 +9,9 @@ const Post         = require("../models/Post");
 const Pitch        = require("../models/Pitch");
 const Project      = require("../models/Project");
 const OptionsList  = require("../models/OptionsList");
+const ActivityLog  = require("../models/ActivityLog");
+const logActivity  = require("../utils/logActivity");
+const adController = require("./adController");
 
 const ok   = (res, data, code = 200) => res.status(code).json({ success: true,  ...data });
 const fail = (res, msg,  code = 400) => res.status(code).json({ success: false, message: msg });
@@ -63,6 +66,13 @@ exports.toggleUserStatus = async (req, res) => {
 
     user.isActive = !user.isActive;
     await user.save();
+    const userName = user.firstName ? `${user.firstName} ${user.lastName}` : (user.agencyName || user.teamName || user.email || id);
+    logActivity({
+      actorId: req.user._id, actorRole: "admin", actorName: "Admin",
+      actionType: user.isActive ? "user_enabled" : "user_disabled",
+      targetId: user._id, targetType: "User",
+      description: `Compte ${user.isActive ? "activé" : "désactivé"} : ${userName} (${role})`,
+    });
     return ok(res, { isActive: user.isActive });
   } catch (err) {
     return fail(res, err.message, 500);
@@ -280,3 +290,36 @@ exports.getAllOptions = async (req, res) => {
     return fail(res, err.message, 500);
   }
 };
+
+// ─────────────────────────────────────────────
+// ACTIVITY LOG  GET /admin/activity
+// ─────────────────────────────────────────────
+exports.getActivityLog = async (req, res) => {
+  try {
+    const page  = parseInt(req.query.page)  || 1;
+    const limit = parseInt(req.query.limit) || 30;
+    const filter = {};
+    if (req.query.actionType) filter.actionType = req.query.actionType;
+
+    const [logs, total] = await Promise.all([
+      ActivityLog.find(filter)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      ActivityLog.countDocuments(filter),
+    ]);
+    return ok(res, { logs, total, page, pages: Math.ceil(total / limit) });
+  } catch (err) {
+    return fail(res, err.message, 500);
+  }
+};
+
+// ─────────────────────────────────────────────
+// ADS  (proxy to adController)
+// ─────────────────────────────────────────────
+exports.getAdminAds = adController.getAdminAds;
+exports.createAd    = adController.createAd;
+exports.updateAd    = adController.updateAd;
+exports.toggleAd    = adController.toggleAd;
+exports.deleteAd    = adController.deleteAd;

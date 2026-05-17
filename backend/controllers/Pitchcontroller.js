@@ -2,6 +2,7 @@ const Pitch        = require("../models/Pitch");
 const Post         = require("../models/Post");
 const Notification = require("../models/Notification");
 const AgencyMember = require("../models/AgencyMember");
+const logActivity  = require("../utils/logActivity");
 
 const ok = (res, data, code = 200) =>
   res.status(code).json({ success: true, ...data });
@@ -158,6 +159,12 @@ const sendPitch = async (req, res) => {
       metadata: { postId: post._id, pitchId: pitch._id },
     });
 
+    logActivity({
+      actorId: pitch.senderAgency || pitch.senderTeam || pitch.senderFreelancer,
+      actorRole: pitch.senderType?.toLowerCase(), actorName: pitch.senderName || String(pitch.senderAgency || ""),
+      actionType: "pitch_sent", targetId: pitch._id, targetType: "Pitch",
+      description: `Offre envoyée sur "${post.title}"`,
+    });
     return ok(res, { pitch }, 201);
   } catch (err) {
     console.error("sendPitch:", err);
@@ -348,6 +355,17 @@ const acceptPitch = async (req, res) => {
       metadata: { pitchId: pitch._id, projectId: project._id },
     });
 
+    logActivity({
+      actorId: req.user._id, actorRole: "client", actorName: String(req.user._id),
+      actionType: "pitch_accepted", targetId: pitch._id, targetType: "Pitch",
+      description: `Offre acceptée — projet créé : "${project?.title || pitch._id}"`,
+      metadata: { projectId: project?._id },
+    });
+    logActivity({
+      actorId: project?._id, actorRole: "system", actorName: "Système",
+      actionType: "project_created", targetId: project?._id, targetType: "Project",
+      description: `Projet créé automatiquement : "${project?.title || ""}"`,
+    });
     return ok(res, {
       pitch,
       project,

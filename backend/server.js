@@ -55,6 +55,7 @@ app.use("/api/calendar",       require("./routes/calendarRoutes"));
 app.use("/api/chat",           require("./routes/chatRoutes"));
 app.use("/api/collaboration-requests", require("./routes/collaborationRequestRoutes"));
 app.use("/api/analytics",              require("./routes/analyticsRoutes"));
+app.use("/api/ads",                    require("./routes/adRoutes"));
 
 // ── Health check ──
 app.get("/api/health", (req, res) => {

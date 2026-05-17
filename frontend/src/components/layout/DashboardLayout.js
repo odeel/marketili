@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuth from "../../hooks/useAuth";
 import notificationService from "../../services/notificationService";
+import AdBanner from "../ads/AdBanner";
 import chatService from "../../services/chatService";
 import {
   IconBell, IconLogOut, IconChevronLeft, IconChevronRight,
@@ -328,6 +329,7 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
         </header>
 
         <main className="dash-content">
+          {role !== "admin" && <AdBanner />}
           <AnimatePresence mode="wait">
             <motion.div key={topbarTitle}
               initial={{ opacity: 0, y: 8 }}

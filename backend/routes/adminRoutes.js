@@ -13,7 +13,15 @@ router.patch("/users/:role/:id/toggle", c.toggleUserStatus);
 router.get("/stats",    c.getStats);
 
 // ── Activity ──
-router.get("/activity", c.getRecentActivity);
+router.get("/activity",       c.getRecentActivity);
+router.get("/activity/log",   c.getActivityLog);
+
+// ── Ads ──
+router.get("/ads",               c.getAdminAds);
+router.post("/ads",              c.createAd);
+router.patch("/ads/:id",         c.updateAd);
+router.patch("/ads/:id/toggle",  c.toggleAd);
+router.delete("/ads/:id",        c.deleteAd);
 
 // ── Posts moderation ──
 router.get("/posts",              c.getAdminPosts);
