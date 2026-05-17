@@ -30,7 +30,7 @@
 | Freelancer: numéro carte auto-entrepreneur | ✅ | carteAutoEntrepreneur field |
 | JWT HTTP-only cookies | ✅ | Set on login, cleared on logout |
 | Role-based authorization middleware | ✅ | protect + authorize() + adminOnly |
-| Agency member: forced password change on first login | ✅ | mustChangePassword flag + ChangePasswordPage |
+| Agency member: forced password change on first login | ✅ | mustChangePassword flag + ChangePasswordPage; also wired for team_member role |
 | PrivateRoute system | ✅ | allowedRoles checked per route |
 | Unauthorized access page | ✅ | /unauthorized route |
 | isActive check on login | ✅ | auth middleware validates |
@@ -46,7 +46,7 @@
 | Title | ✅ | |
 | Status (open / in_progress / closed / reactivated) | ✅ | |
 | Description | ✅ | |
-| Objectives | 🟡 | No dedicated `objectives` field; folded into description |
+| Objectives | ✅ | Dedicated `objectives` field on Post model; textarea in CreatePostModal; displayed in PostCard (purple italic block) |
 | Budget range (min / max) | ✅ | budget.{min, max, currency} |
 | Benefits / non-monetary compensation | ✅ | compensationType + benefits field |
 | Optional / flexible pricing | ✅ | compensationType: monetary \| benefits \| mixed |
@@ -57,7 +57,7 @@
 | Marketing type | ✅ | marketingType enum: Events, 360, ATL, BTL, Production, Brand |
 | Collaboration type | ✅ | collaborationType: service \| partnership \| sponsorship \| exposure |
 | Public or targeted to specific provider | ✅ | isPublic + sentTo[] + sendPostToProvider endpoint |
-| Provider can send pitch directly to client | 🟡 | sendPostToProvider exists on backend; no dedicated UI flow for providers initiating |
+| Provider can send pitch directly to client | ✅ | initiatedBy field on Post; ProfilePage "Envoyer une proposition" modal for provider viewing client profile; ClientDashboard shows amber "Proposition reçue" badge |
 | Post filters: status, location, category, type | ✅ | postController.getPosts() |
 | Post search (title + description) | ✅ | |
 | Pagination | ✅ | |
@@ -107,7 +107,7 @@
 | Viewed differently by role | ✅ | getClientProjects vs getAgencyProjects etc. |
 | Project card: progress, client, deadline, status, workers, stats | ✅ | |
 | Project detail: progress bars, tasks, client info, workers, deadlines, deliverables | ✅ | |
-| Completed projects turn grey visually | 🟡 | Backend: projectStatus="completed"; UI styling (greyed/archived appearance) needs verification |
+| Completed projects turn grey visually | ✅ | Diagonal watermark ribbon (completed/cancelled) on project cards in agency, team member, and freelancer dashboards |
 | Ordered by closest deadline first | ✅ | |
 | Deadline color system (grey/green/yellow/orange/red) | ✅ | deadlineColor.js utility |
 | Progress auto-calculated (done tasks / total) | ✅ | |
@@ -115,7 +115,7 @@
 | statusHistory tracking | ✅ | |
 | Deliverables submission | ✅ | addDeliverable endpoint + model |
 | assignedMembers tracking | ✅ | |
-| Deadline extension by director | 🔵 | No dedicated UI to extend deadline |
+| Deadline extension by director | 🔵 | updateProject() changes deadline; no dedicated "extend deadline" button in UI |
 | Closest deadline filtering | ✅ | |
 | Calendar integration | ✅ | calendarController returns project deadlines |
 
@@ -163,7 +163,7 @@
 | No digital signature | ✅ | Correct — not implemented |
 | Contract status filters (client, date, done, résiliation, not completed) | ✅ | getContracts() supports these filters |
 | Resiliate contract | ✅ | |
-| Director / commercial / main account see contracts page | ✅ | DirectorContracts page |
+| Director / commercial / main account see contracts page | ✅ | DirectorContracts page with inline search |
 
 ---
 
@@ -181,7 +181,7 @@
 | Freelancer collaborates with multiple agencies | ✅ | agencyCollaborations[]; context switching in UI |
 | Freelancer context card switching (Agency A / Agency B / Team C) | ✅ | FreelancerCollaborations + ContextBar |
 | Isolated workspaces per collaboration context | ✅ | FreelancerProjects filters by agencyId |
-| Freelancer can send application to teams/agencies | 🟡 | No dedicated "apply to join agency/team" workflow/endpoint |
+| Freelancer can send application to teams/agencies | ✅ | CollaborationRequest model + apply/respond endpoints; DirectorMembers "Demandes reçues" tab; FreelancerCollaborations "Mes demandes" tab |
 
 ---
 
@@ -193,7 +193,7 @@
 | Agency profile: previous collaborations, services, portfolio, workers | ✅ | |
 | Freelancer profile: skills, collaborations, portfolio | ✅ | |
 | Team profile: members, specialization, campaigns | 🟡 | members + specialties exist; "campaigns" = portfolio items |
-| All profiles: bio, specialties, stats, publications, work showcase, media, projects, achievements | 🟡 | Most implemented; "achievements" has no dedicated field |
+| All profiles: bio, specialties, stats, publications, work showcase, media, projects, achievements | ✅ | achievements[] field on Client model; tags input in EditProfilePage; pill display on ProfilePage |
 | Social-style posts (update, achievement, campaign, announcement) | ✅ | ProfilePost model + routes + UI |
 | Portfolio items | ✅ | portfolioItems[] on Agency, Team, Freelancer |
 | Collaboration history on profile | ✅ | agencyCollaborations[] shown on FreelancerProfile |
@@ -225,8 +225,8 @@
 | Notification on: project created | ✅ | |
 | Notification on: task overdue | ✅ | type: "task_overdue" |
 | Notification on: contract milestones | ✅ | contract_sent, contract_acknowledged, contract_signed types |
-| Notification on: collaboration request | 🟡 | Type exists but trigger not fully wired |
-| Notification on: account restored | 🟡 | No explicit trigger in restoration endpoint |
+| Notification on: collaboration request | ✅ | Fired when freelancer sends apply request and when agency/team responds |
+| Notification on: account restored | ✅ | logActivity call in setMemberStatus when restoring to active; notification trigger present |
 | Notification on: director approval needed | ✅ | pitch internal workflow triggers |
 
 ---
@@ -237,7 +237,7 @@
 |---|---|---|
 | Calendar (all users) | ✅ | |
 | Personal notes + reminders + pinned tasks | ✅ | PersonalNote model + noteController + PersonalNotes UI |
-| Activity planning (appears in calendar automatically) | 🟡 | Deadlines and task dates appear; personal reminders don't auto-appear in calendar |
+| Activity planning (appears in calendar automatically) | ✅ | SharedCalendar pulls personal reminder notes as purple events with 🔔 icon; "Marquer comme fait" button marks them done with strikethrough |
 | **Client:** my posts + create post | ✅ | |
 | **Client:** browse providers + browse posts | ✅ | |
 | **Client:** pitches received | ✅ | |
@@ -247,20 +247,20 @@
 | **Client:** profile | ✅ | |
 | **Agency Director:** flagged posts | ✅ | |
 | **Agency Director:** pitches | ✅ | |
-| **Agency Director:** projects | ✅ | |
-| **Agency Director:** contracts | ✅ | |
-| **Agency Director:** members management | ✅ | |
-| **Agency Director:** analytics | 🟡 | Basic stats shown; no dedicated analytics page |
+| **Agency Director:** projects | ✅ | Search by title/client name; status filter tabs |
+| **Agency Director:** contracts | ✅ | Inline search by party/project/type |
+| **Agency Director:** members management | ✅ | Includes incoming collaboration requests tab |
+| **Agency Director:** analytics | ✅ | DirectorAnalytics page: pitch win rate, revenue line chart, project status donut, member workload bar chart (Recharts) |
 | **Agency Director:** calendar | ✅ | |
 | **Agency Commercial:** browse + flag posts | ✅ | CommercialBrowse page |
 | **Agency Worker:** tasks, projects, calendar | ✅ | WorkerTasks, WorkerProjects, WorkerCalendar |
 | **Freelancer:** browse posts | ✅ | |
 | **Freelancer:** pitches | ✅ | |
-| **Freelancer:** collaborations (context switching) | ✅ | |
+| **Freelancer:** collaborations (context switching) | ✅ | Includes "Mes demandes" tab for outgoing apply requests |
 | **Freelancer:** projects | ✅ | |
 | **Freelancer:** profile | ✅ | |
 | **Team:** overview, pitches, projects, members | ✅ | TeamDashboard |
-| **Team Member:** tasks, projects, calendar | 🟡 | TeamMember dashboard exists; completeness needs verification |
+| **Team Member:** tasks, projects, calendar | ✅ | Projects page (TeamMemberProjects), Personal Notes, Notifications all added; mustChangePassword flow wired |
 
 ---
 
@@ -287,9 +287,9 @@
 | Disable / enable accounts | ✅ | toggleUserStatus() |
 | Access statistics | ✅ | getStats() — users, posts, pitches counts |
 | Add fields and options (dropdown configurator) | ✅ | OptionsList model + admin options routes |
-| Add ads | ❌ | No ads model, no ads routes, no UI |
+| Add ads | ✅ | Ad model + adController + adRoutes; AdBanner component served to dashboards by role/placement; admin "Publicités" tab with create/toggle/delete |
 | Monitor posts | ✅ | getAdminPosts() + removePost() |
-| Monitor platform activity | 🟡 | getStats() covers basics; no full activity log page |
+| Monitor platform activity | ✅ | ActivityLog model + getActivityLog() endpoint; "Journal" tab in AdminDashboard with emoji icons per actionType, actionType filter, pagination |
 | AdminDashboard (DashboardLayout-based) | ✅ | AdminDashboard.jsx |
 | AdminPanel (standalone, self-contained auth) | ✅ | AdminPanel.jsx (not currently routed in App.js) |
 
@@ -304,7 +304,7 @@
 | Task assigned timestamp | ✅ | assignedAt in assignedMembers |
 | Project started timestamp | ✅ | startDate field |
 | Completion date | ✅ | completedAt field |
-| Edit tracking | 🟡 | No generic edit log; statusHistory exists on Project/Contract |
+| Edit tracking | 🟡 | No generic edit log; statusHistory exists on Project/Contract; ActivityLog records key action types |
 | Pitch validation / denial timestamps | ✅ | respondedAt field |
 | Never hard-delete (all soft) | ✅ | server.js 405 protection on delete for core entities |
 | Deadline extension by director | 🔵 | No UI; updateProject can change deadline |
@@ -315,7 +315,7 @@
 
 | Requirement | Status | Notes |
 |---|---|---|
-| Search everywhere | 🟡 | Implemented in posts, providers; not uniformly in all modules |
+| Search everywhere | 🟡 | Posts, providers, pitches, contracts (DirectorContracts), projects (DirectorProjects) all have search; not in all subpages |
 | Status filters | ✅ | Posts, pitches, projects, contracts all filterable |
 | Date filters | ✅ | Contracts, posts support date range |
 | Region filters | ✅ | Posts, providers |
@@ -347,6 +347,7 @@
 | MUI v7.3 | ✅ | |
 | bcryptjs | ✅ | |
 | multer + multer-gridfs-storage | ✅ | |
+| Recharts | ✅ | Used in DirectorAnalytics (LineChart, BarChart, PieChart) |
 | Separate collections per role | ✅ | |
 
 ---
@@ -355,21 +356,26 @@
 
 ### ✅ Fully Working
 
-- Complete multi-role auth (7 roles, JWT cookies, force-password-change)
-- Post lifecycle (create, browse, filter, close, reactivate, delete, targeted sending)
+- Complete multi-role auth (7 roles, JWT cookies, force-password-change for agency_member and team_member)
+- Post lifecycle (create, browse, filter, close, reactivate, delete, targeted sending, objectives field, provider→client direct proposal)
 - Pitch lifecycle (submit, internal approval workflow, accept/reject/withdraw, auto-project creation)
-- Project management (auto-create, tasks, deliverables, comments, assignment, deadline colors, progress)
-- Contract lifecycle (draft → sent → receipt → bon de commande → signed → résiliation), with filters
+- Project management (auto-create, tasks, deliverables, comments, assignment, deadline colors, progress, completed project diagonal ribbon)
+- Contract lifecycle (draft → sent → receipt → bon de commande → signed → résiliation), with filters and inline search
 - Agency internal workflow (commercial flags → director selects → strategist pitches → chef validates)
 - Freelancer multi-agency context switching with isolated workspaces
 - Worker lifecycle (soft statuses: inactive/suspended/archived, restoration, historical integrity)
+- Freelancer apply-to-join workflow (CollaborationRequest: apply, respond accept/decline, notifications both sides)
 - All 4 main dashboards (Client, Agency, Freelancer, Team) with role-split views
-- Personal notes with pin/reminder
-- Notification system (19+ types, categories, unread count, mark-all-read)
-- Profiles (public view, edit, portfolio, social posts, collaboration history)
+- Agency Director analytics (pitch win rate, revenue trend, project status donut, member workload — Recharts)
+- TeamMember dashboard (projects, personal notes, notifications, force-password-change)
+- Personal notes with pin/reminder; reminders auto-appear in calendar as purple events with mark-done action
+- Notification system (19+ types, categories, unread count, mark-all-read, collaboration request triggers, account restored trigger)
+- Profiles (public view, edit, portfolio, social posts, collaboration history, client achievements field)
 - Browse providers with search/filter
-- Calendar with color-coded deadlines
-- Admin system (users, stats, options configurator, post moderation)
+- Calendar with color-coded deadlines and personal reminders
+- Admin system (users, stats, options configurator, post moderation, ads management, activity log journal)
+- Ads system (Ad model, role/placement targeting, dismissible AdBanner in dashboards, admin CRUD)
+- Activity log (ActivityLog model, 14 action types auto-logged across controllers, paginated journal in admin)
 - Landing page (full French content, animations, contact section)
 - GridFS uploads (images, video, PDF)
 
@@ -381,7 +387,6 @@
 |---|---|
 | **Chat / Conversation system** | Contract flow requires PDF exchange through chat; no Conversation or Message model, no chat routes, no chat UI |
 | **PDF auto-generation** (Contrat Proforma → PDF) | contractController and frontend; `contractPdf` field exists but no generator (e.g., pdfkit, puppeteer) integrated |
-| **Ads system** | Admin can add ads per spec; no Ads model, no routes, no UI |
 | **Agency → Freelancer pitch: CONVENTION articles mapped to form** | PitchForm for agency_to_freelancer exists but individual CONVENTION DE COLLABORATION articles (01–11) are not mapped to distinct form fields |
 | **Contract Proforma form UI** | Dedicated multi-article contract form (PRÉAMBULE → ARTICLE 15) not built |
 
@@ -391,15 +396,8 @@
 
 | Partial Feature | What's Done | What's Missing |
 |---|---|---|
-| **Post objectives field** | Description covers it | No dedicated `objectives` field on Post model or form |
 | **Agency → Client 5-step pitch form** | Backend fields complete; "version 2" form exists | Verify correct PitchForm version is routed; ensure all strategy/content/analysis sections render |
 | **Notification director-only filter** | All notification types exist | No server-side filter ensuring only director receives contract/project notifications |
-| **Personal reminders → calendar auto-appear** | Notes have reminderDate | Calendar doesn't pull personal reminder dates as events |
-| **Analytics dashboard** | Basic stats in admin and overview | No dedicated analytics page with charts for agency (pitch win rate, project velocity, etc.) |
 | **Deadline extension UI** | updateProject() can change deadline | No dedicated "extend deadline" button in director's project view |
-| **Freelancer apply to join agency/team** | agencyCollaborations[] model ready | No apply/invite workflow endpoint or UI |
-| **Completed project greyed appearance** | projectStatus="completed" exists | UI greying/archiving style on project cards needs confirmation |
-| **TeamMember dashboard completeness** | TeamMember routes and model exist | Dashboard subpages for team_member role need verification |
-| **Activity log page (admin)** | getStats() gives aggregates | No detailed activity event feed in admin panel |
-| **Client achievements field** | bio + posts cover it | No dedicated `achievements` model field or display section |
-| **Provider direct post to client (no post)** | sentTo[] on posts supports it | No UI flow for provider to initiate and send a post/proposal directly to a specific client without a pre-existing Post |
+| **Search uniformity** | Posts, pitches, contracts, projects, providers have search | Not present in all sub-panels (e.g. task list, notification list) |
+| **Client profile field of work** | bio + achievements cover context | No dedicated structured "field of work" or "industry" display on public profile |

@@ -1,83 +1,28 @@
-# Tasks Index — Marketili Remaining Work
+# Tasks — Marketili (Remaining Work)
 
-> Last updated: 2026-05-17
-> Source of truth: PROJECT_STATUS.md
-
-This folder contains one file per feature group. Each file specifies exactly what backend and frontend work is needed, which files to touch, and any dependencies.
+> Generated: 2026-05-17
+> Branch: yacine-fixes
+> Based on: PROJECT_STATUS.md — ❌ Not Implemented + 🟡 Partial gaps
 
 ---
 
 ## Priority Order
 
-### 🔴 Priority 1 — Critical Blockers (core workflow broken without these)
-
-| File | Feature | Why Critical |
-|---|---|---|
-| [01_chat_system.md](01_chat_system.md) | Chat & Messaging | Contract flow is entirely supposed to happen inside chat. PDF, receipt, BDC all sent through messages. Nothing works without this. |
-| [02_contract_proforma_pdf.md](02_contract_proforma_pdf.md) | Contract Proforma Form + PDF Generation | Agency cannot generate the formal contract PDF. contractPdf field exists but nothing fills it. Depends on chat being built. |
-| [03_pitch_forms_completion.md](03_pitch_forms_completion.md) | Pitch Forms — CONVENTION + 5-step verification | Agency→Freelancer pitch is missing its legal article structure. Agency→Client 5-step form needs routing verification. |
-
----
-
-### 🟠 Priority 2 — Significant Gaps (feature exists but incomplete)
-
-| File | Feature | Why Important |
-|---|---|---|
-| [04_notifications_gaps.md](04_notifications_gaps.md) | Notification Director Filter + Missing Triggers | Director receives all notifications including ones meant only for them. Some triggers never fire. |
-| [05_freelancer_agency_apply.md](05_freelancer_agency_apply.md) | Freelancer Apply / Agency Invite Workflow | Model is ready but no endpoint or UI. Freelancers have no way to join agencies. |
-| [06_analytics_dashboard.md](06_analytics_dashboard.md) | Agency Analytics Dashboard | Director has no pitch win rate, project velocity, or revenue data. Only raw overview stats. |
+| # | File | Feature | Effort | Status |
+|---|------|---------|--------|--------|
+| 01 | [01_chat_system.md](01_chat_system.md) | Chat / Conversation system | 🔴 Large | ❌ |
+| 02 | [02_pdf_contract_generation.md](02_pdf_contract_generation.md) | PDF contract generation | 🔴 Large | ❌ |
+| 03 | [03_contract_proforma_form.md](03_contract_proforma_form.md) | Contract Proforma form UI | 🟠 Medium | ❌ |
+| 04 | [04_convention_pitch_form.md](04_convention_pitch_form.md) | Agency→Freelancer CONVENTION pitch form | 🟠 Medium | ❌ |
+| 05 | [05_pitch_form_agency_client.md](05_pitch_form_agency_client.md) | Agency→Client 5-step pitch form fix | 🟡 Small | 🟡 |
+| 06 | [06_deadline_extension_ui.md](06_deadline_extension_ui.md) | Deadline extension button (director) | 🟢 Tiny | 🟡 |
+| 07 | [07_search_uniformity.md](07_search_uniformity.md) | Search in remaining panels (tasks, notifs) | 🟢 Tiny | 🟡 |
+| 08 | [08_notification_director_filter.md](08_notification_director_filter.md) | Director-only notification filter | 🟡 Small | 🟡 |
+| 09 | [09_client_profile_industry.md](09_client_profile_industry.md) | Client profile industry/field of work field | 🟢 Tiny | 🟡 |
 
 ---
 
-### 🟡 Priority 3 — UI & UX Fixes (small gaps in existing features)
-
-| File | Feature | Why Needed |
-|---|---|---|
-| [07_project_ui_fixes.md](07_project_ui_fixes.md) | Completed Project Greying + Deadline Extension | Completed projects look the same as active ones. Director can't extend deadline from UI. |
-| [08_calendar_reminders_sync.md](08_calendar_reminders_sync.md) | Personal Reminders → Calendar Sync | Notes with reminderDate don't appear in the calendar automatically. |
-| [09_team_member_dashboard.md](09_team_member_dashboard.md) | TeamMember Dashboard Completeness | TeamMember role has model + routes but dashboard subpages are sparse. |
-
----
-
-### 🔵 Priority 4 — Admin & Backfill
-
-| File | Feature | Why Needed |
-|---|---|---|
-| [10_admin_ads_activity.md](10_admin_ads_activity.md) | Ads System + Admin Activity Log | Admin can't add ads (fully missing). Activity log shows only aggregate stats, not event feed. |
-| [11_minor_fields_fixes.md](11_minor_fields_fixes.md) | Minor field and UX gaps | Objectives field, achievements, provider direct-post, search uniformity across all modules. |
-
----
-
-## Dependency Map
-
-```
-01_chat_system
-    └── 02_contract_proforma_pdf  (contract PDF sent through chat)
-
-03_pitch_forms_completion
-    └── (independent)
-
-04_notifications_gaps
-    └── (independent, but easier after 01_chat)
-
-05_freelancer_agency_apply
-    └── 04_notifications_gaps (invite notification needed)
-
-06_analytics_dashboard
-    └── (independent)
-
-07_project_ui_fixes
-    └── (independent)
-
-08_calendar_reminders_sync
-    └── (independent)
-
-09_team_member_dashboard
-    └── (independent)
-
-10_admin_ads_activity
-    └── (independent)
-
-11_minor_fields_fixes
-    └── (independent)
-```
+## Notes
+- Tasks 01–02 are the largest remaining features (new models + routes + UI).
+- Tasks 03–04 are form-heavy but self-contained.
+- Tasks 05–09 are polish/completion — can be done in a single session.

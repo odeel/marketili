@@ -1,161 +1,152 @@
-# Task 01 — Chat & Messaging System
+# Task 01 — Chat / Conversation System
 
-**Priority:** 🔴 Critical
-**Depends on:** nothing (must be built first)
-**Blocks:** Task 02 (contract PDF flow through chat)
-
----
-
-## Why This Exists
-
-The spec states clearly: "The contract workflow happens INSIDE the chat system. No external workflow."
-
-The entire contract exchange (Proforma PDF → receipt → Bon de Commande) is supposed to flow through an in-platform messaging thread. Currently:
-- `Project` model has a `conversationId` field pointing to a `Conversation` model that does not exist
-- No `Conversation` model, no `Message` model, no routes, no frontend UI
+**Status:** ❌ Not implemented  
+**Effort:** Large (new models, routes, real-time or polling UI)  
+**Blocks:** Task 02 (PDF sent through chat)
 
 ---
 
-## Scope
+## What's Missing
 
-A real-time-ready but initially HTTP-polling chat system between two parties per project. No need for WebSockets in v1 — polling every few seconds is acceptable.
+No chat or messaging exists anywhere in the codebase. The Contract model has a `conversationId` ref field that is never populated. The spec requires:
 
-Each project has exactly **one conversation thread** between the two parties (client ↔ provider). The contract document exchanges happen inside this thread.
+- Parties (client ↔ agency/freelancer) can exchange messages inside a project/contract context
+- Agency sends the signed Contrat Proforma PDF through chat
+- Client receives it, uploads payment receipt through chat
+- System messages appear in chat (e.g. "Bon de commande envoyé")
 
 ---
 
 ## Backend Work
 
-### 1. New Model: `backend/models/Conversation.js`
+### 1. New model: `backend/models/Conversation.js`
 
-Fields:
-- `project` (ref: Project, required, unique — one conversation per project)
-- `participants[]`: `{ participantType: enum["Client","Agency","Freelancer","Team"], participantId }`
-- `createdAt`
+```js
+{
+  project:     { type: ObjectId, ref: "Project", required: true },
+  participants: [
+    {
+      participantType: { type: String, enum: ["Client","Agency","Team","Freelancer","AgencyMember"] },
+      participantId:   ObjectId,
+    }
+  ],
+  lastMessage:  { type: ObjectId, ref: "Message" },
+  createdAt, updatedAt  // timestamps: true
+}
+```
 
-### 2. New Model: `backend/models/Message.js`
+### 2. New model: `backend/models/Message.js`
 
-Fields:
-- `conversation` (ref: Conversation, required)
-- `sender` (no ref, manual)
-- `senderRole` enum: "client" | "agency" | "agency_member" | "freelancer" | "team"
-- `senderName`
-- `senderType` enum: "Client" | "Agency" | "AgencyMember" | "Freelancer" | "Team"
-- `messageType` enum: "text" | "file" | "contract_pdf" | "receipt" | "bon_de_commande" | "system"
-- `content` (text body, optional)
-- `file`: `{ fileId, filename, url, mimeType, size }` (optional, for file messages)
-- `isRead` (default false)
-- `readAt`
-- `metadata`: `{ contractId }` (optional, links file messages to a contract record)
-- timestamps
+```js
+{
+  conversation: { type: ObjectId, ref: "Conversation", required: true },
+  sender: {
+    senderType: { type: String, enum: ["Client","Agency","Team","Freelancer","AgencyMember","system"] },
+    senderId:   ObjectId,
+    senderName: String,
+  },
+  body:        { type: String, trim: true },          // text content
+  attachments: [{ fileId: String, filename: String, mimeType: String, url: String }],
+  isSystemMsg: { type: Boolean, default: false },     // auto-generated events
+  readBy:      [{ participantId: ObjectId, readAt: Date }],
+  createdAt    // timestamps: true
+}
+```
 
-### 3. New Controller: `backend/controllers/chatController.js`
+### 3. New controller: `backend/controllers/chatController.js`
 
 Endpoints:
-- `getOrCreateConversation(projectId)` — GET `/chat/project/:projectId` — finds or creates the conversation for a project; returns conversation + participants
-- `getMessages(conversationId, page, limit)` — GET `/chat/:conversationId/messages` — paginated, ordered oldest→newest
-- `sendMessage(conversationId, content, file?)` — POST `/chat/:conversationId/messages` — supports text or file upload; validates sender is a participant
-- `markRead(conversationId)` — PATCH `/chat/:conversationId/read` — marks all unread messages as read for the current user
-- `getUnreadCount(userId, userRole)` — GET `/chat/unread-count` — total unread messages across all conversations
+- `POST /api/chat/conversations` — create or get existing conversation for a project (idempotent)
+- `GET  /api/chat/conversations` — list all conversations for current user (by participantId)
+- `GET  /api/chat/conversations/:id/messages?page=1&limit=30` — paginated messages (newest first)
+- `POST /api/chat/conversations/:id/messages` — send a message (text + optional file attachment)
+- `PATCH /api/chat/conversations/:id/read` — mark all as read for current user
+- `GET  /api/chat/unread-count` — total unread count across all conversations (used in topbar badge)
 
-### 4. New Routes: `backend/routes/chatRoutes.js`
+On message creation:
+- Update `conversation.lastMessage`
+- Fire `Notification.notify()` to all other participants (category: "messages", type: "system")
 
+### 4. New route: `backend/routes/chatRoutes.js`
+
+```js
+router.use(protect);
+router.post("/conversations",            c.getOrCreateConversation);
+router.get("/conversations",             c.getMyConversations);
+router.get("/conversations/:id/messages",c.getMessages);
+router.post("/conversations/:id/messages", upload.single("file"), c.sendMessage);
+router.patch("/conversations/:id/read",  c.markRead);
+router.get("/unread-count",              c.getUnreadCount);
 ```
-GET    /api/chat/project/:projectId       → getOrCreateConversation
-GET    /api/chat/:conversationId/messages → getMessages
-POST   /api/chat/:conversationId/messages → sendMessage (with optional file via upload middleware)
-PATCH  /api/chat/:conversationId/read     → markRead
-GET    /api/chat/unread-count             → getUnreadCount
-```
 
-All routes: `protect` middleware required.
+Mount in `server.js`: `app.use("/api/chat", require("./routes/chatRoutes"))`
 
-### 5. Update `backend/server.js`
+### 5. Update `Project` model (already has `conversation` ref — populate it on getProject)
 
-Mount: `app.use('/api/chat', chatRoutes)`
-
-Add `/api/chat` to soft-delete protection list.
-
-### 6. Update `backend/models/Project.js`
-
-`conversationId` field already exists. Verify it points to `Conversation` model.
-
-### 7. Update `backend/controllers/projectController.js`
-
-When a project is auto-created (inside `acceptPitch`), also auto-create the Conversation for that project and set `project.conversationId`.
+### 6. Update `Contract` model: populate `conversationId` when fetching contract detail
 
 ---
 
 ## Frontend Work
 
-### 1. New Service: `frontend/src/services/chatService.js`
+### 1. New service: `frontend/src/services/chatService.js`
 
-Methods:
-- `getConversation(projectId)` — GET `/chat/project/:projectId`
-- `getMessages(conversationId, page)` — GET `/chat/:conversationId/messages`
-- `sendMessage(conversationId, { content, file? })` — POST with multipart if file
-- `markRead(conversationId)` — PATCH `/chat/:conversationId/read`
-- `getUnreadCount()` — GET `/chat/unread-count`
+```js
+const chatService = {
+  getOrCreate:    (projectId) => api.post("/chat/conversations", { projectId }),
+  getConversations: ()        => api.get("/chat/conversations"),
+  getMessages:    (id, page)  => api.get(`/chat/conversations/${id}/messages`, { params: { page } }),
+  sendMessage:    (id, data)  => api.post(`/chat/conversations/${id}/messages`, data), // FormData for file
+  markRead:       (id)        => api.patch(`/chat/conversations/${id}/read`),
+  getUnreadCount: ()          => api.get("/chat/unread-count"),
+};
+```
 
-### 2. New Component: `frontend/src/components/chat/ChatWindow.jsx`
+### 2. New component: `frontend/src/components/chat/ChatWindow.js`
 
-UI structure:
-- Messages list (scrollable, oldest at top)
-- Each message: sender avatar, name, time, content or file pill
-- File messages: icon + filename + download link
-- System messages (e.g., "Contrat envoyé"): centered, grey, italic
-- `contract_pdf` / `receipt` / `bon_de_commande` message types: special card with label + download button
-- Input bar: text field + send button + attach file button (opens file picker)
-- Polls for new messages every 5 seconds (simple interval, clears on unmount)
-- Auto-scrolls to bottom on new message
-- Marks conversation as read on open
+A self-contained chat UI component that takes `conversationId` as prop:
+- Scrollable message list (newest at bottom, load more on scroll up)
+- Message bubbles: right = own messages (red), left = other party (grey)
+- System messages centered in italic grey
+- File attachment display (image preview or file link)
+- Input bar: textarea (Enter to send, Shift+Enter for newline) + attach file button
+- Polling every 10s for new messages (or use page focus refresh)
+- Unread count badge cleared on open
 
-### 3. New Component: `frontend/src/components/chat/MessageBubble.jsx`
+### 3. Wire into Project detail pages
 
-Renders a single message. Variations by `messageType`.
+In each project detail view (ClientDashboard, AgencyDashboard DirectorProjects, FreelancerProjects, TeamMemberProjects):
+- Add "Messagerie" tab alongside tasks/deliverables tabs
+- Tab renders `<ChatWindow conversationId={project.conversation} projectId={project._id} />`
+- On first open, auto-create the conversation if none exists
 
-### 4. Integrate ChatWindow into Project Detail
+### 4. Wire into Contract detail
 
-Everywhere a project detail is shown (ClientDashboard projects, DirectorProjects, FreelancerProjects, TeamLeadProjects), add a "Messagerie" tab or panel alongside tasks/deliverables that renders `<ChatWindow projectId={project._id} />`.
+In DirectorContracts and ClientDashboard contract views:
+- Show chat as a side panel or tab
+- System messages auto-generated when contract milestones happen (Bon de Commande sent, receipt uploaded, etc.)
 
-### 5. Unread Chat Badge
+### 5. Update topbar unread badge (already partially wired in DashboardLayout)
 
-Add chat unread count to the dashboard topbar (alongside notification bell) — poll `chatService.getUnreadCount()` every 30s.
+`DashboardLayout.js` already polls `chatService.getUnreadCount()` every 30s and shows the ✉ badge — this will work once the endpoint exists.
 
 ---
 
-## Files to Create
+## Key Design Decisions
 
-```
-backend/models/Conversation.js          NEW
-backend/models/Message.js               NEW
-backend/controllers/chatController.js   NEW
-backend/routes/chatRoutes.js            NEW
-frontend/src/services/chatService.js    NEW
-frontend/src/components/chat/ChatWindow.jsx     NEW
-frontend/src/components/chat/MessageBubble.jsx  NEW
-```
-
-## Files to Modify
-
-```
-backend/server.js                           ADD chatRoutes mount
-backend/models/Project.js                   VERIFY conversationId ref
-backend/controllers/projectController.js    ADD conversation auto-create in acceptPitch
-frontend/src/components/layout/DashboardLayout.jsx  ADD chat unread badge
-frontend/src/pages/dashboard/ClientDashboard.js     ADD chat tab to project detail
-frontend/src/pages/dashboard/agency/DirectorProjects.js  ADD chat tab
-frontend/src/pages/dashboard/freelancer/FreelancerProjects.js  ADD chat tab
-```
+- **No WebSockets for now** — polling every 10s is sufficient for the use case (B2B, not real-time chat app)
+- **One conversation per project** — not per contract (contracts reference the same project conversation)
+- **System messages** for milestone events (contract sent, receipt uploaded, etc.) are created by controllers calling a helper `chatController.systemMessage(conversationId, body)`
+- **Participants** are determined at project creation time: the client + the provider (agency/team/freelancer); also include agency members who are director/commercial
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] Client opens a project and sees a "Messagerie" tab
-- [ ] Client and agency can exchange text messages in real time (via polling)
-- [ ] Either party can attach and send a PDF file
-- [ ] File messages render as a download card with label
-- [ ] System messages (contract milestones) appear automatically in the thread
-- [ ] Unread count appears in topbar and clears when conversation is opened
-- [ ] Conversation is auto-created when a project is created
+- [ ] Client and agency director can exchange messages inside a project
+- [ ] File attachments are uploadable and downloadable in chat
+- [ ] System message appears when Bon de Commande is sent
+- [ ] System message appears when receipt is uploaded
+- [ ] Unread badge in topbar shows count
+- [ ] Marking chat as read clears the badge
+- [ ] Messages are paginated (load older messages on scroll)
