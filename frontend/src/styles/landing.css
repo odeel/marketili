@@ -1,646 +1,879 @@
-/* ============================================================
-   DESIGN TOKENS
-   These are like "variables" — define a color once here,
-   use it everywhere. If you want to change the accent color
-   you only change it in one place and it updates everywhere.
-   ============================================================ */
+/* ── DESIGN TOKENS ── */
 :root {
-  --ink: #1a0a0a;              /* Near-black with a warm red tint — used for text */
-  --ink-light: #3d1f1f;        /* Slightly lighter dark red — used for subheadings */
-  --surface: #ffffff;          /* Pure white background */
-  --surface-muted: #fff5f5;    /* Very soft rose-tinted white — used for alternate sections */
-  --surface-card: #fffafa;     /* Off-white with a hint of rose — card backgrounds */
-  --accent: #c0152a;           /* Deep crimson red — the main brand color */
-  --accent-glow: #e0253f;      /* Slightly brighter red — used for glows/gradients */
-  --accent-soft: #ffe4e6;      /* Very light rose — used for badge backgrounds, soft fills */
-  --accent-2: #f97316;         /* Warm orange — used as a secondary pop of color */
-  --text-muted: #7a4a4a;       /* Muted rose-brown — used for descriptions, captions */
-  --border: rgba(192, 21, 42, 0.12); /* Very transparent red border */
-  --shadow-card: 0 2px 20px rgba(192,21,42,0.08), 0 1px 4px rgba(0,0,0,0.04);
-  --shadow-hover: 0 12px 40px rgba(192,21,42,0.18), 0 4px 12px rgba(0,0,0,0.06);
-  --radius: 18px;              /* How rounded big cards are */
-  --radius-sm: 10px;           /* How rounded small elements are */
-  --radius-pill: 100px;        /* Fully rounded — used for buttons and badges */
+  --lp-bg:        #0a0a0a;
+  --lp-surface:   #111111;
+  --lp-surface-2: #161616;
+  --lp-accent:    #c0152a;
+  --lp-accent-glow: rgba(192, 21, 42, 0.25);
+  --lp-text:      #f0f0f0;
+  --lp-muted:     rgba(240, 240, 240, 0.48);
+  --lp-border:    rgba(255, 255, 255, 0.07);
+  --lp-radius:    16px;
+  --lp-radius-sm: 10px;
+  --lp-pill:      100px;
 }
 
-/* ============================================================
-   RESET & BASE STYLES
-   Browsers add their own default styles (margins, paddings).
-   This block removes all of those so we start from a clean slate.
-   ============================================================ */
-*, *::before, *::after {
-  box-sizing: border-box; /* Makes width/height include padding, not add to it */
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  scroll-behavior: smooth; /* When you click a link that jumps to a section, it glides instead of snapping */
-}
-
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 body {
-  font-family: 'DM Sans', 'Segoe UI', sans-serif; /* The font used everywhere */
-  background: var(--surface);  /* White background */
-  color: var(--ink);           /* Dark text by default */
-  -webkit-font-smoothing: antialiased; /* Makes fonts look crisper on Mac/iOS */
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  background: var(--lp-bg);
+  color: var(--lp-text);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ============================================================
-   SCROLL SNAP CONTAINER
-   This makes the page scroll section by section, like a
-   full-screen slideshow. Each section is exactly one screen tall.
-   ============================================================ */
-.scroll-container {
-  height: 100vh;              /* 100vh = full viewport height = full screen height */
-  overflow-y: scroll;         /* Allow vertical scrolling */
-  scroll-snap-type: y mandatory; /* SNAP to sections vertically, no stopping in between */
-  scroll-behavior: smooth;
-  /* Extra padding so that when you snap to a section, there's
-     a little breathing room at the top before the content starts */
-  scroll-padding-top: 0;
-}
+/* ── ROOT ── */
+.lp-root { min-height: 100vh; }
 
-/* Thin custom scrollbar styling (only works in Chrome/Edge) */
-.scroll-container::-webkit-scrollbar { width: 4px; }
-.scroll-container::-webkit-scrollbar-track { background: transparent; }
-.scroll-container::-webkit-scrollbar-thumb {
-  background: var(--accent-soft);
-  border-radius: 4px;
-}
-
-/* ============================================================
-   FULL SECTIONS
-   Each section is exactly one screen tall (100vh).
-   scroll-snap-align: start means the TOP of each section
-   aligns to the top of the viewport when snapped.
-
-   The padding-top: 80px creates breathing room below the fixed
-   navbar (which is 80px tall) so content doesn't hide behind it.
-   ============================================================ */
-.full-section {
-  height: 100vh;
-  scroll-snap-align: start;   /* Snap this section's top edge to the top of the screen */
-  display: flex;
-  align-items: center;        /* Center content vertically */
-  justify-content: center;    /* Center content horizontally */
-  position: relative;
-  overflow: hidden;
-  /* This is the fix you asked for — adds space at top so content
-     doesn't feel crammed against the previous section */
-  padding-top: 80px;
-}
-
-/* ============================================================
-   NAVIGATION BAR
-   Fixed means it stays at the top even when you scroll.
-   backdrop-filter: blur() creates the frosted-glass effect.
-   ============================================================ */
-.landing-nav {
-  position: fixed;     /* Stays in place while page scrolls */
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;        /* Sits on top of everything else */
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 48px;
-  background: rgba(255, 255, 255, 0.85); /* Slightly transparent white */
-  backdrop-filter: blur(16px);           /* Blurs whatever is behind the nav */
-  border-bottom: 1px solid var(--border);
-}
-
-.nav-logo {
-  font-size: 1.25rem;
-  font-weight: 800;
-  letter-spacing: -0.03em; /* Slightly tighter letters — looks more modern */
-  color: var(--ink);
-}
-
-/* The colored part of the logo (the "ili" in Marketili) */
-.nav-logo span { color: var(--accent); }
-
-.nav-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-/* Ghost/text nav button */
-.nav-link-btn {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px 16px;
-  border-radius: var(--radius-pill);
-  transition: color 0.2s, background 0.2s; /* Smooth color change on hover */
-}
-.nav-link-btn:hover {
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-
-/* Filled CTA button in nav */
-.nav-cta-btn {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: white;
-  background: var(--accent);
-  border: none;
-  cursor: pointer;
-  padding: 9px 22px;
-  border-radius: var(--radius-pill);
-  transition: box-shadow 0.2s, transform 0.2s;
-}
-.nav-cta-btn:hover {
-  box-shadow: 0 4px 20px rgba(192,21,42,0.4);
-  transform: translateY(-1px); /* Lifts slightly on hover */
-}
-
-/* ============================================================
-   HERO SECTION — First screen users see
-   ============================================================ */
-.hero-section {
-  background: var(--surface);
-  text-align: center;
-  flex-direction: column; /* Stack children vertically */
-  gap: 0;
-}
-
-/* The blurry gradient blobs in the background.
-   ::before and ::after are fake elements we create with CSS
-   — no extra HTML needed. */
-.hero-bg-blob {
-  position: absolute;
-  inset: 0; /* Shorthand for top:0; right:0; bottom:0; left:0 */
-  pointer-events: none; /* Clicks pass through — it's just decoration */
-  overflow: hidden;
-}
-
-.hero-bg-blob::before {
-  content: '';        /* Required for pseudo-elements to appear */
-  position: absolute;
-  width: 700px;
-  height: 700px;
-  background: radial-gradient(circle, rgba(192,21,42,0.07) 0%, transparent 70%);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -60%); /* Center it, then shift up a bit */
-  border-radius: 50%;
-}
-
-.hero-bg-blob::after {
-  content: '';
-  position: absolute;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(249,115,22,0.06) 0%, transparent 70%);
-  bottom: 10%;
-  right: 10%;
-  border-radius: 50%;
-}
-
-/* The actual hero text/button container */
-.hero-content {
-  position: relative;
-  z-index: 1;          /* Sits above the background blobs */
-  max-width: 760px;
+/* ── CONTAINER ── */
+.lp-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
   padding: 0 24px;
 }
 
-/* The little pill-shaped "Now live" badge */
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: var(--radius-pill);
-  margin-bottom: 28px;
-  letter-spacing: 0.02em;
-}
-
-/* The pulsing green dot inside the badge */
-.hero-badge-dot {
-  width: 6px;
-  height: 6px;
-  background: var(--accent-2); /* Orange dot */
-  border-radius: 50%;
-  animation: pulse-dot 2s infinite; /* Loops forever */
-}
-
-/* @keyframes defines what the animation DOES step by step.
-   This one makes the dot gently fade and shrink. */
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }    /* Start & end: fully visible */
-  50%       { opacity: 0.5; transform: scale(0.8); } /* Middle: half visible, a bit smaller */
-}
-
-/* clamp(min, preferred, max) — responsive font size.
-   Never smaller than 2.4rem, ideally 5% of viewport width, never bigger than 3.8rem */
-.hero-title {
-  font-size: clamp(2.4rem, 5vw, 3.8rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.04em;
-  color: var(--ink);
-  margin-bottom: 22px;
-}
-
-.hero-title-accent { color: var(--accent); } /* The red part of the title */
-
-.hero-subtitle {
-  font-size: 1.15rem;
-  color: var(--text-muted);
-  line-height: 1.7;       /* 1.7 = 170% of font size — generous line spacing for readability */
-  max-width: 560px;
-  margin: 0 auto 40px;   /* auto left/right = horizontal center */
-}
-
-/* Wraps the two buttons side by side */
-.hero-actions {
+/* ── NAVBAR ── */
+.lp-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
   display: flex;
-  gap: 14px;
-  justify-content: center;
-  flex-wrap: wrap; /* On small screens, buttons stack vertically */
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 48px;
+  background: rgba(10, 10, 10, 0.88);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--lp-border);
 }
 
-/* Solid filled button */
-.btn-primary {
-  display: inline-flex;
+.lp-nav-logo {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--lp-text);
+}
+.lp-nav-logo span { color: var(--lp-accent); }
+
+.lp-nav-center {
+  display: flex;
+  gap: 4px;
   align-items: center;
-  gap: 8px;
-  background: var(--accent);
-  color: white;
-  font-size: 0.95rem;
-  font-weight: 600;
-  padding: 14px 32px;
-  border-radius: var(--radius-pill);
+}
+
+.lp-nav-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--lp-muted);
+  background: none;
   border: none;
   cursor: pointer;
-  transition: box-shadow 0.25s, transform 0.25s;
-  letter-spacing: -0.01em;
-  font-family: inherit; /* Buttons don't inherit font by default — this fixes that */
-}
-.btn-primary:hover {
-  box-shadow: 0 8px 32px rgba(192,21,42,0.35);
-  transform: translateY(-2px);
-}
-
-/* Outlined/ghost button */
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  color: var(--ink);
-  font-size: 0.95rem;
-  font-weight: 600;
-  padding: 14px 32px;
-  border-radius: var(--radius-pill);
-  border: 1.5px solid var(--border);
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  padding: 8px 14px;
+  border-radius: var(--lp-pill);
+  transition: color 0.2s, background 0.2s;
   font-family: inherit;
 }
-.btn-secondary:hover {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
+.lp-nav-link:hover { color: var(--lp-text); background: rgba(255, 255, 255, 0.06); }
+
+.lp-nav-actions { display: flex; gap: 10px; align-items: center; }
+
+.lp-nav-ghost {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--lp-muted);
+  text-decoration: none;
+  padding: 8px 18px;
+  border-radius: var(--lp-pill);
+  border: 1px solid var(--lp-border);
+  transition: color 0.2s, border-color 0.2s;
 }
+.lp-nav-ghost:hover { color: var(--lp-text); border-color: rgba(255, 255, 255, 0.2); }
 
-/* The "2,400+ professionals" row under the buttons */
-.hero-social-proof {
-  margin-top: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.social-proof-avatars { display: flex; }
-
-/* Each circular avatar chip */
-.avatar-placeholder {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 2px solid white;
-  margin-left: -8px;        /* Negative margin makes them overlap */
-  background: linear-gradient(135deg, var(--accent-soft), var(--accent));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.65rem;
-  font-weight: 700;
+.lp-nav-cta {
+  font-size: 0.875rem;
+  font-weight: 600;
   color: white;
+  background: var(--lp-accent);
+  text-decoration: none;
+  padding: 9px 20px;
+  border-radius: var(--lp-pill);
+  transition: box-shadow 0.2s, transform 0.2s;
 }
-.avatar-placeholder:first-child { margin-left: 0; } /* No overlap for first one */
+.lp-nav-cta:hover { box-shadow: 0 4px 20px var(--lp-accent-glow); transform: translateY(-1px); }
 
-.social-proof-text { font-size: 0.85rem; color: var(--text-muted); }
-.social-proof-text strong { color: var(--ink); }
-
-/* ============================================================
-   HOW IT WORKS SECTION
-   ============================================================ */
-.how-section {
-  background: var(--surface-muted); /* Light rose-tinted background */
+/* Hamburger */
+.lp-hamburger {
+  display: none;
   flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+.lp-hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--lp-text);
+  border-radius: 2px;
 }
 
-.section-header {
+/* Mobile menu */
+.lp-mobile-menu {
+  position: fixed;
+  top: 62px; left: 0; right: 0;
+  background: rgba(10, 10, 10, 0.97);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--lp-border);
+  padding: 16px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 99;
+}
+.lp-mobile-menu button,
+.lp-mobile-menu a {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--lp-text);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--lp-border);
+  cursor: pointer;
+  padding: 12px 0;
+  text-decoration: none;
+  text-align: left;
+  font-family: inherit;
+}
+.lp-mobile-cta {
+  margin-top: 8px !important;
+  background: var(--lp-accent) !important;
+  color: white !important;
+  padding: 12px 20px !important;
+  border-radius: var(--lp-pill) !important;
+  text-align: center !important;
+  border: none !important;
+}
+
+/* ── SECTIONS ── */
+.lp-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 120px 0 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.lp-section-head {
   text-align: center;
   margin-bottom: 56px;
 }
 
-/* The tiny all-caps label above section titles like "HOW IT WORKS" */
-.section-label {
+.lp-label {
   display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 12px;
-}
-
-.section-title {
-  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  color: var(--ink);
-  line-height: 1.15;
-}
-
-.section-subtitle {
-  margin-top: 12px;
-  font-size: 1.05rem;
-  color: var(--text-muted);
-  max-width: 480px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.6;
-}
-
-/* 3-column grid for the step cards */
-.steps-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
-  gap: 24px;
-  max-width: 860px;
-  width: 100%;
-  padding: 0 24px;
-}
-
-.step-card {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 32px 28px;
-  position: relative;
-  transition: box-shadow 0.25s, transform 0.25s;
-}
-.step-card:hover {
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-4px); /* Lifts up on hover */
-}
-
-.step-number {
   font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 16px;
-  opacity: 0.7;
-}
-
-/* Emoji icon container */
-.step-icon {
-  width: 44px;
-  height: 44px;
-  background: var(--accent-soft);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  margin-bottom: 18px;
-}
-
-.step-title { font-size: 1.05rem; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
-.step-desc  { font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; }
-
-/* ============================================================
-   ROLE SELECTION SECTION
-   ============================================================ */
-.role-section {
-  background: var(--surface);
-  flex-direction: column;
-}
-
-/* 2-column grid for the 4 role cards */
-.roles-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
-  max-width: 720px;
-  width: 100%;
-  padding: 0 24px;
-}
-
-.role-card {
-  background: var(--surface-card);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 28px 32px;
-  cursor: pointer;
-  /* cubic-bezier is a custom easing curve — makes the animation feel physical */
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  position: relative;
-  overflow: hidden;
-}
-
-/* An invisible overlay that reveals a subtle gradient on hover */
-.role-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, var(--accent), #c0392b);
-  opacity: 0;              /* Hidden by default */
-  transition: opacity 0.3s;
-  border-radius: inherit;  /* Match the card's rounded corners */
-}
-
-.role-card:hover {
-  border-color: var(--accent);
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-hover);
-}
-.role-card:hover::after { opacity: 0.04; } /* Very faint red wash on hover */
-
-.role-card-icon { font-size: 1.8rem; }
-
-.role-card-name {
-  font-size: 1.1rem;
   font-weight: 700;
-  color: var(--ink);
-  letter-spacing: -0.02em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lp-accent);
+  margin-bottom: 16px;
+  border: 1px solid rgba(192, 21, 42, 0.3);
+  padding: 4px 12px;
+  border-radius: var(--lp-pill);
 }
 
-.role-card-desc {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-/* The "Get started →" text that slides in on hover */
-.role-card-arrow {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--accent);
-  margin-top: 6px;
-  opacity: 0;                      /* Invisible by default */
-  transform: translateX(-6px);     /* Shifted left */
-  transition: opacity 0.2s, transform 0.2s;
-}
-/* When the card is hovered, make the arrow appear and slide in */
-.role-card:hover .role-card-arrow {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* ============================================================
-   CTA SECTION — Last full-screen section, dark background
-   ============================================================ */
-.cta-section {
-  background: var(--ink);     /* Dark near-black background */
-  flex-direction: column;
-  text-align: center;
-  overflow: hidden;
-}
-
-/* Glowing gradient blobs behind the CTA text */
-.cta-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 30% 50%, rgba(90, 10, 20, 0.3) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 50%, rgba(214, 97, 14, 0.15) 0%, transparent 60%);
-}
-
-.cta-content {
-  position: relative;
-  z-index: 1; /* Above the glowing background */
-  padding: 0 24px;
-}
-
-.cta-title {
-  font-size: clamp(2rem, 4vw, 3.2rem);
+.lp-h2 {
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
   font-weight: 800;
   letter-spacing: -0.04em;
-  color: white;
+  color: var(--lp-text);
   line-height: 1.1;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
-.cta-subtitle {
-  font-size: 1.05rem;
-  color: rgba(255, 255, 255, 0.55); /* White at 55% opacity */
-  line-height: 1.6;
-  max-width: 480px;
-  margin: 0 auto 40px;
+.lp-body-text {
+  font-size: 1rem;
+  color: var(--lp-muted);
+  line-height: 1.75;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-/* White button on the dark CTA section */
-.btn-cta-white {
+.lp-text-center { text-align: center; }
+.lp-accent { color: var(--lp-accent); }
+
+/* ── BUTTONS ── */
+.lp-btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: white;
-  color: var(--accent);
+  background: var(--lp-accent);
+  color: white;
   font-size: 0.95rem;
-  font-weight: 700;
-  padding: 15px 36px;
-  border-radius: var(--radius-pill);
+  font-weight: 600;
+  padding: 13px 28px;
+  border-radius: var(--lp-pill);
   border: none;
   cursor: pointer;
   transition: box-shadow 0.25s, transform 0.25s;
   font-family: inherit;
 }
-.btn-cta-white:hover {
-  box-shadow: 0 8px 40px rgba(255, 255, 255, 0.25);
-  transform: translateY(-2px);
+.lp-btn-primary:hover { box-shadow: 0 8px 32px var(--lp-accent-glow); transform: translateY(-2px); }
+
+.lp-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--lp-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 13px 28px;
+  border-radius: var(--lp-pill);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  font-family: inherit;
+}
+.lp-btn-outline:hover { border-color: rgba(255, 255, 255, 0.45); background: rgba(255, 255, 255, 0.05); }
+
+.lp-btn-lg { padding: 16px 36px; font-size: 1rem; }
+
+/* ── HERO ── */
+.lp-hero {
+  background: var(--lp-bg);
+  padding-top: 80px;
+  align-items: stretch;
 }
 
-.cta-note {
-  margin-top: 18px;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.35);
-}
-
-/* ============================================================
-   SCROLL INDICATOR — The bouncing mouse icon at the bottom of hero
-   ============================================================ */
-.scroll-indicator {
+.lp-hero-glow {
   position: absolute;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%); /* Center horizontally */
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 65% 40%, rgba(192, 21, 42, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 80%, rgba(192, 21, 42, 0.06) 0%, transparent 50%);
+}
+
+.lp-hero-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  min-height: calc(100vh - 80px);
+}
+
+.lp-hero-text { display: flex; flex-direction: column; }
+
+.lp-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--lp-accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+.lp-eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--lp-accent);
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: lp-pulse 2s infinite;
+}
+
+@keyframes lp-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(192, 21, 42, 0.4); }
+  50%       { opacity: 0.8; transform: scale(1.2); box-shadow: 0 0 0 6px rgba(192, 21, 42, 0); }
+}
+
+.lp-hero-h1 {
+  font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--lp-text);
+  line-height: 1.08;
+  margin-bottom: 22px;
+}
+
+.lp-hero-sub {
+  font-size: 1.05rem;
+  color: var(--lp-muted);
+  line-height: 1.7;
+  margin-bottom: 36px;
+  max-width: 500px;
+}
+
+.lp-hero-btns {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.lp-trust {
+  font-size: 0.78rem;
+  color: rgba(240, 240, 240, 0.3);
+}
+
+/* ── HERO MOCK CARDS ── */
+.lp-hero-mock-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lp-mock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.lp-mock-card {
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-radius);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s;
+}
+.lp-mock-card:hover { border-color: rgba(255, 255, 255, 0.14); }
+.lp-mock-card-sm { padding: 14px 18px; }
+
+.lp-mock-chip {
+  display: inline-block;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  width: fit-content;
+}
+.lp-chip-blue   { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.lp-chip-red    { background: rgba(192, 21, 42, 0.15);  color: #f87171; }
+.lp-chip-purple { background: rgba(124, 58, 237, 0.15); color: #a78bfa; }
+
+.lp-mock-title { font-size: 0.875rem; font-weight: 600; color: var(--lp-text); }
+.lp-mock-meta  { font-size: 0.74rem; color: var(--lp-muted); }
+
+.lp-mock-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.lp-mock-bar-fill {
+  height: 100%;
+  background: var(--lp-accent);
+  border-radius: 2px;
+}
+
+.lp-mock-row { display: flex; align-items: center; justify-content: space-between; }
+
+.lp-mock-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.lp-badge-green  { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.lp-badge-yellow { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+
+.lp-mock-date { font-size: 0.68rem; color: var(--lp-muted); }
+
+/* ── PROBLEM ── */
+.lp-problem { background: var(--lp-surface); }
+
+.lp-pain-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.lp-pain-card {
+  background: var(--lp-surface-2);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-radius);
+  padding: 28px 24px;
+  transition: border-color 0.2s;
+}
+.lp-pain-card:hover { border-color: rgba(192, 21, 42, 0.2); }
+
+.lp-pain-num {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--lp-accent);
+  opacity: 0.6;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.lp-pain-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--lp-text);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.lp-pain-desc {
+  font-size: 0.875rem;
+  color: var(--lp-muted);
+  line-height: 1.6;
+}
+
+/* ── SOLUTION ── */
+.lp-solution { background: var(--lp-bg); }
+
+.lp-pillar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.lp-pillar-card {
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-radius);
+  padding: 32px 28px;
+  transition: border-color 0.2s, transform 0.25s;
+}
+.lp-pillar-card:hover { border-color: rgba(192, 21, 42, 0.3); transform: translateY(-4px); }
+
+.lp-pillar-num {
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: rgba(192, 21, 42, 0.1);
+  letter-spacing: -0.04em;
+  margin-bottom: 16px;
+  line-height: 1;
+}
+
+.lp-pillar-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--lp-text);
+  margin-bottom: 10px;
+}
+
+.lp-pillar-desc {
+  font-size: 0.875rem;
+  color: var(--lp-muted);
+  line-height: 1.65;
+}
+
+/* ── HOW IT WORKS ── */
+.lp-how { background: var(--lp-surface); }
+
+.lp-steps {
+  max-width: 700px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.lp-step {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--lp-border);
+}
+.lp-step:last-child { border-bottom: none; }
+
+.lp-step-num {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--lp-accent);
+  background: rgba(192, 21, 42, 0.1);
+  border: 1px solid rgba(192, 21, 42, 0.2);
+  border-radius: 6px;
+  padding: 4px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.lp-step-body { flex: 1; }
+
+.lp-step-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--lp-text);
+  margin-bottom: 6px;
+}
+
+.lp-step-desc {
+  font-size: 0.875rem;
+  color: var(--lp-muted);
+  line-height: 1.6;
+}
+
+/* ── FOR WHOM ── */
+.lp-for-whom { background: var(--lp-bg); }
+
+.lp-role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.lp-role-card {
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-radius);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  cursor: default;
+  transition: border-color 0.2s, transform 0.25s;
+}
+.lp-role-card:hover { border-color: color-mix(in srgb, var(--rc, var(--lp-accent)) 40%, transparent); }
+
+.lp-role-top { display: flex; flex-direction: column; gap: 4px; }
+
+.lp-role-label {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--rc, var(--lp-accent));
+}
+
+.lp-role-sub {
+  font-size: 0.76rem;
+  color: var(--lp-muted);
+}
+
+.lp-role-desc {
+  font-size: 0.875rem;
+  color: rgba(240, 240, 240, 0.6);
+  line-height: 1.6;
+}
+
+.lp-role-benefits {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 0;
+  flex: 1;
+}
+
+.lp-role-benefits li {
+  font-size: 0.82rem;
+  color: var(--lp-muted);
+  padding-left: 16px;
+  position: relative;
+  line-height: 1.5;
+}
+.lp-role-benefits li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--rc, var(--lp-accent));
+  opacity: 0.7;
+}
+
+.lp-role-cta {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--rc, var(--lp-accent));
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--lp-pill);
+  padding: 9px 18px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.2s, border-color 0.2s;
+  width: fit-content;
+  margin-top: auto;
+}
+.lp-role-cta:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--rc, var(--lp-accent)); }
+
+/* ── FEATURES ── */
+.lp-features { background: var(--lp-surface); }
+
+.lp-feat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.lp-feat-card {
+  background: var(--lp-bg);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-radius);
+  padding: 28px 24px;
+  transition: border-color 0.2s, transform 0.25s;
+}
+.lp-feat-card:hover { border-color: rgba(255, 255, 255, 0.14); transform: translateY(-3px); }
+
+.lp-feat-idx {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--lp-accent);
+  opacity: 0.5;
+  margin-bottom: 12px;
+}
+
+.lp-feat-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--lp-text);
+  margin-bottom: 10px;
+}
+
+.lp-feat-desc {
+  font-size: 0.845rem;
+  color: var(--lp-muted);
+  line-height: 1.65;
+}
+
+/* ── STATS ── */
+.lp-stats { background: var(--lp-bg); }
+
+.lp-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  max-width: 860px;
+  margin: 48px auto;
+}
+
+.lp-stat {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  opacity: 0.4; /* Subtle — doesn't distract */
+  gap: 8px;
+  text-align: center;
 }
 
-.scroll-indicator span {
+.lp-stat-value {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  color: var(--lp-accent);
+  letter-spacing: -0.04em;
+}
+
+.lp-stat-label {
+  font-size: 0.82rem;
+  color: var(--lp-muted);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.lp-quotes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.lp-quote {
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-radius);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lp-quote-text {
+  font-size: 0.9rem;
+  color: rgba(240, 240, 240, 0.7);
+  line-height: 1.7;
+  font-style: italic;
+}
+
+.lp-quote-author {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--lp-accent);
+  font-style: normal;
+}
+
+/* ── FINAL CTA ── */
+.lp-cta { background: var(--lp-bg); }
+
+.lp-cta-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, rgba(192, 21, 42, 0.2) 0%, transparent 60%);
+}
+
+.lp-cta-inner {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.lp-cta-sub {
+  font-size: 1.05rem;
+  color: var(--lp-muted);
+  max-width: 520px;
+  line-height: 1.65;
+}
+
+.lp-cta-btns {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ── FOOTER ── */
+.lp-footer {
+  background: var(--lp-surface);
+  border-top: 1px solid var(--lp-border);
+}
+
+.lp-footer-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 40px;
+  padding: 64px 24px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.lp-footer-brand { display: flex; flex-direction: column; gap: 12px; }
+
+.lp-footer-logo {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--lp-text);
+}
+.lp-footer-logo span { color: var(--lp-accent); }
+
+.lp-footer-tagline {
+  font-size: 0.84rem;
+  color: var(--lp-muted);
+  max-width: 200px;
+  line-height: 1.5;
+}
+
+.lp-footer-socials { display: flex; gap: 10px; }
+
+.lp-social-link {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--lp-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lp-muted);
+  text-decoration: none;
   font-size: 0.72rem;
-  font-weight: 500;
+  font-weight: 700;
+  transition: border-color 0.2s, color 0.2s;
+}
+.lp-social-link:hover { border-color: rgba(255, 255, 255, 0.25); color: var(--lp-text); }
+
+.lp-footer-col { display: flex; flex-direction: column; gap: 10px; }
+
+.lp-footer-col-title {
+  font-size: 0.75rem;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--lp-text);
+  margin-bottom: 4px;
 }
 
-/* The little mouse outline shape */
-.scroll-mouse {
-  width: 22px;
-  height: 34px;
-  border: 2px solid var(--text-muted);
-  border-radius: 11px;
-  position: relative;
+.lp-footer-link {
+  font-size: 0.84rem;
+  color: var(--lp-muted);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  text-align: left;
+  transition: color 0.2s;
+  line-height: 1.5;
+}
+.lp-footer-link:hover { color: var(--lp-text); }
+.lp-footer-muted { cursor: default; }
+.lp-footer-muted:hover { color: var(--lp-muted) !important; }
+
+.lp-footer-bar {
+  border-top: 1px solid var(--lp-border);
+  padding: 20px 24px;
+  text-align: center;
+  font-size: 0.76rem;
+  color: rgba(240, 240, 240, 0.22);
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
-/* The tiny scroll wheel dot inside the mouse */
-.scroll-mouse::after {
-  content: '';
-  position: absolute;
-  width: 4px;
-  height: 6px;
-  background: var(--text-muted);
-  border-radius: 2px;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  animation: scroll-bob 2s ease infinite;
+/* ── RESPONSIVE ── */
+@media (max-width: 960px) {
+  .lp-pillar-grid  { grid-template-columns: 1fr; max-width: 560px; }
+  .lp-feat-grid    { grid-template-columns: repeat(2, 1fr); }
+  .lp-stat-grid    { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* Makes the wheel dot bounce up and down and fade out */
-@keyframes scroll-bob {
-  0%, 100% { transform: translateX(-50%) translateY(0);  opacity: 1; }
-  60%       { transform: translateX(-50%) translateY(8px); opacity: 0; }
+@media (max-width: 820px) {
+  .lp-hero-inner       { grid-template-columns: 1fr; min-height: auto; padding: 40px 0; }
+  .lp-hero-mock-wrap   { display: none; }
+  .lp-hero-sub         { max-width: 100%; }
+}
+
+@media (max-width: 768px) {
+  .lp-nav          { padding: 16px 20px; }
+  .lp-nav-center   { display: none; }
+  .lp-nav-actions  { display: none; }
+  .lp-hamburger    { display: flex; }
+  .lp-pain-grid    { grid-template-columns: 1fr; }
+  .lp-role-grid    { grid-template-columns: 1fr; max-width: 560px; }
+  .lp-quotes       { grid-template-columns: 1fr; }
+  .lp-footer-grid  { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 560px) {
+  .lp-feat-grid    { grid-template-columns: 1fr; }
+  .lp-footer-grid  { grid-template-columns: 1fr; }
+  .lp-hero-btns    { flex-direction: column; }
+  .lp-cta-btns     { flex-direction: column; align-items: center; }
+  .lp-section      { padding: 100px 0 60px; }
 }
