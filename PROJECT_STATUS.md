@@ -1,379 +1,405 @@
-# PROJECT_STATUS.md — Marketili Implementation Status
+# PROJECT_STATUS.md — Marketili Full Audit
 
-> Based on `Marketili — Complete Project Knowle.md` vs actual code audit.
-> Legend: ✅ Done | ⚠️ Partial | ❌ Missing
+> Generated: 2026-05-17
+> Branch: yacine-fixes
+> Based on: `Marketili — Complete Project Knowle.md` vs actual codebase
+
+---
+
+## Legend
+
+| Symbol | Meaning |
+|--------|---------|
+| ✅ | Fully implemented (backend + frontend) |
+| 🟡 | Partially implemented (some gaps) |
+| ❌ | Not implemented |
+| 🔵 | Backend only (no UI yet) |
+| 🟠 | Frontend only (no backend wired) |
 
 ---
 
 ## 1. Authentication & Registration
 
-### Backend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| JWT in HTTP-only cookies | ✅ | Set on login, cleared on logout |
-| Role auto-detection login | ✅ | Iterates all 7 models to find user |
-| Register: Client (person / company modes) | ✅ | `accountType` field on Client model |
-| Register: Agency (main / filiale + parent) | ⚠️ | Model has fields but filiale/parent logic not enforced |
-| Register: Agency specialties selection | ⚠️ | `specialties` field exists on Agency but not populated during registration |
-| Register: Team | ✅ | |
-| Register: Freelancer (num carte auto entrepreneur) | ⚠️ | Model exists but `carteAutoEntrepreneur` field missing |
-| Register: AgencyMember | ✅ | Created by director, mustChangePassword forced |
-| Authorization middleware (protect, authorize, adminOnly) | ✅ | |
-
-### Frontend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Login page | ✅ | |
-| Register page with role selector | ✅ | |
-| Role-specific registration fields | ⚠️ | Client person/company mode present; agency specialties picker missing |
-| PrivateRoute by role | ✅ | |
-| Unauthorized page | ✅ | |
-| Force password change on first login (agency members) | ✅ | |
-| Go-back navigation | ⚠️ | Unauthorized page exists but no dedicated go-back component |
+| Requirement | Status | Notes |
+|---|---|---|
+| Multi-role registration (Client, Agency, Team, Freelancer) | ✅ | All 4 roles fully wired |
+| Auto-detection login (tries all 7 models) | ✅ | authController.login() |
+| Client: Person mode / Company mode | ✅ | accountType enum, displayName virtual |
+| Agency: Main / Filiale (subsidiary) | ✅ | agencyType + parentAgency ref |
+| Agency specialties during registration | ✅ | specialties[] on Agency model; Register.js step 3 |
+| Freelancer: numéro carte auto-entrepreneur | ✅ | carteAutoEntrepreneur field |
+| JWT HTTP-only cookies | ✅ | Set on login, cleared on logout |
+| Role-based authorization middleware | ✅ | protect + authorize() + adminOnly |
+| Agency member: forced password change on first login | ✅ | mustChangePassword flag + ChangePasswordPage |
+| PrivateRoute system | ✅ | allowedRoles checked per route |
+| Unauthorized access page | ✅ | /unauthorized route |
+| isActive check on login | ✅ | auth middleware validates |
+| Go-back navigation on unauthorized | ✅ | Unauthorized.js has conditional redirect |
+| Admin registration | 🔵 | Admin model exists; no self-registration UI (admin-only panel) |
 
 ---
 
-## 2. Posts (Briefs)
+## 2. Posts
 
-### Backend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Create post | ✅ | |
-| Browse all posts (public) | ✅ | |
-| Filter by status, region, city, country, category, targetProvider, search | ✅ | |
-| Post contains: title, description, budget range, deadline, region, required skills, media uploads, marketing type, collaboration type | ⚠️ | `skills` and `marketingType`/`collaborationType` fields missing from Post model |
-| Optional/flexible pricing (benefits, partnership, non-monetary) | ⚠️ | Budget is optional but no explicit "no price / benefits" compensation mode |
-| Post status: open, in_progress, closed, reactivated | ✅ | |
+| Requirement | Status | Notes |
+|---|---|---|
+| Title | ✅ | |
+| Status (open / in_progress / closed / reactivated) | ✅ | |
+| Description | ✅ | |
+| Objectives | 🟡 | No dedicated `objectives` field; folded into description |
+| Budget range (min / max) | ✅ | budget.{min, max, currency} |
+| Benefits / non-monetary compensation | ✅ | compensationType + benefits field |
+| Optional / flexible pricing | ✅ | compensationType: monetary \| benefits \| mixed |
+| Deadline | ✅ | |
+| Region (location) | ✅ | location.{city, region, country} |
+| Required skills | ✅ | requiredSkills[] |
+| Media uploads | ✅ | media[] via GridFS |
+| Marketing type | ✅ | marketingType enum: Events, 360, ATL, BTL, Production, Brand |
+| Collaboration type | ✅ | collaborationType: service \| partnership \| sponsorship \| exposure |
+| Public or targeted to specific provider | ✅ | isPublic + sentTo[] + sendPostToProvider endpoint |
+| Provider can send pitch directly to client | 🟡 | sendPostToProvider exists on backend; no dedicated UI flow for providers initiating |
+| Post filters: status, location, category, type | ✅ | postController.getPosts() |
+| Post search (title + description) | ✅ | |
+| Pagination | ✅ | |
+| Sort by deadline / pitchCount / createdAt | ✅ | |
 | Close post (auto-rejects pending pitches) | ✅ | |
 | Reactivate post | ✅ | |
-| Update post | ✅ | |
 | Delete post (only if no pitches) | ✅ | |
-| Public vs directly targeted post | ✅ | `sentTo` array + `targetProviders` |
-| Agency/provider can directly send pitch to targeted client | ✅ | Pitch flow handles this |
-| Post status history with timestamps | ✅ | `statusHistory` embedded array |
-
-### Frontend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| CreatePostModal | ✅ | |
-| PostsDataGrid (client's own posts) | ✅ | |
-| Browse posts page | ✅ | In agency dashboard |
-| Close / reactivate / delete actions on posts | ✅ | |
-| Edit post modal | ⚠️ | Service exists, UI action shown in grid but edit modal not confirmed fully wired |
-| Search + filters on browse | ⚠️ | Filters exist in hook but UI filter bar not built in client dashboard browse view |
+| min ≤ max budget validation | ✅ | Backend enforced |
+| Post creation UI (CreatePostModal) | ✅ | |
+| Client browses other posts + providers | ✅ | ClientBrowse page |
 
 ---
 
 ## 3. Pitches
 
-### Backend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Send pitch (file attachments optional) | ✅ | |
-| Prevent duplicate pitches on same post | ✅ | |
-| Pitch types: agency_to_client, freelancer_to_client, team_to_client, agency_to_freelancer | ✅ | Enum on model |
-| Agency→Client pitch: full structured fields (strategy, content, analysis, targetAudience, timeline, deliverables, pricing) | ✅ | All sub-objects on Pitch model |
-| Freelancer→Client pitch: simpler fields | ✅ | |
-| Team→Client pitch | ✅ | |
-| Agency→Freelancer pitch (collaboration convention) | ✅ | pitchType exists but contract article structure not enforced in model |
-| Pitch status: pending → accepted / rejected / withdrawn | ✅ | |
-| Accept pitch: auto-rejects all other pending pitches + auto-creates project | ✅ | |
-| Reject pitch with optional reason | ✅ | |
-| Withdraw pitch | ❌ | `withdrawn` status exists in enum but no PATCH /pitches/:id/withdraw endpoint |
-| `isReadByRecipient` tracking | ✅ | Auto-marked when fetched |
-| Pagination on pitch list | ✅ | |
-
-### Frontend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| PitchForm (agency multi-step: strategy, content, analysis, timeline, price) | ✅ | |
-| OffresRecues (pitches received on a post with accept/reject) | ✅ | |
-| My pitches view (sender side) | ⚠️ | Service + hook exist, no dedicated page rendered yet in client/agency dashboards |
-| Pitch file attachment upload | ✅ | |
-| Withdraw pitch button | ❌ | |
+| Requirement | Status | Notes |
+|---|---|---|
+| Status flow: pending → accepted \| rejected \| withdrawn | ✅ | |
+| Auto-reject other pitches when one accepted | ✅ | acceptPitch() |
+| Auto-create project on acceptance | ✅ | Project auto-created in acceptPitch() |
+| Post moves to in_progress on acceptance | ✅ | |
+| Notifications on accept/reject | ✅ | |
+| **Agency → Client pitch** (structured, 5-step) | 🟡 | Backend fields complete; frontend PitchForm has general fields but the full 5-step Agency→Client version (strategy, content pillars, competitive analysis, etc.) is the "version 2" form — verify it is correctly routed in production |
+| Agency → Client: strategy, objectives, techniques | ✅ | strategy{} on Pitch model |
+| Agency → Client: content pillars, publication calendar | ✅ | content{} on Pitch model |
+| Agency → Client: competitive analysis, color palette, positioning | ✅ | analysis{} on Pitch model |
+| Agency → Client: target audience (age, gender, niche, location) | ✅ | targetAudience{} on Pitch model |
+| Agency → Client: contract article sections (PRÉAMBULE … ARTICLE 15) | 🟡 | Fields exist for contract content; no form UI that maps to each article |
+| **Freelancer → Client pitch** (flexible) | ✅ | pitchType: freelancer_to_client; simpler fields |
+| **Team → Client pitch** | ✅ | pitchType: team_to_client |
+| **Agency → Freelancer pitch** (CONVENTION DE COLLABORATION) | 🟡 | pitchType: agency_to_freelancer exists; CONVENTION articles not mapped to individual form fields |
+| Internal agency approval workflow | ✅ | internalStatus: draft → with_chef_de_projet → approved → sent |
+| Role-based internal transitions (strategist, chef_de_projet, director) | ✅ | updateInternalStatus() enforces job title |
+| Pitch with file attachments | ✅ | attachments[] via GridFS |
+| Client can reject with reason | ✅ | rejectPitch() + rejectionReason |
+| Sender can withdraw | ✅ | |
+| isReadByRecipient flag | ✅ | |
 
 ---
 
 ## 4. Projects
 
-### Backend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Auto-create project on pitch acceptance | ✅ | |
-| One shared project (client + provider both reference it) | ✅ | |
-| Project fields: title, description, deadline, progress, status, assignedMembers, tasks, deliverables, agreedPrice | ✅ | |
-| Project status: pending, active, in_review, completed, cancelled | ✅ | |
-| Status history with timestamps | ✅ | |
-| Get client projects (filtered by status) | ✅ | |
-| Get agency projects (filtered by status) | ✅ | |
-| Assign member to project | ✅ | |
-| Closest deadline sorting | ⚠️ | Not enforced server-side; frontend must sort |
-| Deadline color urgency system | ❌ | Backend only; no deadline color logic |
-| Completed project archived styling | ❌ | Frontend responsibility |
-| Deliverable submission | ⚠️ | `deliverables` array on model, no dedicated POST /deliverables endpoint |
-
-### Frontend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Client projects page (cards view) | ✅ | |
-| Agency director projects page | ✅ | |
-| Project detail view (tasks, progress bars, workers, deadlines) | ✅ | |
-| Completed project greyed appearance | ❌ | |
-| Deadline color urgency (grey/green/yellow/orange/red) | ❌ | |
-| Closest deadline first ordering | ❌ | |
-| Assign member to project UI | ⚠️ | Service exists, UI button not confirmed |
-| Deliverable submission UI | ❌ | |
-| Worker (agency member) project view | ⚠️ | WorkerOverview shows tasks but not full project detail |
+| Requirement | Status | Notes |
+|---|---|---|
+| Auto-created after pitch acceptance | ✅ | |
+| ONE shared project (client + provider both reference it) | ✅ | |
+| Viewed differently by role | ✅ | getClientProjects vs getAgencyProjects etc. |
+| Project card: progress, client, deadline, status, workers, stats | ✅ | |
+| Project detail: progress bars, tasks, client info, workers, deadlines, deliverables | ✅ | |
+| Completed projects turn grey visually | 🟡 | Backend: projectStatus="completed"; UI styling (greyed/archived appearance) needs verification |
+| Ordered by closest deadline first | ✅ | |
+| Deadline color system (grey/green/yellow/orange/red) | ✅ | deadlineColor.js utility |
+| Progress auto-calculated (done tasks / total) | ✅ | |
+| Status: pending / active / in_review / completed / cancelled | ✅ | |
+| statusHistory tracking | ✅ | |
+| Deliverables submission | ✅ | addDeliverable endpoint + model |
+| assignedMembers tracking | ✅ | |
+| Deadline extension by director | 🔵 | No dedicated UI to extend deadline |
+| Closest deadline filtering | ✅ | |
+| Calendar integration | ✅ | calendarController returns project deadlines |
 
 ---
 
 ## 5. Tasks
 
-### Backend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Tasks embedded in projects | ✅ | |
-| Create task (title, description, assignedTo, dueDate, priority) | ✅ | |
-| Task status: pending → in_progress → review → done | ✅ | |
-| Update task status / priority / dueDate | ✅ | |
-| Progress auto-recalculated on task update | ✅ | |
-| Get all tasks for a member (across projects) | ✅ | |
-| Task reassignment | ⚠️ | No dedicated PATCH /tasks/:id/reassign; must use updateTask |
-| Deadline color urgency | ❌ | Backend sends dueDate, frontend must apply logic |
-| Closest deadline first ordering | ⚠️ | Not enforced server-side |
-
-### Frontend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Task list in project detail | ✅ | |
-| Worker tasks page | ✅ | `WorkerTasks.js` |
-| Task status update by worker | ✅ | |
-| Task create (director assigns) | ⚠️ | Service exists, UI form not confirmed wired in director view |
-| Deadline urgency colors | ❌ | |
-| Task reassignment UI | ❌ | |
+| Requirement | Status | Notes |
+|---|---|---|
+| Tasks embedded inside projects | ✅ | tasks[] subdocument on Project |
+| Director assigns tasks to members / freelancers / self | ✅ | createTask endpoint |
+| Status: todo → in_progress → in_review → done | ✅ | (spec says "pending → in_progress → review → done"; backend uses "todo" instead of "pending" — functionally equivalent) |
+| Task reassignment | ✅ | previousAssignees[] handover trail |
+| Priority levels (low / medium / high / urgent) | ✅ | |
+| Due date per task | ✅ | |
+| Deadline color system | ✅ | |
+| Ordered by closest deadline first | 🟡 | Backend: ordering not enforced server-side; frontend must sort locally |
+| Task deliverables (file submission) | ✅ | deliverables[] per task |
+| Task comments | ✅ | comments[] per task |
+| Member can work on multiple projects simultaneously | ✅ | assignedProjects[] on AgencyMember |
+| Workers can receive tasks outside primary role | ✅ | No hard restriction on assignment |
+| AgencyMember: getMemberTasks | ✅ | |
 
 ---
 
 ## 6. Contracts
 
-### Backend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Contract types: service_agreement, collaboration, cdd, cdi, project | ✅ | |
-| Contract parties: Client ↔ Agency, Client ↔ Freelancer, Agency ↔ Freelancer, Team ↔ Freelancer, Agency ↔ AgencyMember | ⚠️ | partyA/B types are enum'd but Agency↔AgencyMember not explicitly handled |
-| Contract status flow: draft → sent → acknowledged → signed → resiliation | ✅ | |
-| Agency fills Contrat Proforma form | ✅ | createContract endpoint |
-| System auto-generates PDF | ❌ | PDF generation not implemented; no PDF library |
-| Contract sent through chat (chat system) | ❌ | Chat system not built |
-| Client notified to upload receipt | ⚠️ | Notification model ready but not triggered on contract send |
-| Client uploads receipt | ✅ | PATCH /contracts/:id/receipt |
-| Agency sends Bon de Commande | ✅ | PATCH /contracts/:id/bon-de-commande |
-| Contracts page with filters (client, date, done, resiliation, not completed) | ⚠️ | Filter by partyId/status exists, date/client filters not explicit |
-| Encryption of contracts/documents | ❌ | Deferred per spec |
-| Get contract by project | ✅ | |
-
-### Frontend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Client contracts page (list + status filter) | ✅ | |
-| Contract detail view (all fields) | ✅ | |
-| Receipt upload form (client side) | ✅ | Shown for "sent" status contracts |
-| Agency contract creation form | ⚠️ | Service exists, UI form not confirmed wired |
-| Contract status progression UI | ⚠️ | Client side done; agency side not confirmed |
-| PDF auto-generation | ❌ | |
-| Resiliation initiation UI | ❌ | Service method exists, no UI |
+| Requirement | Status | Notes |
+|---|---|---|
+| Client ↔ Agency | ✅ | partyAType / partyBType support all combos |
+| Client ↔ Freelancer | ✅ | |
+| Agency ↔ Freelancer | ✅ | |
+| Team ↔ Freelancer | ✅ | |
+| Agency ↔ AgencyMember | ✅ | |
+| Contract types: service agreement, collaboration, CDD, CDI | ✅ | contractType enum |
+| Contract flow inside chat system | ❌ | No chat/conversation system exists. Contract has `conversationId` ref on Project but no Conversation/Message models or routes |
+| Contrat Proforma form (agency fills) | 🟡 | Fields exist on Contract model; dedicated Proforma form UI not confirmed |
+| Auto-generate PDF from form | ❌ | contractPdf field exists to store PDF; no PDF generation library integrated |
+| PDF sent through chat | ❌ | No chat system |
+| Client notified to upload receipt | ✅ | Notification trigger exists |
+| Client uploads receipt | ✅ | uploadReceipt endpoint + UI in ClientDashboard |
+| Agency sends Bon de Commande | ✅ | sendBonDeCommande endpoint |
+| Success message in chat + notification | 🟡 | Notification triggers exist; no chat |
+| Contract encryption | ❌ | Deferred; noted in spec as future |
+| No digital signature | ✅ | Correct — not implemented |
+| Contract status filters (client, date, done, résiliation, not completed) | ✅ | getContracts() supports these filters |
+| Resiliate contract | ✅ | |
+| Director / commercial / main account see contracts page | ✅ | DirectorContracts page |
 
 ---
 
-## 7. Agency Internal Workflow
+## 7. Collaborations & Worker Lifecycle
 
-### Backend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Create internal member accounts | ✅ | |
-| Member roles: director, commercial, strategist, chef de projet, worker | ⚠️ | `jobTitle` enum exists but strategist/chef de projet not explicitly separated in workflow logic |
-| Commercial flags posts | ✅ | POST /projects/flag-post + Agency.flaggedPosts |
-| Director reviews flagged posts | ✅ | GET /projects/agency/:id/flagged-posts |
-| Director marks flagged post as pitched | ✅ | PATCH /flagged-posts/:postId/pitched |
-| Strategist prepares pitch → chef de projet validates → sent to client | ❌ | This internal review/approval workflow is not implemented; pitch goes directly from agency account |
-| Assign members to projects | ✅ | |
-| Assign tasks to members | ✅ | |
-| Toggle member active/inactive | ✅ | |
-| Worker restoration system | ⚠️ | `isActive` toggle exists; no formal restore endpoint or status (inactive/suspended/archived) |
-| Freelancers inside agencies (multi-agency collaboration) | ⚠️ | Freelancer model has `agencyCollaborations` array but no API to manage it |
-| Deadline notification to director when overdue | ❌ | |
-| Director can extend deadline manually | ❌ | No endpoint to update project deadline |
-
-### Frontend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Director dashboard (overview, flagged posts, clients, projects, members) | ✅ | |
-| Commercial dashboard (overview, browse + flag posts) | ✅ | |
-| Worker dashboard (tasks, calendar) | ✅ | |
-| Create member form | ✅ | |
-| Members list with toggle | ✅ | |
-| Internal pitch review workflow (strategist → chef de projet → director) | ❌ | |
-| Extend project deadline UI | ❌ | |
+| Requirement | Status | Notes |
+|---|---|---|
+| Employment-style collaboration | ✅ | agencyCollaborations[] on Freelancer |
+| Partnership agreement | ✅ | contractType supports it |
+| Worker leaves → account status: inactive / suspended / archived (NOT deleted) | ✅ | accountStatus enum on AgencyMember |
+| Previous work remains historically attached | ✅ | Soft-delete protection on all core entities in server.js |
+| Old tasks linked to original executor | ✅ | previousAssignees[] preserved |
+| Replacement worker inherits current tasks only (read-only for history) | 🟡 | Handover is tracked; read-only enforcement on old history is a UI concern, not enforced at API level |
+| Restoration system (account reactivated for future collaboration) | ✅ | setMemberStatus to active |
+| Freelancer collaborates with multiple agencies | ✅ | agencyCollaborations[]; context switching in UI |
+| Freelancer context card switching (Agency A / Agency B / Team C) | ✅ | FreelancerCollaborations + ContextBar |
+| Isolated workspaces per collaboration context | ✅ | FreelancerProjects filters by agencyId |
+| Freelancer can send application to teams/agencies | 🟡 | No dedicated "apply to join agency/team" workflow/endpoint |
 
 ---
 
-## 8. Notifications
+## 8. Profiles
 
-### Backend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Notification model with types and categories | ✅ | |
-| Static `notify()` method | ✅ | |
-| Mark single notification as read | ✅ | |
+| Requirement | Status | Notes |
+|---|---|---|
+| Client profile: field of work, activity, previous collaborations | 🟡 | bio exists; no dedicated "field of work" field; previous collaborations via projects |
+| Agency profile: previous collaborations, services, portfolio, workers | ✅ | |
+| Freelancer profile: skills, collaborations, portfolio | ✅ | |
+| Team profile: members, specialization, campaigns | 🟡 | members + specialties exist; "campaigns" = portfolio items |
+| All profiles: bio, specialties, stats, publications, work showcase, media, projects, achievements | 🟡 | Most implemented; "achievements" has no dedicated field |
+| Social-style posts (update, achievement, campaign, announcement) | ✅ | ProfilePost model + routes + UI |
+| Portfolio items | ✅ | portfolioItems[] on Agency, Team, Freelancer |
+| Collaboration history on profile | ✅ | agencyCollaborations[] shown on FreelancerProfile |
+| Public profile view (any role viewable by anyone) | ✅ | GET /profile/:role/:id — no auth required |
+| Profile edit | ✅ | EditProfilePage + PATCH /profile/me |
+| Social links (Instagram, TikTok, YouTube, LinkedIn, Twitter) | ✅ | Freelancer model only |
+| Browse providers (search, filter by type/specialty/region) | ✅ | BrowseProvidersPage |
+| Specialties appear before bio, editable later | ✅ | |
+| Completed projects count on profile | ✅ | profileController.getProfile() aggregates it |
+
+---
+
+## 9. Notifications
+
+| Requirement | Status | Notes |
+|---|---|---|
+| 19+ event types | ✅ | |
+| Categories: tasks, projects, contracts, pitches, deadlines, admin, messages | ✅ | |
+| Urgency colors | ✅ | |
+| Filter by category | ✅ | |
+| isRead flag | ✅ | |
 | Mark all read | ✅ | |
-| Get notifications (paginated, unreadOnly filter) | ✅ | |
-| Unread count endpoint | ✅ | |
-| Delete notification | ✅ | |
-| Triggers: pitch received/accepted/rejected | ❌ | `notify()` exists but not called in pitchController |
-| Triggers: task assigned | ❌ | Not called in projectController |
-| Triggers: deadline approaching / overdue | ❌ | No cron/scheduler |
-| Triggers: contract signed / receipt requested | ❌ | Not called in contractController |
-| Triggers: director approval needed | ❌ | |
-| Filter by category in UI | ❌ | |
-| Only director sees contract/project notifications | ❌ | |
-
-### Frontend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Notifications page / panel | ❌ | Service file exists, no UI component |
-| Unread count badge | ❌ | |
-| Filter notifications by type | ❌ | |
-| Urgency colors | ❌ | |
+| Unread count badge | ✅ | Polled every 30s in DashboardLayout |
+| Only director sees contract + project notifications | 🟡 | No server-side role filter on notification delivery — all notifications sent to recipient; UI filtering not confirmed |
+| Notification bell in topbar dropdown | ✅ | DashboardLayout topbar |
+| Full notifications page | ✅ | NotificationsPage |
+| Pagination | ✅ | |
+| Notification on: pitch received, accepted, rejected | ✅ | |
+| Notification on: project created | ✅ | |
+| Notification on: task overdue | ✅ | type: "task_overdue" |
+| Notification on: contract milestones | ✅ | contract_sent, contract_acknowledged, contract_signed types |
+| Notification on: collaboration request | 🟡 | Type exists but trigger not fully wired |
+| Notification on: account restored | 🟡 | No explicit trigger in restoration endpoint |
+| Notification on: director approval needed | ✅ | pitch internal workflow triggers |
 
 ---
 
-## 9. Profiles
+## 10. Dashboards
 
-### Backend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Client profile fields (field of work, activity, previous collaborations) | ⚠️ | `industry` exists but `fieldOfWork`/collaborations history not explicit |
-| Agency profile (specialties, portfolio, workers, bio) | ✅ | `specialties`, `portfolioItems`, `members`, `bio` on Agency model |
-| Freelancer profile (skills, collaborations, portfolio, social links) | ✅ | |
-| Team profile (members, specialization, campaigns) | ⚠️ | `specialties` exists, campaigns not tracked |
-| Public profile page / browse providers | ❌ | No GET /agencies/:id or GET /freelancers/:id endpoint |
-| Profile edit endpoint | ❌ | No PATCH /profile endpoint for any role |
-| Social-style posts (achievements, campaigns, media announcements) | ❌ | Separate from business Posts |
-
-### Frontend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Profile pages | ❌ | No profile page component exists |
-| Browse providers page | ❌ | Referenced in dashboard nav but not built |
-| Edit profile UI | ❌ | |
-| Social-style post feed | ❌ | |
-| Portfolio display | ❌ | |
-
----
-
-## 10. Dashboards — General Features
-
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Calendar (task dates + project deadlines) | ⚠️ | WorkerCalendar exists for agency workers; not present for client or freelancer |
-| Personal todo list / reminders / pinned tasks / quick notes | ❌ | |
-| Search + filters on all major lists | ⚠️ | Posts have it; pitches, projects, tasks do not have full filter UI |
-| Region filters everywhere | ⚠️ | Posts only |
-| Closest deadline ordering everywhere | ❌ | |
-| Colored urgency system (grey/green/yellow/orange/red) | ❌ | |
+| Requirement | Status | Notes |
+|---|---|---|
+| Calendar (all users) | ✅ | |
+| Personal notes + reminders + pinned tasks | ✅ | PersonalNote model + noteController + PersonalNotes UI |
+| Activity planning (appears in calendar automatically) | 🟡 | Deadlines and task dates appear; personal reminders don't auto-appear in calendar |
+| **Client:** my posts + create post | ✅ | |
+| **Client:** browse providers + browse posts | ✅ | |
+| **Client:** pitches received | ✅ | |
+| **Client:** projects | ✅ | |
+| **Client:** contracts | ✅ | |
+| **Client:** calendar | ✅ | |
+| **Client:** profile | ✅ | |
+| **Agency Director:** flagged posts | ✅ | |
+| **Agency Director:** pitches | ✅ | |
+| **Agency Director:** projects | ✅ | |
+| **Agency Director:** contracts | ✅ | |
+| **Agency Director:** members management | ✅ | |
+| **Agency Director:** analytics | 🟡 | Basic stats shown; no dedicated analytics page |
+| **Agency Director:** calendar | ✅ | |
+| **Agency Commercial:** browse + flag posts | ✅ | CommercialBrowse page |
+| **Agency Worker:** tasks, projects, calendar | ✅ | WorkerTasks, WorkerProjects, WorkerCalendar |
+| **Freelancer:** browse posts | ✅ | |
+| **Freelancer:** pitches | ✅ | |
+| **Freelancer:** collaborations (context switching) | ✅ | |
+| **Freelancer:** projects | ✅ | |
+| **Freelancer:** profile | ✅ | |
+| **Team:** overview, pitches, projects, members | ✅ | TeamDashboard |
+| **Team Member:** tasks, projects, calendar | 🟡 | TeamMember dashboard exists; completeness needs verification |
 
 ---
 
-## 11. Freelancer Dashboard
+## 11. Agency Internal Workflow
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Dashboard page | ❌ | ComingSoon placeholder |
-| Collaboration cards (agency A, agency B, team C context switching) | ❌ | |
-| Isolated workspace per collaboration | ❌ | |
-| Browse posts | ❌ | |
-| Send application to teams/agencies | ❌ | |
-| Send collaboration proposal to clients | ❌ | |
-
----
-
-## 12. Team Dashboard
-
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Dashboard page | ❌ | ComingSoon placeholder |
-| TeamMember management | ❌ | |
-| Browse and pitch on posts | ❌ | |
+| Requirement | Status | Notes |
+|---|---|---|
+| Commercial: browse and flag posts | ✅ | flagPost endpoint + CommercialBrowse UI |
+| Director: review flagged posts, select, forward to strategist | ✅ | DirectorFlaggedPosts + internalStatus |
+| Strategist: prepare pitch, send to chef de projet | ✅ | internalStatus: draft → with_chef_de_projet |
+| Chef de projet: validate, send to client; if rejected → back to strategist | ✅ | internalStatus: approved → sent or back |
+| Job titles: director, commercial, strategist, chef_de_projet, designer, editor, smm, community_manager | ✅ | AgencyMember.jobTitle enum |
+| Multiple workers with same job on same project | ✅ | No restriction; assignedMembers[] allows multiple |
+| Member in multiple projects | ✅ | |
+| Task assignment by director | ✅ | |
 
 ---
 
-## 13. Admin System
+## 12. Admin System
 
-### Backend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Get all users with role/search filter | ✅ | |
-| Disable / enable accounts | ✅ | toggleUserStatus |
-| Monitor posts | ❌ | No admin post moderation endpoint |
-| Access statistics / analytics | ❌ | |
-| Add fields and options | ❌ | |
-| Add ads | ❌ | |
-| Monitor platform activity | ❌ | |
-
-### Frontend
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Admin dashboard (user list + search + toggle) | ✅ | AdminDashboard.jsx |
-| Post moderation UI | ❌ | |
-| Platform statistics UI | ❌ | |
-| Ads management | ❌ | |
+| Requirement | Status | Notes |
+|---|---|---|
+| Manage users (list, search, filter by role) | ✅ | getAllUsers() |
+| Disable / enable accounts | ✅ | toggleUserStatus() |
+| Access statistics | ✅ | getStats() — users, posts, pitches counts |
+| Add fields and options (dropdown configurator) | ✅ | OptionsList model + admin options routes |
+| Add ads | ❌ | No ads model, no ads routes, no UI |
+| Monitor posts | ✅ | getAdminPosts() + removePost() |
+| Monitor platform activity | 🟡 | getStats() covers basics; no full activity log page |
+| AdminDashboard (DashboardLayout-based) | ✅ | AdminDashboard.jsx |
+| AdminPanel (standalone, self-contained auth) | ✅ | AdminPanel.jsx (not currently routed in App.js) |
 
 ---
 
-## 14. Collaboration / Worker Lifecycle
+## 13. History & Timestamps
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Account status: inactive / suspended / archived (not deleted) | ⚠️ | Only `isActive` boolean; no suspended/archived states |
-| Historical integrity (tasks/projects stay linked after departure) | ✅ | References are ObjectIds, not deleted |
-| Replacement worker inherits ongoing tasks only | ❌ | No reassignment handover logic |
-| Account restoration system | ⚠️ | Can re-toggle isActive; no formal restore workflow |
-| Seasonal / recurring collaborator support | ⚠️ | Possible via toggle but not formalized |
-| Freelancer multi-agency collaboration management | ❌ | `agencyCollaborations` array on model, no endpoints |
-
----
-
-## 15. What's Fully Working Right Now
-
-- Multi-role registration and login
-- JWT auth with HTTP-only cookies, role detection, protected routes
-- Full post lifecycle (create, browse, filter, close, reactivate, delete)
-- Full pitch lifecycle (send, accept auto-creates project, reject, file attachments)
-- Full project structure (tasks, members, progress tracking, status)
-- Full contract workflow (draft → sent → receipt → bon de commande → signed)
-- Agency member management (create, list, toggle, force password change)
-- Agency internal workflow: commercial flags posts → director reviews → pitches sent
-- Client dashboard: posts, pitches received, projects, contracts
-- Agency dashboard: director / commercial / worker split views
-- Admin dashboard: user management with toggle
-- File upload via GridFS (pitch attachments)
-- Landing page
+| Requirement | Status | Notes |
+|---|---|---|
+| Post creation timestamp | ✅ | createdAt via Mongoose timestamps |
+| Pitch sent timestamp | ✅ | |
+| Task assigned timestamp | ✅ | assignedAt in assignedMembers |
+| Project started timestamp | ✅ | startDate field |
+| Completion date | ✅ | completedAt field |
+| Edit tracking | 🟡 | No generic edit log; statusHistory exists on Project/Contract |
+| Pitch validation / denial timestamps | ✅ | respondedAt field |
+| Never hard-delete (all soft) | ✅ | server.js 405 protection on delete for core entities |
+| Deadline extension by director | 🔵 | No UI; updateProject can change deadline |
 
 ---
 
-## 16. Priority Missing Features (Next to Build)
+## 14. Global UX Requirements
 
-1. **Notification triggers** — wire `notify()` into pitchController, projectController, contractController
-2. **Notifications UI** — bell icon, notification panel, unread count badge
-3. **Profile pages** — public profiles + edit profile for all roles
-4. **Browse providers** — agency/freelancer/team discovery page
-5. **Freelancer dashboard** — full replacement for ComingSoon
-6. **Team dashboard** — full replacement for ComingSoon
-7. **Deadline urgency colors** — frontend utility function applied to all task/project cards
-8. **PDF contract generation** — auto-generate Contrat Proforma PDF
-9. **Internal pitch workflow** — strategist → chef de projet → director approval chain
-10. **Personal calendar + todo** — per-user reminders separate from project tasks
-11. **Deliverable submission** — endpoint + UI for submitting project deliverables
-12. **Admin: post moderation + platform analytics**
-13. **Registration: agency specialties picker + filiale logic + freelancer carte field**
-14. **Withdraw pitch** — endpoint + UI button
+| Requirement | Status | Notes |
+|---|---|---|
+| Search everywhere | 🟡 | Implemented in posts, providers; not uniformly in all modules |
+| Status filters | ✅ | Posts, pitches, projects, contracts all filterable |
+| Date filters | ✅ | Contracts, posts support date range |
+| Region filters | ✅ | Posts, providers |
+| Sorting | ✅ | Posts support sort param |
+| Closest deadline first ordering | 🟡 | Implemented in calendar + posts; not enforced everywhere |
+| Colored urgency system | ✅ | deadlineColor.js used across dashboards |
+| Structured inputs (dropdowns, radio, checkbox) | ✅ | Forms use MUI Select/Radio/Checkbox throughout |
+| No meeting terminology | ✅ | None present in codebase |
+| No localStorage | ✅ | All state via cookies + hooks |
+| No Redux / Zustand / Context | ✅ | Custom hooks only |
+| French UI labels, English internal naming | ✅ | |
+| Premium SaaS design (black/red gradients, smooth animations) | ✅ | Framer Motion, consistent dark palette |
+| No emojis in dashboards | ✅ | |
+| Calendar integration for deadlines + tasks | ✅ | calendarController + calendar pages |
+
+---
+
+## 15. Tech Stack & Libraries
+
+| Requirement | Status | Notes |
+|---|---|---|
+| React CRA | ✅ | |
+| Express.js | ✅ | |
+| MongoDB Atlas + Mongoose ^8.x | ✅ | |
+| JWT HTTP-only cookies | ✅ | |
+| GridFS file storage (images, video, PDF, 50MB) | ✅ | |
+| axios locked at 0.27.2 | ✅ | |
+| Framer Motion | ✅ | |
+| MUI v7.3 | ✅ | |
+| bcryptjs | ✅ | |
+| multer + multer-gridfs-storage | ✅ | |
+| Separate collections per role | ✅ | |
+
+---
+
+## Summary: What Is Done vs What Is Missing
+
+### ✅ Fully Working
+
+- Complete multi-role auth (7 roles, JWT cookies, force-password-change)
+- Post lifecycle (create, browse, filter, close, reactivate, delete, targeted sending)
+- Pitch lifecycle (submit, internal approval workflow, accept/reject/withdraw, auto-project creation)
+- Project management (auto-create, tasks, deliverables, comments, assignment, deadline colors, progress)
+- Contract lifecycle (draft → sent → receipt → bon de commande → signed → résiliation), with filters
+- Agency internal workflow (commercial flags → director selects → strategist pitches → chef validates)
+- Freelancer multi-agency context switching with isolated workspaces
+- Worker lifecycle (soft statuses: inactive/suspended/archived, restoration, historical integrity)
+- All 4 main dashboards (Client, Agency, Freelancer, Team) with role-split views
+- Personal notes with pin/reminder
+- Notification system (19+ types, categories, unread count, mark-all-read)
+- Profiles (public view, edit, portfolio, social posts, collaboration history)
+- Browse providers with search/filter
+- Calendar with color-coded deadlines
+- Admin system (users, stats, options configurator, post moderation)
+- Landing page (full French content, animations, contact section)
+- GridFS uploads (images, video, PDF)
+
+---
+
+### ❌ Not Implemented
+
+| Missing Feature | Where Needed |
+|---|---|
+| **Chat / Conversation system** | Contract flow requires PDF exchange through chat; no Conversation or Message model, no chat routes, no chat UI |
+| **PDF auto-generation** (Contrat Proforma → PDF) | contractController and frontend; `contractPdf` field exists but no generator (e.g., pdfkit, puppeteer) integrated |
+| **Ads system** | Admin can add ads per spec; no Ads model, no routes, no UI |
+| **Agency → Freelancer pitch: CONVENTION articles mapped to form** | PitchForm for agency_to_freelancer exists but individual CONVENTION DE COLLABORATION articles (01–11) are not mapped to distinct form fields |
+| **Contract Proforma form UI** | Dedicated multi-article contract form (PRÉAMBULE → ARTICLE 15) not built |
+
+---
+
+### 🟡 Partially Implemented (Gaps to Close)
+
+| Partial Feature | What's Done | What's Missing |
+|---|---|---|
+| **Post objectives field** | Description covers it | No dedicated `objectives` field on Post model or form |
+| **Agency → Client 5-step pitch form** | Backend fields complete; "version 2" form exists | Verify correct PitchForm version is routed; ensure all strategy/content/analysis sections render |
+| **Notification director-only filter** | All notification types exist | No server-side filter ensuring only director receives contract/project notifications |
+| **Personal reminders → calendar auto-appear** | Notes have reminderDate | Calendar doesn't pull personal reminder dates as events |
+| **Analytics dashboard** | Basic stats in admin and overview | No dedicated analytics page with charts for agency (pitch win rate, project velocity, etc.) |
+| **Deadline extension UI** | updateProject() can change deadline | No dedicated "extend deadline" button in director's project view |
+| **Freelancer apply to join agency/team** | agencyCollaborations[] model ready | No apply/invite workflow endpoint or UI |
+| **Completed project greyed appearance** | projectStatus="completed" exists | UI greying/archiving style on project cards needs confirmation |
+| **TeamMember dashboard completeness** | TeamMember routes and model exist | Dashboard subpages for team_member role need verification |
+| **Activity log page (admin)** | getStats() gives aggregates | No detailed activity event feed in admin panel |
+| **Client achievements field** | bio + posts cover it | No dedicated `achievements` model field or display section |
+| **Provider direct post to client (no post)** | sentTo[] on posts supports it | No UI flow for provider to initiate and send a post/proposal directly to a specific client without a pre-existing Post |
