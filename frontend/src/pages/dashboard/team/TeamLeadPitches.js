@@ -24,6 +24,140 @@ const fmt = (d) => d
 
 const PAGE_SIZE = 12;
 
+// ── Expandable pitch card ──────────────────────────────────────────────────────
+const PitchCard = ({ p, index, onWithdraw, withdrawing }) => {
+  const [expanded, setExpanded] = useState(false);
+  const meta = STATUS_META[p.status] || STATUS_META.pending;
+  const s = p.strategy || {};
+  const c = p.content  || {};
+  const a = p.analysis || {};
+  const t = p.targetAudience || {};
+
+  const hasDetails = p.description || s.strategyOverview || c.contentPillars?.length
+    || a.competitiveAnalysis || t.ageMin || t.locations?.length;
+
+  return (
+    <motion.div
+      key={p._id}
+      className="card"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04 }}
+      style={{ padding: "18px 22px", borderLeft: `3px solid ${meta.color}` }}>
+      <div style={{ display: "flex", justifyContent: "space-between",
+        alignItems: "flex-start", gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: "0.92rem", marginBottom: 4 }}>
+            {p.post?.title || "Post supprimé"}
+          </div>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            {p.proposedPrice?.amount && (
+              <div style={{ fontSize: "0.78rem", color: "#555" }}>
+                Offre : <strong>{p.proposedPrice.amount.toLocaleString()} {p.proposedPrice.currency || "DZD"}</strong>
+              </div>
+            )}
+            {p.timeline?.duration && (
+              <div style={{ fontSize: "0.78rem", color: "#555" }}>
+                Durée : <strong>{p.timeline.duration} {p.timeline.unit === "days" ? "j" : p.timeline.unit === "weeks" ? "sem" : "mois"}</strong>
+              </div>
+            )}
+            <div style={{ fontSize: "0.78rem", color: "var(--d-muted)" }}>
+              Envoyée le {fmt(p.createdAt)}
+            </div>
+          </div>
+
+          {expanded && (
+            <div style={{ marginTop: 12, borderTop: "1px solid var(--d-border-soft)", paddingTop: 12 }}>
+              {p.description && (
+                <div style={{ fontSize: "0.82rem", color: "#444", lineHeight: 1.6, marginBottom: 10 }}>
+                  {p.description}
+                </div>
+              )}
+              {s.strategyOverview && (
+                <div style={{ marginBottom: 6 }}>
+                  <span style={{ fontSize: "0.72rem", color: "#888", fontWeight: 600 }}>Stratégie : </span>
+                  <span style={{ fontSize: "0.82rem", color: "#333" }}>{s.strategyOverview}</span>
+                </div>
+              )}
+              {s.creativeIdea && (
+                <div style={{ marginBottom: 6 }}>
+                  <span style={{ fontSize: "0.72rem", color: "#888", fontWeight: 600 }}>Idée créative : </span>
+                  <span style={{ fontSize: "0.82rem", color: "#333" }}>{s.creativeIdea}</span>
+                </div>
+              )}
+              {s.objectives && (
+                <div style={{ marginBottom: 6 }}>
+                  <span style={{ fontSize: "0.72rem", color: "#888", fontWeight: 600 }}>Objectifs : </span>
+                  <span style={{ fontSize: "0.82rem", color: "#333" }}>{s.objectives}</span>
+                </div>
+              )}
+              {c.contentPillars?.length > 0 && (
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: "0.72rem", color: "#888", fontWeight: 600, marginBottom: 4 }}>Piliers de contenu</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                    {c.contentPillars.map((v, i) => (
+                      <span key={i} style={{ padding: "2px 10px", borderRadius: 20, fontSize: "0.7rem",
+                        fontWeight: 600, background: "#f3f0ff", color: "#7c3aed" }}>{v}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {a.competitiveAnalysis && (
+                <div style={{ marginBottom: 6 }}>
+                  <span style={{ fontSize: "0.72rem", color: "#888", fontWeight: 600 }}>Analyse concurrentielle : </span>
+                  <span style={{ fontSize: "0.82rem", color: "#333" }}>{a.competitiveAnalysis}</span>
+                </div>
+              )}
+              {(t.ageMin || t.ageMax || t.gender) && (
+                <div style={{ marginBottom: 6 }}>
+                  <span style={{ fontSize: "0.72rem", color: "#888", fontWeight: 600 }}>Audience : </span>
+                  <span style={{ fontSize: "0.82rem", color: "#333" }}>
+                    {[t.ageMin && t.ageMax ? `${t.ageMin}–${t.ageMax} ans` : null, t.gender].filter(Boolean).join(", ")}
+                  </span>
+                </div>
+              )}
+              {t.locations?.length > 0 && (
+                <div style={{ marginBottom: 6 }}>
+                  <span style={{ fontSize: "0.72rem", color: "#888", fontWeight: 600 }}>Localisations : </span>
+                  <span style={{ fontSize: "0.82rem", color: "#333" }}>{t.locations.join(", ")}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {hasDetails && (
+            <button onClick={() => setExpanded(e => !e)}
+              style={{ marginTop: 8, background: "none", border: "none", cursor: "pointer",
+                fontSize: "0.72rem", color: "#059669", fontWeight: 600,
+                fontFamily: "inherit", padding: 0 }}>
+              {expanded ? "Réduire ▲" : "Voir détails ▼"}
+            </button>
+          )}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+          <span style={{ padding: "3px 11px", borderRadius: 20, fontSize: "0.7rem",
+            fontWeight: 700, background: meta.bg, color: meta.color,
+            whiteSpace: "nowrap" }}>
+            {meta.label}
+          </span>
+          {p.status === "pending" && (
+            <button
+              onClick={() => onWithdraw(p)}
+              disabled={withdrawing === p._id}
+              style={{ padding: "4px 12px", borderRadius: 8, fontSize: "0.72rem",
+                fontWeight: 600, cursor: "pointer",
+                border: "1px solid #ef4444", color: "#ef4444",
+                background: "none", opacity: withdrawing === p._id ? 0.5 : 1 }}>
+              {withdrawing === p._id ? "..." : "Retirer"}
+            </button>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const TeamLeadPitches = ({ user }) => {
   const [allPitches,  setAllPitches]  = useState([]);
   const [loading,     setLoading]     = useState(true);
@@ -102,59 +236,15 @@ const TeamLeadPitches = ({ user }) => {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {pitches.map((p, i) => {
-                const meta = STATUS_META[p.status] || STATUS_META.pending;
-                return (
-                  <motion.div key={p._id} className="card"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    style={{ padding: "18px 22px", borderLeft: `3px solid ${meta.color}` }}>
-                    <div style={{ display: "flex", justifyContent: "space-between",
-                      alignItems: "flex-start", gap: 12 }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: "0.92rem", marginBottom: 4 }}>
-                          {p.post?.title || "Post supprimé"}
-                        </div>
-                        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                          {p.price && (
-                            <div style={{ fontSize: "0.78rem", color: "#555" }}>
-                              Offre : <strong>{p.price.toLocaleString("fr-DZ")} {p.currency || "DZD"}</strong>
-                            </div>
-                          )}
-                          {p.duration && (
-                            <div style={{ fontSize: "0.78rem", color: "#555" }}>
-                              Durée : <strong>{p.duration} {p.durationUnit || ""}</strong>
-                            </div>
-                          )}
-                          <div style={{ fontSize: "0.78rem", color: "var(--d-muted)" }}>
-                            Envoyée le {fmt(p.createdAt)}
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column",
-                        alignItems: "flex-end", gap: 8 }}>
-                        <span style={{ padding: "3px 11px", borderRadius: 20, fontSize: "0.7rem",
-                          fontWeight: 700, background: meta.bg, color: meta.color,
-                          whiteSpace: "nowrap" }}>
-                          {meta.label}
-                        </span>
-                        {p.status === "pending" && (
-                          <button
-                            onClick={() => handleWithdraw(p)}
-                            disabled={withdrawing === p._id}
-                            style={{ padding: "4px 12px", borderRadius: 8, fontSize: "0.72rem",
-                              fontWeight: 600, cursor: "pointer",
-                              border: "1px solid #ef4444", color: "#ef4444",
-                              background: "none", opacity: withdrawing === p._id ? 0.5 : 1 }}>
-                            {withdrawing === p._id ? "..." : "Retirer"}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
+              {pitches.map((p, i) => (
+                <PitchCard
+                  key={p._id}
+                  p={p}
+                  index={i}
+                  onWithdraw={handleWithdraw}
+                  withdrawing={withdrawing}
+                />
+              ))}
             </div>
 
             {pages > 1 && (

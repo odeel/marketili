@@ -102,7 +102,9 @@ const ConventionCard = ({ p, index }) => {
 
 // ── Pitch card ─────────────────────────────────────────────────
 const PitchCard = ({ p, index, onWithdraw, withdrawing }) => {
+  const [expanded, setExpanded] = useState(false);
   const meta = STATUS_META[p.status] || STATUS_META.pending;
+
   return (
     <motion.div
       key={p._id}
@@ -123,14 +125,14 @@ const PitchCard = ({ p, index, onWithdraw, withdrawing }) => {
             </div>
           )}
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            {p.price && (
+            {p.proposedPrice?.amount && (
               <div style={{ fontSize: "0.78rem", color: "#555" }}>
-                Offre : <strong>{p.price.toLocaleString("fr-DZ")} {p.currency || "DZD"}</strong>
+                Offre : <strong>{p.proposedPrice.amount.toLocaleString()} {p.proposedPrice.currency || "DZD"}</strong>
               </div>
             )}
-            {p.duration && (
+            {p.timeline?.duration && (
               <div style={{ fontSize: "0.78rem", color: "#555" }}>
-                Durée : <strong>{p.duration} {p.durationUnit || ""}</strong>
+                Durée : <strong>{p.timeline.duration} {p.timeline.unit === "days" ? "j" : p.timeline.unit === "weeks" ? "sem" : "mois"}</strong>
               </div>
             )}
             <div style={{ fontSize: "0.78rem", color: "var(--d-muted)" }}>
@@ -139,10 +141,19 @@ const PitchCard = ({ p, index, onWithdraw, withdrawing }) => {
           </div>
           {p.description && (
             <div style={{ fontSize: "0.78rem", color: "#555", marginTop: 8,
-              lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+              lineHeight: 1.55, display: "-webkit-box",
+              WebkitLineClamp: expanded ? "none" : 2,
+              WebkitBoxOrient: "vertical", overflow: expanded ? "visible" : "hidden" }}>
               {p.description}
             </div>
+          )}
+          {p.description && (
+            <button onClick={() => setExpanded(e => !e)}
+              style={{ marginTop: 6, background: "none", border: "none", cursor: "pointer",
+                fontSize: "0.72rem", color: "#7c3aed", fontWeight: 600,
+                fontFamily: "inherit", padding: 0 }}>
+              {expanded ? "Réduire ▲" : "Voir détails ▼"}
+            </button>
           )}
         </div>
 
