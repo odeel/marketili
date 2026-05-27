@@ -1,6 +1,6 @@
-// backend/routes/uploadRoutes.js
 const express   = require("express");
 const rateLimit = require("express-rate-limit");
+const { Readable } = require("stream");
 const router    = express.Router();
 const mongoose  = require("mongoose");
 const { upload, conn } = require("../config/db");
@@ -15,34 +15,64 @@ const uploadLimiter = rateLimit({
   message: { success: false, message: "Limite d'upload atteinte. Réessayez plus tard." },
 });
 
+// POST /api/upload
+// Multer puts the file in memory (req.file.buffer), then we stream it
+// to GridFSBucket using the existing mongoose connection.
 router.post("/", protect, uploadLimiter, upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "No file uploaded" });
+      return res.status(400).json({ success: false, message: "Aucun fichier reçu" });
     }
 
-    const connection = conn(); // Call as function
+    const connection = conn();
     const bucket = new mongoose.mongo.GridFSBucket(connection.db, {
       bucketName: "uploads",
     });
 
-    const fileId = req.file.id;
-    const url = `/api/upload/${fileId}`;
+    const filename = `${Date.now()}-${req.file.originalname.replace(/\s/g, "_")}`;
 
-    res.json({
-      success: true,
-      message: "File uploaded successfully",
-      fileId: fileId.toString(),
-      id: fileId.toString(),
-      filename: req.file.filename,
-      url,
+    const uploadStream = bucket.openUploadStream(filename, {
+      contentType: req.file.mimetype,
+      metadata: {
+        originalName: req.file.originalname,
+        uploadedBy:   req.user._id,
+        uploadedAt:   new Date(),
+      },
     });
+
+    // Stream the buffer into GridFS
+    const readable = Readable.from(req.file.buffer);
+    readable.pipe(uploadStream);
+
+    uploadStream.on("finish", () => {
+      const fileId = uploadStream.id;
+      return res.json({
+        success:  true,
+        message:  "File uploaded successfully",
+        fileId:   fileId.toString(),
+        id:       fileId.toString(),
+        filename,
+        url:      `/api/upload/${fileId}`,
+      });
+    });
+
+    uploadStream.on("error", (err) => {
+      console.error("GridFS upload stream error:", err);
+      if (!res.headersSent) {
+        res.status(500).json({ success: false, message: "Erreur lors de l'enregistrement du fichier" });
+      }
+    });
+
   } catch (error) {
     console.error("Upload error:", error);
-    res.status(500).json({ success: false, message: "Upload failed", error: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: "Upload failed: " + error.message });
+    }
   }
 });
 
+// GET /api/upload/:id   — stream file from GridFS
+// ?download=1 forces attachment disposition (browser download)
 router.get("/:id", async (req, res) => {
   try {
     const connection = conn();
@@ -58,13 +88,13 @@ router.get("/:id", async (req, res) => {
     }
 
     const file = files[0];
-    const contentType = file.contentType || "application/octet-stream";
-    const encodedName = encodeURIComponent(file.filename || req.params.id);
-    const disposition = req.query.download === "1" ? "attachment" : "inline";
+    const contentType  = file.contentType || "application/octet-stream";
+    const encodedName  = encodeURIComponent(file.filename || req.params.id);
+    const disposition  = req.query.download === "1" ? "attachment" : "inline";
 
-    res.set("Content-Type", contentType);
+    res.set("Content-Type",        contentType);
     res.set("Content-Disposition", `${disposition}; filename*=UTF-8''${encodedName}`);
-    res.set("Cache-Control", "private, max-age=3600");
+    res.set("Cache-Control",       "private, max-age=3600");
 
     const downloadStream = bucket.openDownloadStream(fileId);
     downloadStream.on("error", () => {

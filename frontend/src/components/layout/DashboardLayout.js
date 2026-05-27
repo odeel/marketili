@@ -244,7 +244,7 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
         <header className="dash-topbar">
           <div className="dash-topbar-left">
             <button className="dash-hamburger" onClick={() => setMobileOpen(o => !o)}
-              aria-label="Menu">
+              aria-label="Menu" aria-expanded={mobileOpen}>
               <span /><span /><span />
             </button>
             <h1 className="dash-topbar-title">{activeTitle}</h1>

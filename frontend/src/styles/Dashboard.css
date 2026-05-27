@@ -1304,6 +1304,14 @@ body {
   .stats-row    { grid-template-columns: 1fr 1fr; }
   .dash-form-row { grid-template-columns: 1fr; }
 
+  /* Section headers: allow wrapping when title + CTA don't fit side-by-side */
+  .section-header { flex-wrap: wrap; gap: 10px; }
+  .section-head   { flex-wrap: wrap; gap: 8px; }
+
+  /* Pagination: stack count text above buttons on narrow screens */
+  .pagination { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .pagination-btns { align-self: flex-end; }
+
   /* Notification dropdown: full-width on mobile */
   .dash-notif-dropdown {
     width: calc(100vw - 28px);

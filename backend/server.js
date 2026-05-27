@@ -6,7 +6,6 @@ const cookieParser  = require("cookie-parser");
 const helmet        = require("helmet");
 const rateLimit     = require("express-rate-limit");
 const slowDown      = require("express-slow-down");
-const mongoSanitize = require("express-mongo-sanitize");
 const hpp           = require("hpp");
 const compression   = require("compression");
 const morgan        = require("morgan");
@@ -52,7 +51,7 @@ app.use(
         objectSrc:  ["'none'"],
         mediaSrc:   ["'self'", "blob:"],
         workerSrc:  ["'self'", "blob:"],
-        upgradeInsecureRequests: process.env.NODE_ENV === "production" ? [] : null,
+        ...(process.env.NODE_ENV === "production" && { upgradeInsecureRequests: [] }),
       },
     },
   })
@@ -84,14 +83,27 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // ── 6. Input sanitization ────────────────────────────────────────────────────
-// mongo-sanitize: strips MongoDB operators ($gt, $where, etc.) from req.body,
-// req.query, req.params. Verified to work under Express 5 — see TASK-07.
-app.use(mongoSanitize({
-  replaceWith: "_",        // replace $ with _ rather than silently delete
-  onSanitizeError: (req, res) => {
-    res.status(400).json({ success: false, message: "Requête invalide." });
-  },
-}));
+// express-mongo-sanitize tries to reassign req.query which is a getter-only
+// property in Express 5 — it throws TypeError on every request.
+// Replaced with an inline sanitizer that mutates the object in-place instead.
+const _sanitize = (obj) => {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return;
+  for (const key of Object.keys(obj)) {
+    if (key.includes("$") || key.includes("\x00")) {
+      const safe = key.replace(/\$/g, "_").replace(/\x00/g, "_");
+      obj[safe] = obj[key];
+      delete obj[key];
+    } else {
+      _sanitize(obj[key]);
+    }
+  }
+};
+app.use((req, _res, next) => {
+  _sanitize(req.body);
+  _sanitize(req.params);
+  try { _sanitize(req.query); } catch { /* Express 5: query may not be mutable */ }
+  next();
+});
 
 // hpp: normalize duplicate query params — prevents array injection
 // e.g. ?role=admin&role=client → req.query.role = "client" (last value)

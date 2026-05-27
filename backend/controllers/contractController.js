@@ -9,6 +9,7 @@ const Message      = require("../models/Message");
 const { conn }     = require("../config/db");
 const generateContractPdf = require("../utils/generateContractPdf");
 const findDirectorId      = require("../utils/findDirector");
+const logActivity         = require("../utils/logActivity");
 
 // ── Helpers ──
 const ok   = (res, data, code = 200) => res.status(code).json({ success: true,  ...data });
@@ -361,6 +362,15 @@ exports.confirmAndStart = async (req, res) => {
         metadata: { projectId: contract.project, contractId: contract._id },
       });
     }
+
+    logActivity({
+      actorId: req.user?._id, actorRole: req.user?.role,
+      actorName: req.user?.agencyName || req.user?.teamName
+        || (req.user?.firstName ? `${req.user.firstName} ${req.user.lastName}` : "Prestataire"),
+      actionType: "contract_signed", targetId: contract._id, targetType: "Contract",
+      description: `Contrat signé et projet démarré : ${contract.title || contract._id}`,
+      metadata: { projectId: contract.project },
+    });
 
     return ok(res, { contract, message: "Contrat confirmé — projet démarré" });
   } catch (err) {

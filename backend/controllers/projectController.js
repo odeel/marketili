@@ -3,6 +3,7 @@ const Agency       = require("../models/Agency");
 const AgencyMember = require("../models/AgencyMember");
 const TeamMember   = require("../models/TeamMember");
 const Notification = require("../models/Notification");
+const logActivity  = require("../utils/logActivity");
 
 // ── Helper ──
 const calculateProgress = (project) => {
@@ -26,6 +27,15 @@ exports.createProject = async (req, res) => {
       ...(providerType === "Agency"     && { providerAgency: providerId }),
       ...(providerType === "Team"       && { providerTeam: providerId }),
       ...(providerType === "Freelancer" && { providerFreelancer: providerId }),
+    });
+
+    logActivity({
+      actorId: req.user?._id || clientId, actorRole: req.user?.role || "client",
+      actorName: req.user?.firstName
+        ? `${req.user.firstName} ${req.user.lastName}`
+        : (req.user?.companyName || "Client"),
+      actionType: "project_created", targetId: project._id, targetType: "Project",
+      description: `Projet créé : ${title}`,
     });
 
     res.status(201).json(project);
@@ -412,6 +422,7 @@ exports.updateProject = async (req, res) => {
     if (deadline    !== undefined) project.deadline    = deadline;
     if (agreedPrice !== undefined) project.agreedPrice = agreedPrice;
 
+    const wasCompleted = projectStatus === "completed" && project.projectStatus !== "completed";
     if (projectStatus && projectStatus !== project.projectStatus) {
       project.projectStatus = projectStatus;
       if (projectStatus === "completed") project.completedAt = new Date();
@@ -424,6 +435,17 @@ exports.updateProject = async (req, res) => {
     }
 
     await project.save();
+
+    if (wasCompleted) {
+      logActivity({
+        actorId: req.user?._id || requesterId, actorRole: req.user?.role || "unknown",
+        actorName: req.user?.agencyName || req.user?.teamName
+          || (req.user?.firstName ? `${req.user.firstName} ${req.user.lastName}` : "Utilisateur"),
+        actionType: "project_completed", targetId: project._id, targetType: "Project",
+        description: `Projet terminé : ${project.title}`,
+      });
+    }
+
     res.json({ success: true, project });
   } catch (err) {
     res.status(500).json({ message: err.message });
