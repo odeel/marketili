@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import contractService from "../../services/contractService";
+import uploadService  from "../../services/uploadService";
 import ContratProformaForm from "./ContratProformaForm";
 
 const STATUS_META = {
@@ -380,7 +381,7 @@ const ProviderContractDetail = ({ contract: initial, user, onBack }) => {
             textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
             Documents
           </div>
-          <a href={contract.contractPdf.url} target="_blank" rel="noreferrer"
+          <a href={uploadService.resolveUrl(contract.contractPdf.url)} target="_blank" rel="noreferrer"
             style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px",
               borderRadius: 8, border: "1px solid var(--d-border-soft)",
               textDecoration: "none", color: "var(--d-ink)", fontSize: "0.83rem" }}>

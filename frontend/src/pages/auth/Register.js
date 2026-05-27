@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuth from "../../hooks/useAuth";
@@ -146,6 +146,8 @@ const Register = () => {
   const preselectedRole = searchParams.get("role");
   const validRole       = ROLES.find(r => r.id === preselectedRole);
 
+  useEffect(() => { document.title = "Créer un compte — Marketili"; }, []);
+
   const [step,        setStep]        = useState(validRole ? (validRole.subOptions ? 2 : 3) : 1);
   const [role,        setRole]        = useState(validRole ? validRole.id : null);
   const [accountType, setAccountType] = useState(null);
@@ -231,7 +233,10 @@ const Register = () => {
         <div className="auth-left-decor">M</div>
 
         <div className="auth-left-content">
-          <Link to="/" className="auth-logo">Market<span>ili</span></Link>
+          <Link to="/" className="auth-logo">
+            <img src="/marketelli_logo_1.png" alt="Marketili"
+              style={{ height: 44, objectFit: "contain", display: "block" }} />
+          </Link>
           <h2 className="auth-left-title">
             La plateforme qui connecte les marques aux <em>experts marketing.</em>
           </h2>

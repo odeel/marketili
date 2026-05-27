@@ -14,9 +14,8 @@ const chatService = {
       if (content)     form.append("content", content);
       if (messageType) form.append("messageType", messageType);
       if (metadata)    form.append("metadata", JSON.stringify(metadata));
-      return api.post(`/chat/${conversationId}/messages`, form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      }).then(r => r.data);
+      // Do NOT set Content-Type manually — axios detects FormData and adds the boundary automatically
+      return api.post(`/chat/${conversationId}/messages`, form).then(r => r.data);
     }
     return api.post(`/chat/${conversationId}/messages`, { content, messageType, metadata })
       .then(r => r.data);

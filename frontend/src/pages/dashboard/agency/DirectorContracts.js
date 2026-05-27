@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import contractService from "../../../services/contractService";
+import uploadService  from "../../../services/uploadService";
 import { IconFileText, IconCheckSquare } from "../../../components/ui/Icons";
 import ContratProformaForm from "../../../components/contracts/ContratProformaForm";
 
@@ -405,7 +406,7 @@ const ContractDetail = ({ contract: initial, user, onBack, onRefresh }) => {
   const DocLink = ({ label, filename, url }) => {
     if (!url) return null;
     return (
-      <a href={url} target="_blank" rel="noreferrer"
+      <a href={uploadService.resolveUrl(url)} target="_blank" rel="noreferrer"
         style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
           padding: "10px 14px", borderRadius: 8, border: "1px solid var(--d-border-soft)",
           background: "#fff", textDecoration: "none", marginBottom: 8 }}>

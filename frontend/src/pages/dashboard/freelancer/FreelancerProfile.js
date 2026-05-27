@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import profileService from "../../../services/profileService";
-import useAuth        from "../../../hooks/useAuth";
+import profileService  from "../../../services/profileService";
+import uploadService   from "../../../services/uploadService";
+import useAuth         from "../../../hooks/useAuth";
 
 const fmt = (d) =>
   d ? new Date(d).toLocaleDateString("fr-DZ", { day: "2-digit", month: "long", year: "numeric" }) : "—";
@@ -242,11 +243,14 @@ const FreelancerProfile = () => {
   const [saving,  setSaving]   = useState(false);
   const [error,   setError]    = useState("");
   const [saved,   setSaved]    = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const photoRef = useRef();
 
   const [form, setForm] = useState({
     bio: "", phone: "", skills: [], categories: [],
     followersCount: "", socialLinks: {},
     location: { city: "", region: "", country: "" },
+    avatar: "",
   });
 
   const load = useCallback(() => {
@@ -268,6 +272,7 @@ const FreelancerProfile = () => {
             region:  p.location?.region  || "",
             country: p.location?.country || "",
           },
+          avatar: p.avatar || "",
         });
       })
       .catch(() => setError("Impossible de charger le profil"))
@@ -301,8 +306,23 @@ const FreelancerProfile = () => {
       followersCount: p.followersCount || "",
       socialLinks: p.socialLinks || {},
       location: { city: p.location?.city || "", region: p.location?.region || "", country: p.location?.country || "" },
+      avatar: p.avatar || "",
     });
     setEditing(false); setError("");
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const res = await uploadService.upload(file);
+      set("avatar", res.url);
+    } catch {
+      setError("Impossible d'uploader la photo.");
+    } finally {
+      setAvatarUploading(false);
+    }
   };
 
   if (!user) return null;
@@ -376,7 +396,26 @@ const FreelancerProfile = () => {
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="card-body">
           <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
-            <AvatarCircle src={profile.avatar} name={displayName} size={80} />
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              <input ref={photoRef} type="file" accept="image/*" style={{ display: "none" }}
+                onChange={handleAvatarChange} />
+              <AvatarCircle
+                src={editing ? (form.avatar || profile.avatar) : profile.avatar}
+                name={displayName} size={80}
+              />
+              {editing && (
+                <button type="button" onClick={() => photoRef.current?.click()}
+                  disabled={avatarUploading}
+                  style={{
+                    position: "absolute", bottom: 0, right: 0, width: 26, height: 26,
+                    borderRadius: "50%", background: accentColor, border: "2px solid #fff",
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "0.75rem", color: "#fff",
+                  }}>
+                  {avatarUploading ? "..." : "📷"}
+                </button>
+              )}
+            </div>
             <div style={{ flex: 1, minWidth: 200 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
                 <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "var(--d-ink)" }}>

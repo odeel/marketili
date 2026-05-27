@@ -77,14 +77,9 @@
 
 .auth-logo {
   display: inline-block;
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: #fff;
   text-decoration: none;
-  letter-spacing: -0.03em;
   margin-bottom: 60px;
 }
-.auth-logo span { color: var(--red); }
 
 .auth-left-title {
   font-size: 2rem;

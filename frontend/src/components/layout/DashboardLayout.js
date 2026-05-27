@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuth from "../../hooks/useAuth";
 import notificationService from "../../services/notificationService";
@@ -58,6 +58,7 @@ const relativeTime = (date) => {
 
 const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) => {
   const navigate   = useNavigate();
+  const location   = useLocation();
   const { logout } = useAuth();
   const [collapsed,        setCollapsed]        = useState(false);
   const [showNotifs,       setShowNotifs]       = useState(false);
@@ -132,6 +133,16 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
 
   const handleLogout = () => { logout(); navigate("/login"); };
 
+  const activeTitle = (() => {
+    const sorted = [...navItems].sort((a, b) => b.path.length - a.path.length);
+    const match  = sorted.find(item => location.pathname === item.path || location.pathname.startsWith(item.path + "/"));
+    return match?.label || topbarTitle;
+  })();
+
+  useEffect(() => {
+    document.title = `${activeTitle} — Marketili`;
+  }, [activeTitle]);
+
   return (
     <div className={`dash-layout ${collapsed ? "sidebar-collapsed" : "sidebar-open"}`}>
 
@@ -140,12 +151,17 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
 
         {/* Logo */}
         <div className="dash-sidebar-logo">
-          {!collapsed && (
-            <span className="dash-logo-text">Market<span>ili</span></span>
-          )}
-          {collapsed && (
-            <span className="dash-logo-text"><span>M</span></span>
-          )}
+          <img
+            src="/marketelli_logo_1.png"
+            alt="Marketili"
+            style={{
+              height: collapsed ? 28 : 34,
+              maxWidth: collapsed ? 28 : 130,
+              objectFit: "contain",
+              objectPosition: "left center",
+              transition: "all 0.2s",
+            }}
+          />
           <button className="dash-sidebar-toggle" onClick={() => setCollapsed(o => !o)}
             title={collapsed ? "Agrandir" : "Réduire"}>
             {collapsed
@@ -204,7 +220,7 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
       <div className="dash-main">
         <header className="dash-topbar">
           <div className="dash-topbar-left">
-            <h1 className="dash-topbar-title">{topbarTitle}</h1>
+            <h1 className="dash-topbar-title">{activeTitle}</h1>
           </div>
           <div className="dash-topbar-right">
 
@@ -213,7 +229,11 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
             {chatUnreadCount > 0 && (
               <div style={{ position: "relative" }}>
                 <button className="dash-topbar-icon-btn" title="Messagerie"
-                  style={{ fontSize: "1rem" }}>
+                  style={{ fontSize: "1rem" }}
+                  onClick={() => {
+                    const projectsItem = navItems.find(n => n.path.includes("/projects"));
+                    if (projectsItem) navigate(projectsItem.path);
+                  }}>
                   ✉
                   <span style={{
                     position: "absolute", top: 4, right: 4,
@@ -331,7 +351,7 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
         <main className="dash-content">
           {role !== "admin" && <AdBanner />}
           <AnimatePresence mode="wait">
-            <motion.div key={topbarTitle}
+            <motion.div key={location.pathname}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22 }}>

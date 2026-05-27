@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import "../styles/landing.css";
@@ -21,7 +21,10 @@ const Navbar = ({ contactRef }) => {
   const scrollTo = (ref) => { ref?.current?.scrollIntoView({ behavior: "smooth" }); setOpen(false); };
   return (
     <nav className="lp-nav">
-      <div className="lp-nav-logo">Marketi<span>li</span></div>
+      <div className="lp-nav-logo">
+        <img src="/marketelli_logo_1.png" alt="Marketili"
+          style={{ height: 36, objectFit: "contain", display: "block" }} />
+      </div>
       <div className="lp-nav-center">
         <button className="lp-nav-link" onClick={() => scrollTo(contactRef)}>Contact</button>
       </div>
@@ -221,6 +224,8 @@ const LandingPage = () => {
   const navigate   = useNavigate();
   const contactRef = useRef(null);
 
+  useEffect(() => { document.title = "Marketili — Plateforme Marketing"; }, []);
+
   return (
     <div className="lp-root">
       <Navbar contactRef={contactRef} />
@@ -325,7 +330,10 @@ const LandingPage = () => {
       <footer className="lp-footer">
         <div className="lp-container lp-footer-grid">
           <div className="lp-footer-brand">
-            <div className="lp-footer-logo">Marketi<span>li</span></div>
+            <div className="lp-footer-logo">
+              <img src="/marketelli_logo_1.png" alt="Marketili"
+                style={{ height: 36, objectFit: "contain", display: "block" }} />
+            </div>
             <p className="lp-footer-tagline">La collaboration marketing professionnelle.</p>
             <div className="lp-footer-socials">
               <a href="#" className="lp-social-link" aria-label="LinkedIn">in</a>

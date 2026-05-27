@@ -11,6 +11,7 @@ import { useMyPosts }    from "../../hooks/usePosts";
 import useAuth           from "../../hooks/useAuth";
 import projectService    from "../../services/projectService";
 import contractService   from "../../services/contractService";
+import uploadService     from "../../services/uploadService";
 import { getDeadlineColor, getDeadlineLabel } from "../../utils/deadlineColor";
 import NotificationsPage from "./NotificationsPage";
 import notificationService from "../../services/notificationService";
@@ -877,7 +878,7 @@ const ClientContractDetail = ({ contract: initial, user, onBack, onRefresh }) =>
             textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
             Contrat PDF
           </div>
-          <a href={contract.contractPdf.url} target="_blank" rel="noreferrer"
+          <a href={uploadService.resolveUrl(contract.contractPdf.url)} target="_blank" rel="noreferrer"
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "10px 14px", borderRadius: 8, border: "1px solid #f0dede",
               background: "#fff", color: "#1a0a0a", textDecoration: "none" }}>
@@ -896,7 +897,7 @@ const ClientContractDetail = ({ contract: initial, user, onBack, onRefresh }) =>
             textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
             Bon de commande
           </div>
-          <a href={contract.bonDeCommande.url} target="_blank" rel="noreferrer"
+          <a href={uploadService.resolveUrl(contract.bonDeCommande.url)} target="_blank" rel="noreferrer"
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "10px 14px", borderRadius: 8, border: "1px solid #f0dede",
               background: "#fff", color: "#1a0a0a", textDecoration: "none" }}>

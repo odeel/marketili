@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import profileService from "../../../services/profileService";
+import uploadService  from "../../../services/uploadService";
 import useAuth        from "../../../hooks/useAuth";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -257,12 +258,15 @@ const AgencyProfile = () => {
   const [saving,  setSaving]   = useState(false);
   const [error,   setError]    = useState("");
   const [saved,   setSaved]    = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const photoRef = useRef();
 
   const isDirector = user?.role === "agency";
 
   const [form, setForm] = useState({
     bio: "", phone: "", website: "", specialties: [], skills: [],
     address: { street: "", city: "", region: "", country: "", postalCode: "" },
+    logo: "", avatar: "",
   });
 
   const load = useCallback(() => {
@@ -285,6 +289,8 @@ const AgencyProfile = () => {
             country:    p.address?.country    || "",
             postalCode: p.address?.postalCode || "",
           },
+          logo:   p.logo   || "",
+          avatar: p.avatar || "",
         });
       })
       .catch(() => setError("Impossible de charger le profil"))
@@ -322,8 +328,24 @@ const AgencyProfile = () => {
         region: p.address?.region || "", country: p.address?.country || "",
         postalCode: p.address?.postalCode || "",
       },
+      logo:   p.logo   || "",
+      avatar: p.avatar || "",
     });
     setEditing(false); setError("");
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const res = await uploadService.upload(file);
+      set(isDirector ? "logo" : "avatar", res.url);
+    } catch {
+      setError("Impossible d'uploader la photo.");
+    } finally {
+      setAvatarUploading(false);
+    }
   };
 
   if (!user) return null;
@@ -419,12 +441,28 @@ const AgencyProfile = () => {
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="card-body">
           <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
-            <AvatarCircle
-              src={profile.logo || profile.avatar}
-              name={displayName}
-              size={80}
-              color={accentColor}
-            />
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              <input ref={photoRef} type="file" accept="image/*" style={{ display: "none" }}
+                onChange={handleAvatarChange} />
+              <AvatarCircle
+                src={editing
+                  ? (isDirector ? (form.logo || profile.logo) : (form.avatar || profile.avatar)) || profile.logo || profile.avatar
+                  : (profile.logo || profile.avatar)}
+                name={displayName} size={80} color={accentColor}
+              />
+              {editing && (
+                <button type="button" onClick={() => photoRef.current?.click()}
+                  disabled={avatarUploading}
+                  style={{
+                    position: "absolute", bottom: 0, right: 0, width: 26, height: 26,
+                    borderRadius: "50%", background: accentColor, border: "2px solid #fff",
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "0.75rem", color: "#fff",
+                  }}>
+                  {avatarUploading ? "..." : "📷"}
+                </button>
+              )}
+            </div>
             <div style={{ flex: 1, minWidth: 200 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
                 <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "var(--d-ink)" }}>
