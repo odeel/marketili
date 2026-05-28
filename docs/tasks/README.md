@@ -10,7 +10,7 @@ Complete the Marketili platform end-to-end so that every user role (Client, Agen
 
 | Area | File | Status |
 |------|------|--------|
-| General Platform Improvements | [01-general-improvements.md](./01-general-improvements.md) | 🟡 In progress |
+| General Platform Improvements | [01-general-improvements.md](./01-general-improvements.md) | 🟢 Done |
 | Messaging System Refactor | [02-messaging-system.md](./02-messaging-system.md) | 🟢 Done |
 | Client Dashboard | [03-client-dashboard.md](./03-client-dashboard.md) | 🟢 Done |
 | Agency Director Dashboard | [04-agency-director.md](./04-agency-director.md) | 🟢 Done |

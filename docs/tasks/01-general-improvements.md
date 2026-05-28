@@ -33,7 +33,7 @@ Stabilize the shared foundations of the platform: correct permission exposure, a
 
 ### Posts & Attachments
 - [x] Add file/image attachment support inside the post creation form
-- [ ] Display attachments on post detail views
+- [x] Display attachments on post detail views
 
 ### Navigation & Session
 - [x] Fix redirect-to-login bug when clicking on Contracts from any dashboard
@@ -65,7 +65,7 @@ Stabilize the shared foundations of the platform: correct permission exposure, a
 ### Localization Schema
 - [x] Remove `city` and `country` fields from User/Agency/Freelancer/Team schemas
 - [x] Keep only `region`; update validation and seed data accordingly
-- [ ] Write a migration/script to strip city and country from existing records
+- [x] Write a migration/script to strip city and country from existing records
 
 ### Posts & Attachments
 - [x] Add `attachments` array field to the Post schema (file references or URLs)

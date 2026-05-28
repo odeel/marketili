@@ -52,6 +52,8 @@ const buildAttachment = (file) => {
 
 // POST /api/pitches
 const sendPitch = async (req, res) => {
+  if (req.userRole === "agency_member" && req.user?.jobTitle === "commercial")
+    return fail(res, "Accès refusé — rôle commercial", 403);
   try {
     const {
       postId,
