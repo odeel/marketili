@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import profileService from "../../services/profileService";
+import uploadService  from "../../services/uploadService";
 import {
   IconX, IconPlus, IconMapPin, IconCalendar, IconFileText,
   IconMail, IconPhone, IconGlobe, IconCamera, IconLink,
@@ -32,7 +33,7 @@ export const AvatarCircle = ({ src, name, size = 88, accentColor = "#c0152a" }) 
   };
   if (src) return (
     <div style={{ ...ring, overflow: "hidden" }}>
-      <img src={src} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      <img src={uploadService.resolveUrl(src)} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
     </div>
   );
   return (

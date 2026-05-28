@@ -31,21 +31,26 @@ router.post("/", protect, uploadLimiter, upload.single("file"), async (req, res)
 
     const filename = `${Date.now()}-${req.file.originalname.replace(/\s/g, "_")}`;
 
+    // Pre-create ObjectId — uploadStream.id returns Date.now() in Mongoose 9 / driver v6
+    const fileId = new mongoose.Types.ObjectId();
+
     const uploadStream = bucket.openUploadStream(filename, {
+      id:          fileId,
       contentType: req.file.mimetype,
       metadata: {
         originalName: req.file.originalname,
         uploadedBy:   req.user._id,
         uploadedAt:   new Date(),
+        contentType:  req.file.mimetype,
       },
     });
 
-    // Stream the buffer into GridFS
-    const readable = Readable.from(req.file.buffer);
+    // Stream the buffer into GridFS — wrap in array so it emits one Buffer chunk,
+    // not individual bytes (Readable.from iterates Buffers in older Node versions)
+    const readable = Readable.from([req.file.buffer]);
     readable.pipe(uploadStream);
 
     uploadStream.on("finish", () => {
-      const fileId = uploadStream.id;
       return res.json({
         success:  true,
         message:  "File uploaded successfully",
@@ -88,13 +93,15 @@ router.get("/:id", async (req, res) => {
     }
 
     const file = files[0];
-    const contentType  = file.contentType || "application/octet-stream";
+    const contentType  = file.contentType || file.metadata?.contentType || "application/octet-stream";
     const encodedName  = encodeURIComponent(file.filename || req.params.id);
     const disposition  = req.query.download === "1" ? "attachment" : "inline";
 
     // Allow cross-origin embedding in iframes (FileViewerModal)
+    // Remove nosniff so browsers can render images/PDFs served before metadata.contentType was added
     res.removeHeader("X-Frame-Options");
     res.removeHeader("Content-Security-Policy");
+    res.removeHeader("X-Content-Type-Options");
 
     res.set("Content-Type",        contentType);
     res.set("Content-Disposition", `${disposition}; filename*=UTF-8''${encodedName}`);

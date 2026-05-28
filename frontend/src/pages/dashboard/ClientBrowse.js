@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { usePosts } from "../../hooks/usePosts";
+import uploadService from "../../services/uploadService";
 import { getDeadlineColor, getDeadlineLabel } from "../../utils/deadlineColor";
 import { IconSearch, IconCompass, IconFilter, IconMapPin } from "../../components/ui/Icons";
 
@@ -305,14 +306,14 @@ const BrowseCard = ({ post, index, onClick }) => {
           <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
             {post.media.slice(0, 3).map((m, i) => (
               m.mimeType?.startsWith("image/") ? (
-                <a key={i} href={m.url} target="_blank" rel="noreferrer"
+                <a key={i} href={uploadService.resolveUrl(m.url)} target="_blank" rel="noreferrer"
                   style={{ display: "block", flexShrink: 0 }}>
-                  <img src={m.url} alt={m.filename}
+                  <img src={uploadService.resolveUrl(m.url)} alt={m.filename}
                     style={{ width: 64, height: 48, objectFit: "cover",
                       borderRadius: 6, border: "1px solid #f0dede" }} />
                 </a>
               ) : (
-                <a key={i} href={m.url} target="_blank" rel="noreferrer"
+                <a key={i} href={uploadService.resolveUrl(m.url)} target="_blank" rel="noreferrer"
                   style={{ display: "flex", alignItems: "center", gap: 4,
                     padding: "4px 8px", borderRadius: 6, background: "#f5f3f8",
                     border: "1px solid #eceaf2", fontSize: "0.68rem",

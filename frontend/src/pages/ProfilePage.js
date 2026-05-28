@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import profileService from "../services/profileService";
-import postService    from "../services/postService";
-import chatService    from "../services/chatService";
+import profileService  from "../services/profileService";
+import postService     from "../services/postService";
+import chatService     from "../services/chatService";
+import uploadService   from "../services/uploadService";
 import useAuth from "../hooks/useAuth";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -75,7 +76,7 @@ const Avatar = ({ src, name, size = 96, color = "#7c3aed" }) => {
     boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
   };
   return src ? (
-    <img src={src} alt={name} style={{ ...style, objectFit: "cover" }} />
+    <img src={uploadService.resolveUrl(src)} alt={name} style={{ ...style, objectFit: "cover" }} />
   ) : (
     <div style={{ ...style, background: `linear-gradient(${color}, ${color}cc)`,
       display: "flex", alignItems: "center", justifyContent: "center",
@@ -130,7 +131,7 @@ const PortfolioGrid = ({ items }) => {
             style={{ borderRadius: 12, overflow: "hidden", border: "1px solid #f0f0f0",
               background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
             {item.imageUrl ? (
-              <img src={item.imageUrl} alt={item.title}
+              <img src={uploadService.resolveUrl(item.imageUrl)} alt={item.title}
                 style={{ width: "100%", height: 130, objectFit: "cover" }} />
             ) : (
               <div style={{ height: 100, background: "linear-gradient(135deg,#f3f0ff,#e0e7ff)",

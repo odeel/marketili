@@ -308,16 +308,18 @@ exports.sendMessage = async (req, res) => {
       // Stream the buffer into GridFS to get a real ObjectId
       const bucket = new mongoose.mongo.GridFSBucket(conn().db, { bucketName: "uploads" });
       const storedFilename = `${Date.now()}-${req.file.originalname.replace(/\s/g, "_")}`;
+      // Pre-create ObjectId — uploadStream.id returns Date.now() in Mongoose 9 / driver v6
+      const fileId = new mongoose.Types.ObjectId();
       const uploadStream = bucket.openUploadStream(storedFilename, {
+        id:          fileId,
         contentType: req.file.mimetype,
-        metadata: { originalName: req.file.originalname, uploadedBy: req.user._id },
+        metadata: { originalName: req.file.originalname, uploadedBy: req.user._id, contentType: req.file.mimetype },
       });
       await new Promise((resolve, reject) => {
         uploadStream.on("finish", resolve);
         uploadStream.on("error",  reject);
-        Readable.from(req.file.buffer).pipe(uploadStream);
+        Readable.from([req.file.buffer]).pipe(uploadStream);
       });
-      const fileId = uploadStream.id;
 
       msgData.messageType = msgData.messageType === "text" ? "file" : msgData.messageType;
       msgData.file = {
