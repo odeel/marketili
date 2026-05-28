@@ -10,6 +10,7 @@ const Agency        = require("../models/Agency");
 const Freelancer    = require("../models/Freelancer");
 const Team          = require("../models/Team");
 const { conn }      = require("../config/db");
+const { getIo }     = require("../config/socket");
 
 const ROLE_TO_TYPE = {
   client:        "Client",
@@ -345,6 +346,10 @@ exports.sendMessage = async (req, res) => {
       lastMessageAt:      message.createdAt,
       lastMessagePreview: preview,
     });
+
+    // Push to all clients currently in this conversation room
+    const io = getIo();
+    if (io) io.to(`conv:${conversationId}`).emit("new_message", { message });
 
     res.status(201).json({ success: true, message });
   } catch (err) {

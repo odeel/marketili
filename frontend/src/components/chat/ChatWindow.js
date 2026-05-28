@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import chatService from "../../services/chatService";
+import { getSocket } from "../../services/socketService";
 import MessageBubble from "./MessageBubble";
 import useAuth from "../../hooks/useAuth";
 
@@ -69,13 +70,34 @@ const ChatWindow = ({ projectId, conversationId: directConvId, style: rootStyle 
     scrollBottom();
   }, [messages]);
 
-  // Poll every 5s
+  // Real-time: join socket room and listen for new messages
+  useEffect(() => {
+    if (!conversationId) return;
+    const socket = getSocket();
+    socket.emit("join_conversation", conversationId);
+
+    const handleNewMessage = ({ message }) => {
+      setMessages(prev => {
+        // Deduplicate by _id — sender already appended optimistically
+        if (prev.some(m => m._id === message._id)) return prev;
+        return [...prev, message];
+      });
+    };
+
+    socket.on("new_message", handleNewMessage);
+    return () => {
+      socket.off("new_message", handleNewMessage);
+      socket.emit("leave_conversation", conversationId);
+    };
+  }, [conversationId]);
+
+  // Fallback poll every 30s in case the socket drops
   useEffect(() => {
     pollRef.current = setInterval(() => {
       if (convIdRef.current) {
         loadMessages(convIdRef.current);
       }
-    }, 5000);
+    }, 30000);
     return () => clearInterval(pollRef.current);
   }, [loadMessages]);
 

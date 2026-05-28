@@ -1,6 +1,7 @@
 require("dotenv").config({ path: require("path").resolve(__dirname, ".env") });
 
 const express       = require("express");
+const http          = require("http");
 const cors          = require("cors");
 const cookieParser  = require("cookie-parser");
 const helmet        = require("helmet");
@@ -12,6 +13,7 @@ const morgan        = require("morgan");
 const fs            = require("fs");
 const path          = require("path");
 const { connectDB } = require("./config/db");
+const { init: initSocket } = require("./config/socket");
 
 const app = express();
 
@@ -118,7 +120,8 @@ const globalLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: "Trop de requêtes. Réessayez dans 15 minutes." },
-  skip: (req) => req.path === "/api/health",   // never block health checks
+  // Skip health check and Socket.io polling requests
+  skip: (req) => req.path === "/api/health" || req.path.startsWith("/socket.io"),
 });
 app.use(globalLimiter);
 
@@ -191,12 +194,14 @@ app.use((err, req, res, next) => {
 // ── 13. Start with server timeouts ───────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
-  const server = app.listen(PORT, () => {
+  const server = http.createServer(app);
+  initSocket(server, corsOptions);
+
+  server.listen(PORT, () => {
     console.log(`🚀 Marketili server running on port ${PORT} (${process.env.NODE_ENV})`);
   });
 
-  // Slow Loris protection — kill stalled connections
-  server.keepAliveTimeout = 65000;   // close idle keep-alive after 65s
-  server.headersTimeout   = 66000;   // must be > keepAliveTimeout
-  server.requestTimeout   = 30000;   // kill requests taking > 30s
+  // Slow Loris protection — kill stalled HTTP connections (not WS upgrades)
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout   = 66000;
 });
