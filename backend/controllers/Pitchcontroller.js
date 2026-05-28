@@ -3,6 +3,14 @@ const Post         = require("../models/Post");
 const Notification = require("../models/Notification");
 const AgencyMember = require("../models/AgencyMember");
 const logActivity  = require("../utils/logActivity");
+const { getIo }    = require("../config/socket");
+
+const emitPitchUpdate = (userIds) => {
+  const io = getIo();
+  if (!io) return;
+  const ids = Array.isArray(userIds) ? userIds : [userIds];
+  ids.forEach(id => { if (id) io.to(`user:${id}`).emit("pitch_update"); });
+};
 
 const ok = (res, data, code = 200) =>
   res.status(code).json({ success: true, ...data });
@@ -171,6 +179,8 @@ const sendPitch = async (req, res) => {
         link: `/dashboard/client/pitches`,
         metadata: { postId: post._id, pitchId: pitch._id },
       });
+      // notify() already emits new_notification; also emit pitch_update so the list refetches
+      emitPitchUpdate(post.client);
     }
 
     if (isConvention && receiverId) {
@@ -438,6 +448,9 @@ const acceptPitch = async (req, res) => {
       description: `Projet créé automatiquement : "${project?.title || ""}"`,
     });
 
+    // Refresh pitch lists for both the provider and the client
+    emitPitchUpdate([providerId, pitch.client]);
+
     return ok(res, {
       pitch,
       project,
@@ -521,6 +534,8 @@ const rejectPitch = async (req, res) => {
       link: `/dashboard/${rejDashRoot}/pitches`,
       metadata: { pitchId: pitch._id },
     });
+
+    emitPitchUpdate(rejSenderRecipient);
 
     return ok(res, { pitch, message: "Offre rejetée" });
   } catch (err) {
@@ -641,6 +656,15 @@ const updateInternalStatus = async (req, res) => {
           });
         });
       }
+    }
+
+    // Notify all agency members and the agency entity so their pitch lists refresh
+    if (pitch.senderAgency) {
+      emitPitchUpdate(pitch.senderAgency);
+      const allMembers = await AgencyMember.find({
+        agency: pitch.senderAgency, accountStatus: "active",
+      }).select("_id").lean();
+      emitPitchUpdate(allMembers.map(m => m._id));
     }
 
     return ok(res, { pitch, message: "Statut interne mis à jour" });

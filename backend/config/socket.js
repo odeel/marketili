@@ -13,6 +13,9 @@ const init = (server, corsOptions) => {
   });
 
   _io.on("connection", (socket) => {
+    socket.on("join_user_room", (userId) => {
+      if (userId) socket.join(`user:${userId}`);
+    });
     socket.on("join_conversation", (conversationId) => {
       if (conversationId) socket.join(`conv:${conversationId}`);
     });

@@ -5,6 +5,7 @@ import useAuth from "../../hooks/useAuth";
 import notificationService from "../../services/notificationService";
 import AdBanner from "../ads/AdBanner";
 import chatService from "../../services/chatService";
+import { getSocket } from "../../services/socketService";
 import {
   IconBell, IconLogOut, IconChevronLeft, IconChevronRight,
   IconTarget, IconBuilding, IconUsers, IconZap, IconUser,
@@ -100,6 +101,28 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
     const interval = setInterval(() => { load(); loadChat(); }, 30000);
     return () => { clearInterval(interval); window.removeEventListener("focus", onFocus); };
   }, []);
+
+  // Real-time: join user room and listen for pushed notifications and chat messages
+  useEffect(() => {
+    if (!user?._id) return;
+    const socket = getSocket();
+    socket.emit("join_user_room", user._id);
+
+    const handleNewNotif = ({ notification }) => {
+      setNotifs(prev => [notification, ...prev.slice(0, 9)]);
+      setUnreadCount(c => c + 1);
+    };
+    const handleChatUnread = () => {
+      setChatUnreadCount(c => c + 1);
+    };
+
+    socket.on("new_notification", handleNewNotif);
+    socket.on("new_message",      handleChatUnread);
+    return () => {
+      socket.off("new_notification", handleNewNotif);
+      socket.off("new_message",      handleChatUnread);
+    };
+  }, [user?._id]);
 
   useEffect(() => {
     const handler = (e) => {
