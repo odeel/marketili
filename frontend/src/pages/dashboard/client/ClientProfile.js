@@ -27,7 +27,7 @@ const ClientProfile = () => {
   const [form, setForm] = useState({
     bio: "", phone: "", industry: "", fieldOfWork: "",
     achievements: [],
-    location: { city: "", region: "", country: "" },
+    location: { region: "" },
     avatar: "",
   });
 
@@ -45,9 +45,7 @@ const ClientProfile = () => {
           fieldOfWork:  p.fieldOfWork  || "",
           achievements: p.achievements || [],
           location: {
-            city:    p.location?.city    || "",
-            region:  p.location?.region  || "",
-            country: p.location?.country || "",
+            region: p.location?.region || "",
           },
           avatar: p.avatar || "",
         });
@@ -82,7 +80,7 @@ const ClientProfile = () => {
       industry:     p.industry     || "",
       fieldOfWork:  p.fieldOfWork  || "",
       achievements: p.achievements || [],
-      location: { city: p.location?.city || "", region: p.location?.region || "", country: p.location?.country || "" },
+      location: { region: p.location?.region || "" },
       avatar: p.avatar || "",
     });
     setEditing(false); setError("");
@@ -116,7 +114,7 @@ const ClientProfile = () => {
   const displayName = isCompany
     ? profile.companyName
     : `${profile.firstName || ""} ${profile.lastName || ""}`.trim();
-  const locationStr = [profile.location?.city, profile.location?.region, profile.location?.country].filter(Boolean).join(", ");
+  const locationStr = profile.location?.region || "";
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
@@ -298,9 +296,7 @@ const ClientProfile = () => {
               <div className="card-body" style={{ paddingTop: 10 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {[
-                    { f: "city",    l: "Ville",           p: "Alger, Oran..." },
-                    { f: "region",  l: "Wilaya / Région", p: "Alger, Oran, Annaba..." },
-                    { f: "country", l: "Pays",            p: "Algérie" },
+                    { f: "region", l: "Wilaya / Région", p: "Alger, Oran, Annaba..." },
                   ].map(({ f, l, p }) => (
                     <div key={f} className="dash-form-group" style={{ margin: 0 }}>
                       <label className="dash-form-label">{l}</label>

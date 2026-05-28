@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+﻿import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import profileService from "../../../services/profileService";
 import uploadService  from "../../../services/uploadService";
@@ -28,7 +28,7 @@ const TeamProfile = () => {
 
   const [form, setForm] = useState({
     bio: "", phone: "", website: "", specialties: [], skills: [],
-    location: { city: "", region: "", country: "" },
+    location: { region: "" },
     avatar: "",
   });
 
@@ -46,9 +46,7 @@ const TeamProfile = () => {
           specialties: p.specialties || [],
           skills:      p.skills      || [],
           location: {
-            city:    p.location?.city    || "",
-            region:  p.location?.region  || "",
-            country: p.location?.country || "",
+            region: p.location?.region  || "",
           },
           avatar: p.avatar || "",
         });
@@ -80,7 +78,7 @@ const TeamProfile = () => {
     setForm({
       bio: p.bio || "", phone: p.phone || "", website: p.website || "",
       specialties: p.specialties || [], skills: p.skills || [],
-      location: { city: p.location?.city || "", region: p.location?.region || "", country: p.location?.country || "" },
+      location: { region: p.location?.region || "" },
       avatar: p.avatar || "",
     });
     setEditing(false); setError("");
@@ -114,7 +112,7 @@ const TeamProfile = () => {
     ? (profile.teamName || `${profile.firstName || ""} ${profile.lastName || ""}`.trim())
     : `${profile.firstName || ""} ${profile.lastName || ""}`.trim();
   const locationStr  = isLead
-    ? [profile.location?.city, profile.location?.region, profile.location?.country].filter(Boolean).join(", ")
+    ? profile.location?.region || ""
     : null;
   const tags = isLead ? (profile.specialties || []) : (profile.skills || []);
 
@@ -244,7 +242,7 @@ const TeamProfile = () => {
                 <div className="dash-form-group">
                   <label className="dash-form-label">Localisation</label>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {[{ f: "city", p: "Ville" }, { f: "region", p: "Wilaya" }, { f: "country", p: "Pays" }].map(({ f, p }) => (
+                    {[{ f: "region", p: "Wilaya" }].map(({ f, p }) => (
                       <input key={f} className="dash-form-input" style={{ flex: 1, minWidth: 100 }}
                         value={form.location[f]} placeholder={p}
                         onChange={e => setLoc(f, e.target.value)} />
@@ -340,3 +338,4 @@ const TeamProfile = () => {
 };
 
 export default TeamProfile;
+

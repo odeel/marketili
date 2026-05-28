@@ -357,7 +357,7 @@ const ClientProjects = ({ user }) => {
                 {/* Footer */}
                 <div style={{ display: "flex", justifyContent: "space-between",
                   fontSize: "0.72rem", color: "#9a6060" }}>
-                  <span>{p.progress || 0}% · {p.tasks?.length || 0} tâche{p.tasks?.length !== 1 ? "s" : ""}</span>
+                  <span>{p.progress || 0}% avancement</span>
                   {dlLabel
                     ? <span style={{ color: dlColor, fontWeight: 600 }}>{dlLabel}</span>
                     : <span>Échéance : {p.deadline
@@ -381,16 +381,6 @@ const ClientProjectDetail = ({ project: initial, onBack, onRefresh }) => {
 
   useEffect(() => { onRefresh && onRefresh(); }, []);
 
-  const TASK_STATUS = {
-    todo:        { label: "À faire",     color: "#6b7280" },
-    in_progress: { label: "En cours",    color: "#f59e0b" },
-    in_review:   { label: "En révision", color: "#0891b2" },
-    done:        { label: "Terminé",     color: "#10b981" },
-  };
-
-  const PRIORITY_COLOR = {
-    low: "#10b981", medium: "#f59e0b", high: "#f97316", urgent: "#ef4444",
-  };
 
   return (
     <div>
@@ -510,55 +500,6 @@ const ClientProjectDetail = ({ project: initial, onBack, onRefresh }) => {
         </div>
       )}
 
-      {/* Tasks — read-only for client */}
-      <div className="card">
-        <div style={{ padding: "16px 22px", borderBottom: "1px solid #faeaea" }}>
-          <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "#1a0a0a" }}>
-            Tâches ({project.tasks?.length || 0})
-          </div>
-          <div style={{ fontSize: "0.78rem", color: "#9a6060", marginTop: 2 }}>
-            Suivi de l'avancement du prestataire
-          </div>
-        </div>
-
-        {!project.tasks?.length ? (
-          <div className="empty-state" style={{ padding: "32px 24px" }}>
-            <div className="empty-state-icon"><IconCheckSquare size={20} /></div>
-            <div className="empty-state-title">Aucune tâche définie</div>
-          </div>
-        ) : project.tasks.map((task, i) => (
-          <div key={task._id || i}
-            style={{ display: "flex", alignItems: "center", gap: 12,
-              padding: "12px 22px",
-              borderBottom: i < project.tasks.length - 1 ? "1px solid #faeaea" : "none" }}>
-            {/* Status dot */}
-            <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
-              background: TASK_STATUS[task.status]?.color || "#6b7280" }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 600, fontSize: "0.87rem", color: "#1a0a0a" }}>
-                {task.title}
-              </div>
-              <div style={{ display: "flex", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
-                <span style={{ fontSize: "0.72rem", fontWeight: 600,
-                  color: TASK_STATUS[task.status]?.color || "#6b7280" }}>
-                  {TASK_STATUS[task.status]?.label || task.status}
-                </span>
-                {task.priority && (
-                  <span style={{ fontSize: "0.72rem",
-                    color: PRIORITY_COLOR[task.priority] || "#9a6060" }}>
-                    ● {task.priority}
-                  </span>
-                )}
-                {task.dueDate && (
-                  <span style={{ fontSize: "0.72rem", color: "#9a6060" }}>
-                    {new Date(task.dueDate).toLocaleDateString("fr-DZ")}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
       </> /* end detail tab */}
     </div>
   );

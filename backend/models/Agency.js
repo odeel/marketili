@@ -8,7 +8,7 @@ const agencySchema = new mongoose.Schema(
     directorLastName:  { type: String, required: [true, "Director last name is required"], trim: true },
     businessNumber: { type: String, trim: true },
     address: {
-      street: String, city: String, region: String, country: String, postalCode: String,
+      street: String, region: String,
     },
     email: {
       type: String, required: [true, "Email is required"], unique: true,

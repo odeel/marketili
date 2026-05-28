@@ -76,6 +76,13 @@ exports.getProject = async (req, res) => {
       .populate("post",   "title categories budget description");
 
     if (!project) return res.status(404).json({ message: "Project not found" });
+
+    // Clients see progress and deliverables only — not internal task list
+    if (req.user?.role === "client") {
+      const { tasks, ...rest } = project.toObject();
+      return res.json({ success: true, project: rest });
+    }
+
     res.json({ success: true, project });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -239,6 +246,8 @@ exports.updateTask = async (req, res) => {
 // GET PROJECT TASKS  GET /api/projects/:projectId/tasks
 // ─────────────────────────────────────────────
 exports.getProjectTasks = async (req, res) => {
+  if (req.user?.role === "client")
+    return res.status(403).json({ message: "Accès refusé" });
   try {
     const project = await Project.findById(req.params.projectId).select("tasks");
     if (!project) return res.status(404).json({ message: "Project not found" });
@@ -556,10 +565,12 @@ exports.getClientProjects = async (req, res) => {
       .populate("providerTeam",       "teamName")
       .populate("providerFreelancer", "firstName lastName")
       .populate("post",               "title categories")
-      .sort({ deadline: 1 }) // closest deadline first
+      .sort({ deadline: 1 })
       .lean();
 
-    res.json({ success: true, projects });
+    // Strip internal task list from client-facing responses
+    const safeProjects = projects.map(({ tasks, ...rest }) => rest);
+    res.json({ success: true, projects: safeProjects });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

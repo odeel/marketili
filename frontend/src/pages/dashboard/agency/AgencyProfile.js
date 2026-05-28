@@ -61,11 +61,8 @@ const AgencyProfile = () => {
           specialties: p.specialties || [],
           skills:     p.skills    || [],
           address: {
-            street:     p.address?.street     || "",
-            city:       p.address?.city       || "",
-            region:     p.address?.region     || "",
-            country:    p.address?.country    || "",
-            postalCode: p.address?.postalCode || "",
+            street: p.address?.street || "",
+            region: p.address?.region || "",
           },
           logo:   p.logo   || "",
           avatar: p.avatar || "",
@@ -99,9 +96,8 @@ const AgencyProfile = () => {
       bio: p.bio || "", phone: p.phone || "", website: p.website || "",
       specialties: p.specialties || [], skills: p.skills || [],
       address: {
-        street: p.address?.street || "", city: p.address?.city || "",
-        region: p.address?.region || "", country: p.address?.country || "",
-        postalCode: p.address?.postalCode || "",
+        street: p.address?.street || "",
+        region: p.address?.region || "",
       },
       logo:   p.logo   || "",
       avatar: p.avatar || "",
@@ -139,7 +135,7 @@ const AgencyProfile = () => {
   const directorName = isDirector
     ? `${profile.directorFirstName || ""} ${profile.directorLastName || ""}`.trim()
     : null;
-  const locationStr  = [profile.address?.city, profile.address?.region, profile.address?.country].filter(Boolean).join(", ");
+  const locationStr  = profile.address?.region || "";
   const tags         = isDirector ? (profile.specialties || []) : (profile.skills || []);
   const avatarSrc    = editing
     ? ((isDirector ? form.logo : form.avatar) || profile.logo || profile.avatar)
@@ -275,11 +271,8 @@ const AgencyProfile = () => {
                   <label className="dash-form-label">Adresse</label>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {[
-                      { field: "street",     label: "Rue",                 p: "Rue, numéro..." },
-                      { field: "city",       label: "Ville",               p: "Alger, Oran..." },
-                      { field: "region",     label: "Wilaya / Région",     p: "Alger, Oran, Annaba..." },
-                      { field: "country",    label: "Pays",                p: "Algérie" },
-                      { field: "postalCode", label: "Code postal",         p: "16000..." },
+                      { field: "street", p: "Rue, numéro..." },
+                      { field: "region", p: "Wilaya / Région" },
                     ].map(({ field, p }) => (
                       <input key={field} className="dash-form-input" value={form.address[field]}
                         placeholder={p} onChange={e => setAddr(field, e.target.value)} />
@@ -345,10 +338,8 @@ const AgencyProfile = () => {
               </div>
               <div className="card-body" style={{ paddingTop: 10 }}>
                 <InfoGrid items={[
-                  { icon: <IconBuilding size={14} />, label: "Rue",         value: profile.address?.street },
-                  { icon: <IconMapPin size={14} />,   label: "Ville",       value: profile.address?.city },
-                  { icon: <IconMapPin size={14} />,   label: "Wilaya",      value: profile.address?.region },
-                  { icon: <IconMapPin size={14} />,   label: "Pays",        value: profile.address?.country },
+                  { icon: <IconBuilding size={14} />, label: "Rue",    value: profile.address?.street },
+                  { icon: <IconMapPin size={14} />,   label: "Wilaya", value: profile.address?.region },
                 ]} />
               </div>
             </div>
