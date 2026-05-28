@@ -176,6 +176,17 @@ const projectSchema = new mongoose.Schema(
       ref: "Conversation",
     },
 
+    // ── Client notes (client-to-provider communication, distinct from task comments) ──
+    notes: [
+      {
+        authorId:   { type: mongoose.Schema.Types.ObjectId },
+        authorName: String,
+        authorRole: String,
+        text:       { type: String, trim: true },
+        createdAt:  { type: Date, default: Date.now },
+      },
+    ],
+
     // ── Status history for audit trail ──
     statusHistory: [
       {

@@ -33,6 +33,9 @@ const projectService = {
   addDeliverable: (projectId, data) =>
     api.post(`/projects/${projectId}/deliverables`, data).then(r => r.data),
 
+  addNote: (projectId, data) =>
+    api.post(`/projects/${projectId}/notes`, data).then(r => r.data),
+
   // ── Tasks ──
   createTask: (projectId, data) =>
     api.post(`/projects/${projectId}/tasks`, data).then(r => r.data),

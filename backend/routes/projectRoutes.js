@@ -27,5 +27,6 @@ router.post("/:projectId/tasks",                             protect, c.createTa
 router.patch("/:projectId/tasks/:taskId",                    protect, c.updateTask);
 router.post("/:projectId/tasks/:taskId/comments",            protect, c.addTaskComment);
 router.post("/:projectId/deliverables",                      protect, c.addDeliverable);
+router.post("/:projectId/notes",                             protect, c.addNote);
 
 module.exports = router;

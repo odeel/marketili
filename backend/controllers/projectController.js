@@ -497,6 +497,42 @@ exports.addDeliverable = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────
+// ADD NOTE  POST /api/projects/:projectId/notes
+// Client-to-provider communication, distinct from internal task comments
+// ─────────────────────────────────────────────
+exports.addNote = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { text } = req.body;
+
+    if (!text?.trim()) {
+      return res.status(400).json({ message: "Le texte de la note est requis" });
+    }
+
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    const user = req.user;
+    const authorName =
+      user.companyName ||
+      (user.firstName ? `${user.firstName} ${user.lastName}` : null) ||
+      user.agencyName || user.teamName || "Utilisateur";
+
+    project.notes.push({
+      authorId:   user._id,
+      authorName,
+      authorRole: req.userRole,
+      text:       text.trim(),
+    });
+
+    await project.save();
+    res.json({ success: true, notes: project.notes });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────
 // GET MEMBER PROJECTS  GET /api/projects/member/:memberId/projects
 // ─────────────────────────────────────────────
 exports.getMemberProjects = async (req, res) => {

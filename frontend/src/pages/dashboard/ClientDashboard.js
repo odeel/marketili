@@ -379,11 +379,30 @@ const ClientProjects = ({ user }) => {
 
 // ── Client project detail — read-only view ────────────────────────────────────
 const ClientProjectDetail = ({ project: initial, onBack, onRefresh }) => {
-  const [activeTab, setActiveTab] = useState("detail");
-  const [project, setProject] = useState(initial);
+  const [activeTab,   setActiveTab]   = useState("detail");
+  const [project,     setProject]     = useState(initial);
+  const [notes,       setNotes]       = useState(initial.notes || []);
+  const [noteText,    setNoteText]    = useState("");
+  const [noteLoading, setNoteLoading] = useState(false);
+  const [noteError,   setNoteError]   = useState("");
 
   useEffect(() => { onRefresh && onRefresh(); }, []);
 
+  const submitNote = async (e) => {
+    e.preventDefault();
+    if (!noteText.trim()) return;
+    setNoteLoading(true);
+    setNoteError("");
+    try {
+      const data = await projectService.addNote(project._id, { text: noteText.trim() });
+      setNotes(data.notes || []);
+      setNoteText("");
+    } catch (err) {
+      setNoteError(err.response?.data?.message || "Erreur lors de l'envoi");
+    } finally {
+      setNoteLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -415,6 +434,7 @@ const ClientProjectDetail = ({ project: initial, onBack, onRefresh }) => {
       <div style={{ display: "flex", gap: 4, marginBottom: 18 }}>
         {[
           { id: "detail",     label: "Détail du projet" },
+          { id: "notes",      label: `Notes${notes.length ? ` (${notes.length})` : ""}` },
           { id: "messagerie", label: "Messagerie" },
         ].map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -432,6 +452,91 @@ const ClientProjectDetail = ({ project: initial, onBack, onRefresh }) => {
       </div>
 
       {activeTab === "messagerie" && <ChatWindow projectId={project._id} />}
+
+      {/* ── Notes tab ── */}
+      {activeTab === "notes" && (
+        <div>
+          {/* Leave a note form */}
+          <div className="card" style={{ padding: "20px 22px", marginBottom: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#9a6060",
+              textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
+              Laisser une note
+            </div>
+            <form onSubmit={submitNote}>
+              <textarea
+                value={noteText}
+                onChange={e => setNoteText(e.target.value)}
+                placeholder="Écrivez un message à votre prestataire (feedback, demande, remarque)..."
+                rows={4}
+                style={{
+                  width: "100%", borderRadius: 9, border: "1.5px solid #f0dede",
+                  padding: "10px 14px", fontSize: "0.85rem", fontFamily: "inherit",
+                  resize: "vertical", boxSizing: "border-box", outline: "none",
+                  transition: "border-color 0.15s",
+                }}
+                onFocus={e => e.target.style.borderColor = "#c0152a"}
+                onBlur={e => e.target.style.borderColor = "#f0dede"}
+              />
+              {noteError && (
+                <div style={{ color: "#c0152a", fontSize: "0.78rem", marginTop: 6 }}>
+                  {noteError}
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+                <button type="submit" disabled={noteLoading || !noteText.trim()}
+                  style={{
+                    padding: "9px 22px", borderRadius: 9, border: "none",
+                    background: noteText.trim() ? "#c0152a" : "#f0dede",
+                    color: noteText.trim() ? "#fff" : "#9a6060",
+                    fontWeight: 700, fontSize: "0.85rem", cursor: noteText.trim() ? "pointer" : "not-allowed",
+                    fontFamily: "inherit", transition: "all 0.15s",
+                  }}>
+                  {noteLoading ? "Envoi…" : "Envoyer la note"}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Notes list */}
+          {notes.length === 0 ? (
+            <div className="card">
+              <div className="empty-state" style={{ padding: "40px 24px" }}>
+                <div className="empty-state-icon"><IconNote size={20} /></div>
+                <div className="empty-state-title">Aucune note pour l'instant</div>
+                <div className="empty-state-desc">
+                  Laissez une note pour communiquer avec votre prestataire.
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="card">
+              {[...notes].reverse().map((n, i) => (
+                <div key={n._id || i} style={{
+                  padding: "14px 22px",
+                  borderBottom: i < notes.length - 1 ? "1px solid #faeaea" : "none",
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between",
+                    alignItems: "flex-start", marginBottom: 6 }}>
+                    <div style={{ fontWeight: 700, fontSize: "0.82rem", color: "#4a2a2a" }}>
+                      {n.authorName}
+                      <span style={{ fontWeight: 400, color: "#9a6060", marginLeft: 6,
+                        fontSize: "0.72rem" }}>
+                        {n.authorRole === "client" ? "Client" : n.authorRole}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: "0.7rem", color: "#9a6060", whiteSpace: "nowrap" }}>
+                      {n.createdAt ? new Date(n.createdAt).toLocaleDateString("fr-DZ") : ""}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "0.85rem", color: "#1a0a0a", lineHeight: 1.5 }}>
+                    {n.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {activeTab === "detail" && <>
 

@@ -39,6 +39,8 @@ const createPost = async (req, res) => {
       collaborationType,
       compensationType,
       benefits,
+      visibility,
+      targetProvider,
     } = body;
 
     const clientId     = body.clientId;
@@ -77,7 +79,17 @@ const createPost = async (req, res) => {
       compensationType,
       benefits,
       file,
+      visibility: visibility || "public",
     };
+
+    if (visibility === "private" && targetProvider?.providerId) {
+      postData.targetProvider = {
+        providerType: targetProvider.providerType,
+        providerId:   targetProvider.providerId,
+      };
+      postData.isPublic = false;
+    }
+
     if (initiatorType && initiatorId) {
       postData.initiatedBy = { initiatorType, initiatorId };
       postData.isPublic = false;
@@ -145,6 +157,21 @@ const getPosts = async (req, res) => {
 
     if (targetProvider) {
       filter.targetProviders = { $in: [targetProvider, "all"] };
+    }
+
+    // Visibility filtering: providers only see public posts or posts targeted at them
+    const providerRoles = ["agency", "agency_member", "team", "team_member", "freelancer"];
+    if (req.user && providerRoles.includes(req.userRole)) {
+      filter.$and = filter.$and || [];
+      filter.$and.push({
+        $or: [
+          { visibility: { $ne: "private" } },
+          { "targetProvider.providerId": req.user._id },
+        ],
+      });
+    } else {
+      // Unauthenticated or client — only show non-private posts
+      filter.visibility = { $ne: "private" };
     }
 
     if (marketingType)    filter.marketingType    = marketingType;
