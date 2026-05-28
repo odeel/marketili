@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import profileService from "../services/profileService";
 import postService    from "../services/postService";
+import chatService    from "../services/chatService";
 import useAuth from "../hooks/useAuth";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -354,6 +355,31 @@ const ProfilePage = () => {
   const [propSaving,   setPropSaving]   = useState(false);
   const [propDone,     setPropDone]     = useState(false);
 
+  const [sendingMsg, setSendingMsg] = useState(false);
+
+  const ROLE_TO_DASHBOARD = {
+    client: "/dashboard/client/messages",
+    agency: "/dashboard/agency/messages",
+    agency_member: "/dashboard/agency/messages",
+    team: "/dashboard/team/messages",
+    team_member: "/dashboard/team/messages",
+    freelancer: "/dashboard/freelancer/messages",
+  };
+
+  const handleSendMessage = async () => {
+    if (!user || sendingMsg) return;
+    setSendingMsg(true);
+    try {
+      const data = await chatService.startDirectConversation(id, role);
+      const dashPath = ROLE_TO_DASHBOARD[user.role] || "/dashboard/client/messages";
+      navigate(dashPath, { state: { openConvId: data.conversation._id } });
+    } catch {
+      // silently fail — user can navigate to messages manually
+    } finally {
+      setSendingMsg(false);
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
     profileService.getProfile(role, id)
@@ -577,6 +603,26 @@ const ProfilePage = () => {
                     <span style={{ textTransform: "capitalize" }}>{platform}</span>
                   </a>
                 ))}
+            </div>
+          )}
+
+          {/* Send message action — shown to any logged-in user viewing another's profile */}
+          {!isOwner && user && (
+            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f0f0f0" }}>
+              <button
+                onClick={handleSendMessage}
+                disabled={sendingMsg}
+                style={{
+                  padding: "9px 20px", borderRadius: 9, border: "none",
+                  background: sendingMsg ? "#ddd" : meta.color,
+                  color: "#fff", fontFamily: "inherit",
+                  fontSize: "0.82rem", fontWeight: 700,
+                  cursor: sendingMsg ? "not-allowed" : "pointer",
+                  transition: "background 0.15s",
+                  display: "flex", alignItems: "center", gap: 7,
+                }}>
+                ✉ {sendingMsg ? "Ouverture…" : "Envoyer un message"}
+              </button>
             </div>
           )}
         </Card>

@@ -2,6 +2,10 @@ const Conversation = require("../models/Conversation");
 const Message      = require("../models/Message");
 const Project      = require("../models/Project");
 const AgencyMember = require("../models/AgencyMember");
+const Client       = require("../models/Client");
+const Agency       = require("../models/Agency");
+const Freelancer   = require("../models/Freelancer");
+const Team         = require("../models/Team");
 
 const ROLE_TO_TYPE = {
   client:        "Client",
@@ -12,13 +16,21 @@ const ROLE_TO_TYPE = {
   freelancer:    "Freelancer",
 };
 
+const MODEL_MAP = {
+  client:        Client,
+  agency:        Agency,
+  freelancer:    Freelancer,
+  team:          Team,
+  agency_member: AgencyMember,
+};
+
 const getSenderName = (user) =>
   user.firstName
-    ? `${user.firstName} ${user.lastName}`
+    ? `${user.firstName} ${user.lastName || ""}`.trim()
     : user.agencyName || user.teamName || user.companyName || "Utilisateur";
 
 // ─────────────────────────────────────────────
-// GET OR CREATE CONVERSATION  GET /api/chat/project/:projectId
+// GET OR CREATE CONVERSATION (project-tied)  GET /api/chat/project/:projectId
 // ─────────────────────────────────────────────
 exports.getOrCreateConversation = async (req, res) => {
   try {
@@ -47,8 +59,90 @@ exports.getOrCreateConversation = async (req, res) => {
 
       conv = await Conversation.create({ project: projectId, participants });
 
-      // Back-fill conversationId on the project
       await Project.findByIdAndUpdate(projectId, { conversationId: conv._id });
+    }
+
+    res.json({ success: true, conversation: conv });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// LIST MY CONVERSATIONS  GET /api/chat/conversations
+// ─────────────────────────────────────────────
+exports.getMyConversations = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const conversations = await Conversation.find({
+      isDirect: true,
+      users: userId,
+    })
+      .sort({ lastMessageAt: -1, updatedAt: -1 })
+      .lean();
+
+    // Attach per-conversation unread counts
+    const withUnread = await Promise.all(
+      conversations.map(async (conv) => {
+        const unreadCount = await Message.countDocuments({
+          conversation: conv._id,
+          sender:       { $ne: userId },
+          isRead:       false,
+        });
+        return { ...conv, unreadCount };
+      })
+    );
+
+    res.json({ success: true, conversations: withUnread });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// START OR FIND DIRECT CONVERSATION  POST /api/chat/conversations/direct
+// ─────────────────────────────────────────────
+exports.startDirectConversation = async (req, res) => {
+  try {
+    const { targetUserId, targetRole } = req.body;
+    const currentUser = req.user;
+    const currentRole = req.userRole;
+
+    if (!targetUserId) {
+      return res.status(400).json({ success: false, message: "targetUserId requis" });
+    }
+
+    // Prevent conversation with self
+    if (String(currentUser._id) === String(targetUserId)) {
+      return res.status(400).json({ success: false, message: "Vous ne pouvez pas vous envoyer de message" });
+    }
+
+    // Find existing direct conversation between these two users
+    let conv = await Conversation.findOne({
+      isDirect: true,
+      users: { $all: [currentUser._id, targetUserId] },
+    });
+
+    if (!conv) {
+      // Resolve target name from role model
+      let targetName = "Utilisateur";
+      const TargetModel = MODEL_MAP[targetRole];
+      if (TargetModel) {
+        const target = await TargetModel.findById(targetUserId).lean();
+        if (target) targetName = getSenderName(target);
+      }
+
+      const currentName = getSenderName(currentUser);
+
+      conv = await Conversation.create({
+        isDirect: true,
+        users: [currentUser._id, targetUserId],
+        participantInfo: [
+          { userId: currentUser._id, role: currentRole, name: currentName },
+          { userId: targetUserId,    role: targetRole || "unknown", name: targetName },
+        ],
+      });
     }
 
     res.json({ success: true, conversation: conv });
@@ -63,6 +157,38 @@ exports.getOrCreateConversation = async (req, res) => {
 exports.getMessages = async (req, res) => {
   try {
     const { conversationId } = req.params;
+    const userId   = req.user._id;
+    const userRole = req.userRole;
+
+    const conv = await Conversation.findById(conversationId);
+    if (!conv) {
+      return res.status(404).json({ success: false, message: "Conversation introuvable" });
+    }
+
+    // Participant-only access
+    if (conv.isDirect) {
+      const isParticipant = conv.users.some((uid) => String(uid) === String(userId));
+      if (!isParticipant) {
+        return res.status(403).json({ success: false, message: "Accès refusé" });
+      }
+    } else if (conv.project) {
+      // Project conversation — verify the user belongs to this project
+      const project = await Project.findById(conv.project).select(
+        "client providerAgency providerTeam providerFreelancer"
+      );
+      if (project) {
+        const allowed =
+          String(project.client) === String(userId) ||
+          String(project.providerAgency) === String(userId) ||
+          String(project.providerTeam) === String(userId) ||
+          String(project.providerFreelancer) === String(userId) ||
+          userRole === "admin";
+        if (!allowed) {
+          return res.status(403).json({ success: false, message: "Accès refusé" });
+        }
+      }
+    }
+
     const page  = Math.max(1, parseInt(req.query.page)  || 1);
     const limit = Math.min(100, parseInt(req.query.limit) || 50);
 
@@ -98,6 +224,16 @@ exports.sendMessage = async (req, res) => {
     const conv = await Conversation.findById(conversationId);
     if (!conv) {
       return res.status(404).json({ success: false, message: "Conversation introuvable" });
+    }
+
+    // Verify sender is a participant in direct conversations
+    if (conv.isDirect) {
+      const isParticipant = conv.users.some(
+        (uid) => String(uid) === String(req.user._id)
+      );
+      if (!isParticipant) {
+        return res.status(403).json({ success: false, message: "Accès refusé" });
+      }
     }
 
     const user     = req.user;
@@ -136,6 +272,16 @@ exports.sendMessage = async (req, res) => {
     }
 
     const message = await Message.create(msgData);
+
+    // Update conversation's last message metadata
+    const preview = message.content
+      ? message.content.slice(0, 60)
+      : "📎 Fichier joint";
+    await Conversation.findByIdAndUpdate(conversationId, {
+      lastMessageAt:      message.createdAt,
+      lastMessagePreview: preview,
+    });
+
     res.status(201).json({ success: true, message });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -169,25 +315,35 @@ exports.getUnreadCount = async (req, res) => {
     const userId   = req.user._id;
     const userRole = req.userRole;
 
-    // Build project filter based on role
+    // Direct conversations unread
+    const directConvs = await Conversation.find({
+      isDirect: true,
+      users: userId,
+    }).select("_id");
+    const directConvIds = directConvs.map((c) => c._id);
+
+    // Project conversations unread (legacy)
     let projectFilter = {};
-    if (userRole === "client")      projectFilter.client           = userId;
-    else if (userRole === "agency") projectFilter.providerAgency   = userId;
-    else if (userRole === "team")   projectFilter.providerTeam     = userId;
+    if (userRole === "client")        projectFilter.client               = userId;
+    else if (userRole === "agency")   projectFilter.providerAgency       = userId;
+    else if (userRole === "team")     projectFilter.providerTeam         = userId;
     else if (userRole === "freelancer") projectFilter.providerFreelancer = userId;
     else if (userRole === "agency_member") {
       const member = await AgencyMember.findById(userId).select("agency");
       if (member) projectFilter.providerAgency = member.agency;
     }
 
-    const projects = await Project.find(projectFilter).select("_id");
-    const projectIds = projects.map(p => p._id);
+    const projects   = await Project.find(projectFilter).select("_id");
+    const projectIds = projects.map((p) => p._id);
+    const projectConvs = await Conversation.find({
+      project: { $in: projectIds },
+    }).select("_id");
+    const projectConvIds = projectConvs.map((c) => c._id);
 
-    const convs = await Conversation.find({ project: { $in: projectIds } }).select("_id");
-    const convIds = convs.map(c => c._id);
+    const allConvIds = [...directConvIds, ...projectConvIds];
 
     const count = await Message.countDocuments({
-      conversation: { $in: convIds },
+      conversation: { $in: allConvIds },
       sender:       { $ne: userId },
       isRead:       false,
     });

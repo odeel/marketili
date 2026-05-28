@@ -30,11 +30,12 @@ import DirectorAnalytics    from "./agency/DirectorAnalytics";
 import AgencyProfile        from "./agency/AgencyProfile";
 import PersonalNotes        from "./shared/PersonalNotes";
 import HistoryPage          from "./shared/HistoryPage";
+import MessagesPage         from "./shared/MessagesPage";
 import { PostCard }         from "./agency/shared";
 import { usePosts }         from "../../hooks/usePosts";
 import {
   IconHome, IconFlag, IconTarget, IconBriefcase,
-  IconUsers, IconCompass, IconCheckSquare, IconCalendar, IconSearch, IconSend, IconFileText, IconBell, IconUser, IconNote, IconTrendingUp, IconClock,
+  IconUsers, IconCompass, IconCheckSquare, IconCalendar, IconSearch, IconSend, IconFileText, IconBell, IconUser, IconNote, IconTrendingUp, IconClock, IconMail,
 } from "../../components/ui/Icons";
 
 // ── Role helpers ──────────────────────────────────────────────────────────────
@@ -78,6 +79,7 @@ const NAV_SUB_DIRECTOR = [
   { label: "Parcourir posts", icon: <IconCompass     size={16} />, path: "/dashboard/agency/browse"    },
   { label: "Projets",         icon: <IconBriefcase   size={16} />, path: "/dashboard/agency/projects"  },
   { label: "Calendrier",      icon: <IconCalendar    size={16} />, path: "/dashboard/agency/calendar"  },
+  { label: "Messages",        icon: <IconMail        size={16} />, path: "/dashboard/agency/messages"  },
   { label: "Mon profil",      icon: <IconUser        size={16} />, path: "/dashboard/agency/profile"   },
 ];
 // Managers: Art Director, Strategist, Digital Manager, Project Manager, Social Media Manager
@@ -86,6 +88,7 @@ const NAV_MANAGER = [
   { label: "Mes tâches",     icon: <IconCheckSquare  size={16} />, path: "/dashboard/agency/tasks"     },
   { label: "Mes projets",    icon: <IconBriefcase    size={16} />, path: "/dashboard/agency/projects"  },
   { label: "Calendrier",     icon: <IconCalendar     size={16} />, path: "/dashboard/agency/calendar"  },
+  { label: "Messages",       icon: <IconMail         size={16} />, path: "/dashboard/agency/messages"  },
   { label: "Mon profil",     icon: <IconUser         size={16} />, path: "/dashboard/agency/profile"   },
 ];
 // Workers: Seniors and Juniors — execution only
@@ -93,6 +96,7 @@ const NAV_WORKER = [
   { label: "Vue d'ensemble", icon: <IconHome         size={16} />, path: "/dashboard/agency"           },
   { label: "Mes tâches",     icon: <IconCheckSquare  size={16} />, path: "/dashboard/agency/tasks"     },
   { label: "Calendrier",     icon: <IconCalendar     size={16} />, path: "/dashboard/agency/calendar"  },
+  { label: "Messages",       icon: <IconMail         size={16} />, path: "/dashboard/agency/messages"  },
   { label: "Mon profil",     icon: <IconUser         size={16} />, path: "/dashboard/agency/profile"   },
 ];
 
@@ -201,6 +205,7 @@ const AgencyDashboard = () => {
 
   const NAV_DIRECTOR_FULL = [
     ...NAV_DIRECTOR,
+    { label: "Messages",      icon: <IconMail size={16} />, path: "/dashboard/agency/messages"      },
     { label: "Notifications", icon: <IconBell size={16} />, path: "/dashboard/agency/notifications",
       badge: unreadCount },
     { label: "Mon profil",    icon: <IconUser size={16} />, path: "/dashboard/agency/profile" },
@@ -246,6 +251,7 @@ const AgencyDashboard = () => {
             <Route path="analytics"     element={<DirectorAnalytics user={user} />} />
             <Route path="history"        element={<HistoryPage />} />
             <Route path="notes"         element={<PersonalNotes />} />
+            <Route path="messages"      element={<MessagesPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="profile"       element={<AgencyProfile />} />
           </>}
@@ -262,8 +268,9 @@ const AgencyDashboard = () => {
             } />
             <Route path="browse"   element={<CommercialBrowse  user={user} />} />
             <Route path="projects" element={<WorkerProjects    user={user} />} />
-            <Route path="calendar" element={<WorkerCalendar    user={user} />} />
-            <Route path="profile"  element={<AgencyProfile />} />
+            <Route path="calendar"  element={<WorkerCalendar    user={user} />} />
+            <Route path="messages"  element={<MessagesPage />} />
+            <Route path="profile"   element={<AgencyProfile />} />
           </>}
 
           {/* ── Manager (Art Dir, Strategist, Digital Mgr, Project Mgr, SMM) ── */}
@@ -272,6 +279,7 @@ const AgencyDashboard = () => {
             <Route path="tasks"    element={<WorkerTasks     user={user} />} />
             <Route path="projects" element={<WorkerProjects  user={user} />} />
             <Route path="calendar" element={<WorkerCalendar  user={user} />} />
+            <Route path="messages" element={<MessagesPage />} />
             <Route path="profile"  element={<AgencyProfile />} />
           </>}
 
@@ -280,6 +288,7 @@ const AgencyDashboard = () => {
             <Route index           element={<WorkerOverview user={user} />} />
             <Route path="tasks"    element={<WorkerTasks    user={user} />} />
             <Route path="calendar" element={<WorkerCalendar user={user} />} />
+            <Route path="messages" element={<MessagesPage />} />
             <Route path="profile"  element={<AgencyProfile />} />
           </>}
 

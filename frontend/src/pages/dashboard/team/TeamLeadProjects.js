@@ -4,7 +4,6 @@ import projectService from "../../../services/projectService";
 import { getDeadlineColor, getDeadlineLabel } from "../../../utils/deadlineColor";
 import { ProgressBar, PriorityBadge } from "../agency/shared";
 import { IconBriefcase, IconCheckSquare, IconUsers } from "../../../components/ui/Icons";
-import ChatWindow from "../../../components/chat/ChatWindow";
 
 const STATUS_META = {
   pending:    { label: "En attente",  color: "#f59e0b", bg: "#fffbeb" },
@@ -55,7 +54,6 @@ const ProjectDetail = ({ project: p, onBack }) => {
       <div style={{ display: "flex", gap: 4, marginBottom: 18 }}>
         {[
           { id: "detail",     label: "Détail du projet" },
-          { id: "messagerie", label: "Messagerie" },
         ].map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             style={{
@@ -70,8 +68,6 @@ const ProjectDetail = ({ project: p, onBack }) => {
           </button>
         ))}
       </div>
-
-      {activeTab === "messagerie" && <ChatWindow projectId={p._id} />}
 
       {activeTab === "detail" && <>
 

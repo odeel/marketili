@@ -3,9 +3,12 @@ import chatService from "../../services/chatService";
 import MessageBubble from "./MessageBubble";
 import useAuth from "../../hooks/useAuth";
 
-const ChatWindow = ({ projectId }) => {
+// Accepts either:
+//   projectId     — resolves conversation from a project (legacy)
+//   conversationId — uses conversation directly (direct messages)
+const ChatWindow = ({ projectId, conversationId: directConvId, style: rootStyle }) => {
   const { user } = useAuth();
-  const [conversationId, setConversationId] = useState(null);
+  const [conversationId, setConversationId] = useState(directConvId || null);
   const [messages,       setMessages]       = useState([]);
   const [loading,        setLoading]        = useState(true);
   const [sending,        setSending]        = useState(false);
@@ -32,9 +35,22 @@ const ChatWindow = ({ projectId }) => {
     } catch {}
   }, []);
 
-  // Init: get or create conversation, then load messages and mark read
+  // When directConvId prop changes, reset
   useEffect(() => {
-    if (!projectId) return;
+    if (directConvId) {
+      setConversationId(directConvId);
+      setMessages([]);
+      setError("");
+      setLoading(true);
+      loadMessages(directConvId)
+        .then(() => chatService.markRead(directConvId).catch(() => {}))
+        .finally(() => setLoading(false));
+    }
+  }, [directConvId, loadMessages]);
+
+  // Init: get or create conversation from project, then load messages and mark read
+  useEffect(() => {
+    if (!projectId || directConvId) return;
     setLoading(true);
 
     chatService.getConversation(projectId)
@@ -46,7 +62,7 @@ const ChatWindow = ({ projectId }) => {
       })
       .catch(() => setError("Impossible de charger la messagerie."))
       .finally(() => setLoading(false));
-  }, [projectId, loadMessages]);
+  }, [projectId, directConvId, loadMessages]);
 
   // Auto-scroll when messages change
   useEffect(() => {
@@ -116,6 +132,7 @@ const ChatWindow = ({ projectId }) => {
       height: 480, border: "1.5px solid var(--d-border-soft, #eee)",
       borderRadius: 12, overflow: "hidden",
       background: "var(--d-bg, #fff)",
+      ...rootStyle,
     }}>
 
       {/* ── Messages area ── */}

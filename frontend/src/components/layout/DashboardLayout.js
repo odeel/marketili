@@ -258,8 +258,8 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
                 <button className="dash-topbar-icon-btn" title="Messagerie"
                   style={{ fontSize: "1rem" }}
                   onClick={() => {
-                    const projectsItem = navItems.find(n => n.path.includes("/projects"));
-                    if (projectsItem) navigate(projectsItem.path);
+                    const msgItem = navItems.find(n => n.path.includes("/messages"));
+                    if (msgItem) navigate(msgItem.path);
                   }}>
                   ✉
                   <span style={{

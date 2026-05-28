@@ -15,10 +15,12 @@ const msgLimiter = rateLimit({
 });
 
 // IMPORTANT: specific routes before param routes to avoid Express matching
-// "unread-count" or "project" as a :conversationId
-router.get("/unread-count",              protect, ctrl.getUnreadCount);
-router.get("/project/:projectId",        protect, ctrl.getOrCreateConversation);
-router.get("/:conversationId/messages",  protect, ctrl.getMessages);
+// "unread-count", "conversations", or "project" as a :conversationId
+router.get("/unread-count",                protect, ctrl.getUnreadCount);
+router.get("/conversations",               protect, ctrl.getMyConversations);
+router.post("/conversations/direct",       protect, ctrl.startDirectConversation);
+router.get("/project/:projectId",          protect, ctrl.getOrCreateConversation);
+router.get("/:conversationId/messages",    protect, ctrl.getMessages);
 router.post(
   "/:conversationId/messages",
   protect,
@@ -26,6 +28,6 @@ router.post(
   upload.single("file"),
   ctrl.sendMessage
 );
-router.patch("/:conversationId/read",    protect, ctrl.markRead);
+router.patch("/:conversationId/read",      protect, ctrl.markRead);
 
 module.exports = router;

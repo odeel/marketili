@@ -19,9 +19,10 @@ import PersonalNotes         from "./shared/PersonalNotes";
 import ProviderContracts     from "../../components/contracts/ProviderContracts";
 import HistoryPage           from "./shared/HistoryPage";
 import "../../styles/Dashboard.css";
+import MessagesPage from "./shared/MessagesPage";
 import {
   IconHome, IconUsers, IconCompass, IconSend,
-  IconBriefcase, IconFileText, IconBell, IconUser, IconCalendar, IconNote, IconClock,
+  IconBriefcase, IconFileText, IconBell, IconUser, IconCalendar, IconNote, IconClock, IconMail,
 } from "../../components/ui/Icons";
 
 const ContextBar = ({ collaborations, activeContext, onSwitch }) => {
@@ -111,6 +112,7 @@ const FreelancerDashboard = () => {
     { label: "Calendrier",       icon: <IconCalendar  size={16} />, path: "/dashboard/freelancer/calendar"       },
     { label: "Historique",       icon: <IconClock     size={16} />, path: "/dashboard/freelancer/history"        },
     { label: "Notes",            icon: <IconNote      size={16} />, path: "/dashboard/freelancer/notes"          },
+    { label: "Messages",          icon: <IconMail      size={16} />, path: "/dashboard/freelancer/messages"        },
     { label: "Notifications",    icon: <IconBell      size={16} />, path: "/dashboard/freelancer/notifications",
       badge: unreadCount },
     { label: "Mon profil",       icon: <IconUser      size={16} />, path: "/dashboard/freelancer/profile"        },
@@ -173,6 +175,7 @@ const FreelancerDashboard = () => {
           <Route path="history"       element={<HistoryPage />} />
           <Route path="calendar"      element={<FreelancerCalendar user={user} />} />
           <Route path="notes"         element={<PersonalNotes />} />
+          <Route path="messages"      element={<MessagesPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="profile"       element={<FreelancerProfile />} />
 

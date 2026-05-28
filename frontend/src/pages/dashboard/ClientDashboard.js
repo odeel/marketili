@@ -23,9 +23,9 @@ import HistoryPage     from "./shared/HistoryPage";
 import {
   IconHome, IconClipboard, IconCompass, IconInbox,
   IconBriefcase, IconFileText, IconZap, IconCheckSquare,
-  IconTrendingUp, IconPlus, IconBell, IconUser, IconCalendar, IconNote, IconClock,
+  IconTrendingUp, IconPlus, IconBell, IconUser, IconCalendar, IconNote, IconClock, IconMail,
 } from "../../components/ui/Icons";
-import ChatWindow from "../../components/chat/ChatWindow";
+import MessagesPage from "./shared/MessagesPage";
 import "../../styles/Dashboard.css";
 
 const ClientDashboard = () => {
@@ -55,6 +55,7 @@ const ClientDashboard = () => {
     { label: "Calendrier",      icon: <IconCalendar   size={16} />, path: "/dashboard/client/calendar"        },
     { label: "Notes",           icon: <IconNote       size={16} />, path: "/dashboard/client/notes"           },
     { label: "Historique",      icon: <IconClock      size={16} />, path: "/dashboard/client/history"          },
+    { label: "Messages",         icon: <IconMail       size={16} />, path: "/dashboard/client/messages"      },
     { label: "Notifications",   icon: <IconBell       size={16} />, path: "/dashboard/client/notifications",
       badge: unreadCount },
     { label: "Mon profil",      icon: <IconUser       size={16} />, path: "/dashboard/client/profile"   },
@@ -77,6 +78,7 @@ const ClientDashboard = () => {
           <Route path="calendar"      element={<ClientCalendar  user={user} />} />
           <Route path="notes"         element={<PersonalNotes />} />
           <Route path="history"       element={<HistoryPage />} />
+          <Route path="messages"      element={<MessagesPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="profile"       element={<ClientProfile />} />
           <Route path="*"             element={<Navigate to="/dashboard/client" replace />} />
@@ -412,7 +414,6 @@ const ClientProjectDetail = ({ project: initial, onBack, onRefresh }) => {
       <div style={{ display: "flex", gap: 4, marginBottom: 18 }}>
         {[
           { id: "detail",     label: "Détail du projet" },
-          { id: "messagerie", label: "Messagerie" },
         ].map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             style={{
@@ -427,8 +428,6 @@ const ClientProjectDetail = ({ project: initial, onBack, onRefresh }) => {
           </button>
         ))}
       </div>
-
-      {activeTab === "messagerie" && <ChatWindow projectId={project._id} />}
 
       {activeTab === "detail" && <>
 

@@ -1,8 +1,16 @@
 import api from "./api";
 
 const chatService = {
+  // Project-tied conversation (legacy)
   getConversation: (projectId) =>
     api.get(`/chat/project/${projectId}`).then(r => r.data),
+
+  // Direct conversations
+  getMyConversations: () =>
+    api.get("/chat/conversations").then(r => r.data),
+
+  startDirectConversation: (targetUserId, targetRole) =>
+    api.post("/chat/conversations/direct", { targetUserId, targetRole }).then(r => r.data),
 
   getMessages: (conversationId, page = 1, limit = 50) =>
     api.get(`/chat/${conversationId}/messages`, { params: { page, limit } }).then(r => r.data),
