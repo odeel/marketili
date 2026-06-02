@@ -64,8 +64,8 @@ In **Site settings → Environment variables**, add:
 
 Click **Deploy site** (or trigger a deploy from the Deploys tab).
 
-The build takes ~2–3 minutes. When it finishes, Netlify gives you a URL like
-`https://bright-sunshine-abc123.netlify.app`.
+The build takes ~2–3 minutes. When it finishes, your site will be live at:
+`https://marketili.netlify.app`
 
 ---
 
@@ -80,17 +80,11 @@ The build takes ~2–3 minutes. When it finishes, Netlify gives you a URL like
 
 ## Step 6 — Tell the backend about the Netlify domain
 
-After you have the final Netlify URL, go to your backend server and add or update the
-`CORS_ORIGIN` environment variable (see `DEPLOY_BACKEND.md`):
+After deployment, go to your backend server and add or update the
+`CORS_ORIGIN` environment variable (see `DEPLOY_BACKEND.md`) to:
 
 ```
-CORS_ORIGIN=https://bright-sunshine-abc123.netlify.app
-```
-
-Or if using a custom domain:
-
-```
-CORS_ORIGIN=https://app.marketili.com
+CORS_ORIGIN=https://marketili.netlify.app
 ```
 
 Without this step the browser will block API requests with a CORS error.

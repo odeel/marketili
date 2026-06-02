@@ -206,11 +206,11 @@ MONGO_URI=mongodb://liloshoppingdz_db_user:wBwU6hnnNALyyV10@ac-i991urm-shard-00-
 JWT_SECRET=marketili_secret_key_2024
 JWT_EXPIRES_IN=7d
 NODE_ENV=production
-CORS_ORIGIN=https://YOUR-NETLIFY-SITE.netlify.app
+CORS_ORIGIN=https://marketili.netlify.app
 ```
 
 > **Important:**
-> - Replace `https://YOUR-NETLIFY-SITE.netlify.app` with your actual Netlify URL after step 11
+> - CORS_ORIGIN is set to your production Netlify URL: `https://marketili.netlify.app`
 > - Consider changing `JWT_SECRET` to a long random string for production:
 >   ```bash
 >   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
@@ -409,7 +409,7 @@ nano /var/www/marketili/backend/.env
 
 Change:
 ```env
-CORS_ORIGIN=https://amazing-name-123456.netlify.app
+CORS_ORIGIN=https://marketili.netlify.app
 ```
 
 Save, then restart the backend:

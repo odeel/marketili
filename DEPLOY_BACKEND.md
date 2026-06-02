@@ -63,6 +63,11 @@ In the **App → Settings → App-Level Environment Variables**, add all of thes
 Click **Deploy**. The first deploy takes ~3 minutes. You get a URL like
 `https://marketili-api-xxxxx.ondigitalocean.app`.
 
+**Set CORS_ORIGIN to the frontend URL:**
+```
+CORS_ORIGIN=https://marketili.netlify.app
+```
+
 ### 4. Custom domain (optional)
 
 App settings → **Domains → Add domain** → follow the DNS instructions.
