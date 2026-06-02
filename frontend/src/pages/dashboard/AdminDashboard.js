@@ -6,10 +6,10 @@ import adminService from "../../services/adminService";
 import adService from "../../services/adService";
 import notificationService from "../../services/notificationService";
 import {
-  IconGrid, IconUsers, IconUser, IconFlag, IconTrendingUp,
+  IconGrid, IconUsers, IconFlag, IconTrendingUp,
   IconBriefcase, IconSend, IconClipboard, IconSettings,
   IconBell, IconLogOut, IconChevronLeft, IconChevronRight,
-  IconShield, IconSearch, IconPlus, IconX, IconNote,
+  IconShield, IconSearch, IconPlus, IconX,
 } from "../../components/ui/Icons";
 import "../../styles/Dashboard.css";
 
@@ -60,14 +60,7 @@ const ROLE_COLORS = {
   team: C.green, team_member: "#047857", freelancer: C.orange,
 };
 
-const ACTION_TYPES = [
-  "user_registered","user_disabled","user_enabled",
-  "post_created","post_closed","post_removed","post_reactivated",
-  "pitch_sent","pitch_accepted",
-  "project_created","project_completed","contract_signed",
-  "ad_created","member_created","account_restored",
-];
-const ACTION_META = {
+// ── Reusable micro-components ─────────────────────────────────────────────────
   user_registered:   { icon: "👤", color: C.blue },
   user_disabled:     { icon: "🚫", color: C.red },
   user_enabled:      { icon: "✅", color: C.green },
