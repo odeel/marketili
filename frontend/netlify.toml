@@ -9,6 +9,25 @@
   # default). Keep warnings non-blocking so they don't fail production builds.
   CI = "false"
 
+# Proxy API calls to the backend server-side, so the HTTPS site can reach the
+# plain-HTTP backend without browser mixed-content errors. Requests stay
+# same-origin from the browser's view (so cookies + CORS just work).
+# MUST come before the SPA fallback below — Netlify matches rules top-to-bottom.
+[[redirects]]
+  from   = "/api/*"
+  to     = "http://157.245.255.43/api/:splat"
+  status = 200
+  force  = true
+
+# Socket.io — best effort. HTTP long-polling proxies through here; native
+# WebSocket upgrades are NOT supported by Netlify rewrites and will fall back
+# to polling. For full real-time, terminate HTTPS on the backend (Option B).
+[[redirects]]
+  from   = "/socket.io/*"
+  to     = "http://157.245.255.43/socket.io/:splat"
+  status = 200
+  force  = true
+
 # SPA fallback — every path serves index.html so React Router works
 [[redirects]]
   from   = "/*"
