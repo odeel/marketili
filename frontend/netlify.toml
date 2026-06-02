@@ -5,6 +5,9 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  # CRA treats lint warnings as errors when CI=true (which Netlify sets by
+  # default). Keep warnings non-blocking so they don't fail production builds.
+  CI = "false"
 
 # SPA fallback — every path serves index.html so React Router works
 [[redirects]]
