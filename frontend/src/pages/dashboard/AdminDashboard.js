@@ -60,7 +60,8 @@ const ROLE_COLORS = {
   team: C.green, team_member: "#047857", freelancer: C.orange,
 };
 
-// ── Reusable micro-components ─────────────────────────────────────────────────
+// ── Activity action metadata ──────────────────────────────────────────────────
+const ACTION_META = {
   user_registered:   { icon: "👤", color: C.blue },
   user_disabled:     { icon: "🚫", color: C.red },
   user_enabled:      { icon: "✅", color: C.green },
