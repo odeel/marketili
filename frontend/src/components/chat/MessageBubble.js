@@ -57,7 +57,7 @@ const BtnView = ({ color, onClick }) => (
     marginTop: 4, cursor: "pointer", fontFamily: "inherit",
     textAlign: "center",
   }}>
-    Visualiser le document →
+    Visualiser le document
   </button>
 );
 

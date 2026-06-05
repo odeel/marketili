@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const ACTION_TYPES = [
   "user_registered", "user_disabled", "user_enabled", "user_deleted",
-  "post_created", "post_closed",
+  "post_created", "post_closed", "post_removed", "post_reactivated",
   "pitch_sent", "pitch_accepted",
   "project_created", "project_completed",
   "contract_signed",

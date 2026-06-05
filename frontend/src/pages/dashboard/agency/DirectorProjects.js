@@ -1143,7 +1143,7 @@ const DirectorProjects = ({ user }) => {
             style={{ background: "transparent", color: "#9a6060",
               border: "1.5px solid #f0dede", boxShadow: "none" }}
             onClick={() => setSelected(null)}>
-            ← Retour
+            Retour
           </button>
         )}
       </div>

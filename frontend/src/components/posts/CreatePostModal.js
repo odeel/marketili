@@ -442,7 +442,7 @@ const CreatePostModal = ({ clientId, onClose, onCreated }) => {
                     if (!form.title.trim() || !form.description.trim() || !form.deadline)
                       return setError("Titre, description et date limite requis");
                     setError(""); setStep(2);
-                  }}>Suivant →</button>
+                  }}>Suivant</button>
                 </motion.div>
               )}
 
@@ -491,10 +491,10 @@ const CreatePostModal = ({ clientId, onClose, onCreated }) => {
                       flex: 1, padding: 12, border: "1.5px solid #f0dede", borderRadius: 9,
                       background: "white", color: "#9a6060", fontSize: "0.9rem", fontWeight: 600,
                       cursor: "pointer", fontFamily: "inherit",
-                    }}>← Retour</button>
+                    }}>Retour</button>
                     <button type="button" className="dash-form-submit" style={{ flex: 2 }}
                       onClick={() => setStep(3)}>
-                      Suivant →
+                      Suivant
                     </button>
                   </div>
                 </motion.div>
@@ -667,7 +667,7 @@ const CreatePostModal = ({ clientId, onClose, onCreated }) => {
                       flex: 1, padding: 12, border: "1.5px solid #f0dede", borderRadius: 9,
                       background: "white", color: "#9a6060", fontSize: "0.9rem", fontWeight: 600,
                       cursor: "pointer", fontFamily: "inherit",
-                    }}>← Retour</button>
+                    }}>Retour</button>
                     <button type="submit" className="dash-form-submit" disabled={loading} style={{ flex: 2 }}>
                       {loading
                         ? <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>

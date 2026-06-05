@@ -186,7 +186,7 @@ const PitchForm = ({ post, senderType, onSubmit, onClose, loading }) => {
                 </div>
                 {error && <div className="dash-form-error">{error}</div>}
                 <button type="button" className="dash-form-submit" onClick={handleNext}>
-                  Suivant →
+                  Suivant
                 </button>
               </motion.div>
             )}
@@ -224,7 +224,7 @@ const PitchForm = ({ post, senderType, onSubmit, onClose, loading }) => {
                 </div>
                 {error && <div className="dash-form-error">{error}</div>}
                 <button type="button" className="dash-form-submit" onClick={handleNext}>
-                  Suivant →
+                  Suivant
                 </button>
               </motion.div>
             )}
@@ -257,10 +257,10 @@ const PitchForm = ({ post, senderType, onSubmit, onClose, loading }) => {
                 {error && <div className="dash-form-error">{error}</div>}
                 <div className="pitch-form-nav-buttons">
                   <button type="button" className="pitch-form-back-btn" onClick={() => setStep(1)}>
-                    ← Retour
+                    Retour
                   </button>
                   <button type="button" className="pitch-form-next-btn" onClick={handleNext}>
-                    Suivant →
+                    Suivant
                   </button>
                 </div>
               </motion.div>
@@ -288,10 +288,10 @@ const PitchForm = ({ post, senderType, onSubmit, onClose, loading }) => {
                 {error && <div className="dash-form-error">{error}</div>}
                 <div className="pitch-form-nav-buttons">
                   <button type="button" className="pitch-form-back-btn" onClick={() => setStep(2)}>
-                    ← Retour
+                    Retour
                   </button>
                   <button type="button" className="pitch-form-next-btn" onClick={handleNext}>
-                    Suivant →
+                    Suivant
                   </button>
                 </div>
               </motion.div>
@@ -332,10 +332,10 @@ const PitchForm = ({ post, senderType, onSubmit, onClose, loading }) => {
                 {error && <div className="dash-form-error">{error}</div>}
                 <div className="pitch-form-nav-buttons">
                   <button type="button" className="pitch-form-back-btn" onClick={() => setStep(3)}>
-                    ← Retour
+                    Retour
                   </button>
                   <button type="button" className="pitch-form-next-btn" onClick={handleNext}>
-                    Suivant →
+                    Suivant
                   </button>
                 </div>
               </motion.div>
@@ -392,7 +392,7 @@ const PitchForm = ({ post, senderType, onSubmit, onClose, loading }) => {
                 <div className="pitch-form-nav-buttons">
                   {totalSteps > 1 && (
                     <button type="button" className="pitch-form-back-btn" onClick={() => setStep(s => s - 1)}>
-                      ← Retour
+                      Retour
                     </button>
                   )}
                   <button type="button" className="pitch-form-submit-btn" disabled={isBusy} onClick={handleSubmit}>

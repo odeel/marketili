@@ -16,6 +16,23 @@ const TYPE_TABS = [
   { v: "freelancer", l: "Freelancers" },
 ];
 
+// Same list providers pick from at registration (keeps filter values consistent).
+const SPECIALTIES = [
+  "Events", "360 Marketing", "ATL", "BTL", "Production", "Brand Marketing",
+  "Digital", "Influence & Réseaux sociaux", "Relations presse", "Brand Strategy",
+];
+
+const WILAYAS = [
+  "Adrar","Chlef","Laghouat","Oum El Bouaghi","Batna","Béjaïa","Biskra",
+  "Béchar","Blida","Bouira","Tamanrasset","Tébessa","Tlemcen","Tiaret",
+  "Tizi Ouzou","Alger","Djelfa","Jijel","Sétif","Saïda","Skikda",
+  "Sidi Bel Abbès","Annaba","Guelma","Constantine","Médéa","Mostaganem",
+  "M'Sila","Mascara","Ouargla","Oran","El Bayadh","Illizi","Bordj Bou Arréridj",
+  "Boumerdès","El Tarf","Tindouf","Tissemsilt","El Oued","Khenchela",
+  "Souk Ahras","Tipaza","Mila","Aïn Defla","Naâma","Aïn Témouchent",
+  "Ghardaïa","Relizane",
+];
+
 const ROLE_COLORS = {
   agency:     "#7c3aed",
   team:       "#0891b2",
@@ -178,7 +195,7 @@ const BrowseProvidersPage = () => {
     finally { setLoading(false); }
   }, [type, search, specialty, region]);
 
-  useEffect(() => { load(1); }, [type]); // eslint-disable-line
+  useEffect(() => { load(1); }, [type, specialty, region]); // eslint-disable-line
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -229,16 +246,22 @@ const BrowseProvidersPage = () => {
             placeholder="Nom, bio, spécialité..."
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <input
+        <select
           style={{ flex: 1, minWidth: 130, padding: "9px 12px", borderRadius: 9,
-            border: "1px solid #ddd", fontFamily: "inherit", fontSize: "0.85rem" }}
-          placeholder="Spécialité..."
-          value={specialty} onChange={e => setSpecialty(e.target.value)} />
-        <input
+            border: "1px solid #ddd", fontFamily: "inherit", fontSize: "0.85rem",
+            background: "#fff", color: specialty ? "#1a1a1a" : "#888", cursor: "pointer" }}
+          value={specialty} onChange={e => setSpecialty(e.target.value)}>
+          <option value="">Toutes spécialités</option>
+          {SPECIALTIES.map(s => <option key={s} value={s} style={{ color: "#1a1a1a" }}>{s}</option>)}
+        </select>
+        <select
           style={{ flex: 1, minWidth: 130, padding: "9px 12px", borderRadius: 9,
-            border: "1px solid #ddd", fontFamily: "inherit", fontSize: "0.85rem" }}
-          placeholder="Région..."
-          value={region} onChange={e => setRegion(e.target.value)} />
+            border: "1px solid #ddd", fontFamily: "inherit", fontSize: "0.85rem",
+            background: "#fff", color: region ? "#1a1a1a" : "#888", cursor: "pointer" }}
+          value={region} onChange={e => setRegion(e.target.value)}>
+          <option value="">Toutes régions</option>
+          {WILAYAS.map(w => <option key={w} value={w} style={{ color: "#1a1a1a" }}>{w}</option>)}
+        </select>
         <button type="submit"
           style={{ padding: "9px 18px", borderRadius: 9, border: "none",
             background: "#1a1a1a", color: "#fff", fontFamily: "inherit",

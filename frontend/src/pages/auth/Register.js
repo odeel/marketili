@@ -60,6 +60,11 @@ const pwStrength = (pw) => {
 const PW_LABELS = ["", "Faible", "Moyen", "Fort", "Très fort"];
 const PW_COLORS = ["", "#e0253f", "#f59e0b", "#3b82f6", "#22c55e"];
 
+/* ── Phone (Algeria) ───────────────────────────────────────────── */
+// Mobile: 0[5/6/7]xxxxxxxx (10 digits) or +213[5/6/7]xxxxxxxx
+const normalizePhone = (p) => (p || "").replace(/[\s.\-()]/g, "");
+const isValidAlgerianPhone = (p) => /^(?:\+213|0)(?:5|6|7)\d{8}$/.test(normalizePhone(p));
+
 /* ── Animation ─────────────────────────────────────────────────── */
 const slide = {
   hidden:  { opacity: 0, x: 32 },
@@ -178,8 +183,12 @@ const Register = () => {
     if (pwScore < 2)
       return setError("Mot de passe trop faible — ajoutez des chiffres ou des majuscules");
 
+    if (formData.phone && !isValidAlgerianPhone(formData.phone))
+      return setError("Numéro de téléphone invalide (ex : 0550 12 34 56 ou +213 550 12 34 56)");
+
     const payload = { ...formData };
     delete payload.confirmPassword;
+    if (payload.phone) payload.phone = normalizePhone(payload.phone);
 
     if (payload.region) {
       payload.location = { region: payload.region, country: "Algérie" };
@@ -288,7 +297,7 @@ const Register = () => {
             {step === 2 && (
               <motion.div key="s2" variants={slide} initial="hidden" animate="visible" exit="exit">
                 <button className="auth-back-btn" type="button" onClick={() => setStep(1)}>
-                  ← Retour
+                  Retour
                 </button>
                 <div className="auth-form-header">
                   <h1 className="auth-form-title">Type de compte</h1>
@@ -324,7 +333,7 @@ const Register = () => {
                   type="button"
                   onClick={() => setStep(role === "client" ? 2 : 1)}
                 >
-                  ← Retour
+                  Retour
                 </button>
                 <div className="auth-form-header">
                   <h1 className="auth-form-title">Vos informations</h1>
@@ -535,7 +544,7 @@ const Register = () => {
                   <button type="submit" className="auth-submit-btn" disabled={loading}>
                     {loading
                       ? <><span className="btn-spinner" /> Création en cours...</>
-                      : "Créer mon compte →"
+                      : "Créer mon compte"
                     }
                   </button>
                 </form>

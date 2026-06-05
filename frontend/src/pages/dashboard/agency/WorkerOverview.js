@@ -41,7 +41,7 @@ const WorkerOverview = ({ user }) => {
               <div className="section-head-title">Tâches récentes</div>
               <div className="section-head-sub">Vos 5 prochaines tâches</div>
             </div>
-            <span style={{ fontSize: "0.75rem", color: "var(--d-muted)" }}>Voir tout →</span>
+            <span style={{ fontSize: "0.75rem", color: "var(--d-muted)" }}>Voir tout</span>
           </div>
         </div>
         <div className="card-body" style={{ padding: "12px 0 0" }}>

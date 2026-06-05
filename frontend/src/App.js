@@ -18,6 +18,7 @@ import EditProfilePage    from "./pages/EditProfilePage";
 import BrowseProvidersPage from "./pages/BrowseProvidersPage";
 import BillingPage         from "./pages/BillingPage";
 import PricingPage         from "./pages/PricingPage";
+import PrivacyPolicyPage   from "./pages/PrivacyPolicyPage";
 //uuyou
 let LandingPage;
 try {
@@ -36,6 +37,7 @@ function App() {
         <Route path="/pricing"      element={<PricingPage />} />
         <Route path="/tarifs"       element={<PricingPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/privacy"      element={<PrivacyPolicyPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
         {/* ✅ Admin handles its own auth internally — no PrivateRoute */}

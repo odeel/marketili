@@ -400,7 +400,7 @@ const DashboardLayout = ({ role, user, navItems = [], children, topbarTitle }) =
                             style={{ background: "none", border: "none", cursor: "pointer",
                               fontFamily: "inherit", fontSize: "0.75rem", fontWeight: 600,
                               color: "var(--d-muted)" }}>
-                            Voir toutes les notifications →
+                            Voir toutes les notifications
                           </button>
                         </div>
                       </>

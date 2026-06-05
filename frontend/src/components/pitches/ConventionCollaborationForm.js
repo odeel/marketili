@@ -94,7 +94,24 @@ const ConventionCollaborationForm = ({ freelancer, agencyUser, onClose, onSucces
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const isCdi = form.contractType === "cdi";
+    const amountNum = form.amount ? parseFloat(form.amount) : 0;
+
+    // ── Validations ──
     if (!form.description.trim()) return setError("L'objet de la convention est requis");
+    if (!form.startDate) return setError("Veuillez indiquer une date de début");
+    if (!isCdi && !form.endDate) return setError("Veuillez indiquer une date de fin (CDD)");
+    if (!isCdi && form.startDate && form.endDate &&
+        new Date(form.startDate) > new Date(form.endDate))
+      return setError("La date de début doit précéder la date de fin");
+    if (Number.isNaN(amountNum) || amountNum < 0)
+      return setError("Le montant doit être un nombre positif");
+    if (amountNum > 0 && !form.paymentMethod)
+      return setError("Veuillez sélectionner un mode de paiement");
+    if (form.networks.length === 0)
+      return setError("Sélectionnez au moins un réseau social concerné");
+
     setSaving(true); setError("");
     try {
       const payload = {
@@ -108,14 +125,15 @@ const ConventionCollaborationForm = ({ freelancer, agencyUser, onClose, onSucces
         description:    form.description,
         workRequirements: form.workRequirements,
         proposedPrice: {
-          amount:        form.amount ? parseFloat(form.amount) : 0,
+          amount:        amountNum,
           currency:      form.currency,
           paymentMethod: form.paymentMethod,
           paymentSchedule: form.paymentSchedule,
         },
         timeline: {
           startDate: form.startDate || undefined,
-          endDate:   form.endDate   || undefined,
+          // CDI is open-ended → never send an end date
+          endDate:   isCdi ? undefined : (form.endDate || undefined),
         },
         analysis: {
           competitiveAnalysis: "",
@@ -319,20 +337,28 @@ const ConventionCollaborationForm = ({ freelancer, agencyUser, onClose, onSucces
             <Art num="07" title="DURÉE DE LA CONVENTION" />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
               <div>
-                <Label>Date de début</Label>
+                <Label required>Date de début</Label>
                 <input style={inp} type="date"
                   value={form.startDate} onChange={e => set("startDate", e.target.value)} />
               </div>
               <div>
-                <Label>Date de fin</Label>
-                <input style={inp} type="date"
-                  value={form.endDate} onChange={e => set("endDate", e.target.value)} />
+                <Label required={form.contractType !== "cdi"}>Date de fin</Label>
+                {form.contractType === "cdi" ? (
+                  <div style={{ ...inp, color: "#9a6060", fontStyle: "italic",
+                    display: "flex", alignItems: "center" }}>
+                    Indéterminée (CDI)
+                  </div>
+                ) : (
+                  <input style={inp} type="date"
+                    value={form.endDate} onChange={e => set("endDate", e.target.value)} />
+                )}
               </div>
               <div>
                 <Label>Type de contrat</Label>
                 <div style={{ display: "flex", gap: 6 }}>
                   {["cdd", "cdi"].map(t => (
-                    <button key={t} type="button" onClick={() => set("contractType", t)}
+                    <button key={t} type="button"
+                      onClick={() => { set("contractType", t); if (t === "cdi") set("endDate", ""); }}
                       style={{
                         flex: 1, padding: "9px 0", borderRadius: 8, fontSize: "0.82rem",
                         fontWeight: 700, cursor: "pointer", border: "1.5px solid",

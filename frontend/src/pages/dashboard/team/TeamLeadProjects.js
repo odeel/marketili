@@ -48,7 +48,7 @@ const ProjectDetail = ({ project: p, onBack }) => {
         style={{ background: "none", border: "none", cursor: "pointer",
           fontSize: "0.82rem", color: "var(--d-muted)", marginBottom: 20,
           display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}>
-        ← Retour aux projets
+        Retour aux projets
       </button>
 
       {/* ── Tab bar ── */}

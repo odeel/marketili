@@ -148,7 +148,7 @@ const Paginator = ({ page, total, limit, onChange }) => {
         style={{ padding: "5px 14px", borderRadius: 8, border: `1px solid ${C.border}`,
           background: "none", cursor: page <= 1 ? "default" : "pointer",
           opacity: page <= 1 ? 0.4 : 1, fontSize: "0.78rem", fontFamily: "inherit" }}>
-        ← Précédent
+        Précédent
       </button>
       <span style={{ fontSize: "0.78rem", color: C.inkMuted, padding: "0 8px" }}>
         {page} / {pages}
@@ -157,7 +157,7 @@ const Paginator = ({ page, total, limit, onChange }) => {
         style={{ padding: "5px 14px", borderRadius: 8, border: `1px solid ${C.border}`,
           background: "none", cursor: page >= pages ? "default" : "pointer",
           opacity: page >= pages ? 0.4 : 1, fontSize: "0.78rem", fontFamily: "inherit" }}>
-        Suivant →
+        Suivant
       </button>
     </div>
   );
@@ -237,7 +237,7 @@ const OverviewPanel = ({ onNav }) => {
             display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontWeight: 700, fontSize: "0.92rem", color: C.ink }}>Inscriptions récentes</span>
             <button onClick={() => onNav("users")} style={{ ...btnGhost, padding: "4px 10px", fontSize: "0.72rem" }}>
-              Voir tout →
+              Voir tout
             </button>
           </div>
           {!(a.registrations?.length) ? (
@@ -275,7 +275,7 @@ const OverviewPanel = ({ onNav }) => {
             display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontWeight: 700, fontSize: "0.92rem", color: C.ink }}>Journal d'activité</span>
             <button onClick={() => onNav("log")} style={{ ...btnGhost, padding: "4px 10px", fontSize: "0.72rem" }}>
-              Voir tout →
+              Voir tout
             </button>
           </div>
           {!logs.length ? (
@@ -949,7 +949,7 @@ const AdsPanel = () => {
                     <label style={{ fontSize: "0.75rem", fontWeight: 700, color: C.inkMuted,
                       display: "block", marginBottom: 5 }}>Image</label>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <input value={form.imageUrl} placeholder="https://... ou téléverser →"
+                      <input value={form.imageUrl} placeholder="https://... ou téléverser"
                         onChange={e => setForm(p => ({ ...p, imageUrl: e.target.value }))}
                         style={{ ...inputStyle, flex: 1 }} />
                       <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }}

@@ -129,7 +129,7 @@ const ContratProformaForm = ({ contract: initial, onSuccess, onCancel }) => {
           style={{ background: "none", border: "1.5px solid #f0dede", borderRadius: 8,
             padding: "6px 14px", cursor: "pointer", fontSize: "0.82rem",
             color: "#9a6060", fontFamily: "inherit", fontWeight: 600 }}>
-          ← Retour
+          Retour
         </button>
         <div>
           <h2 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800, color: "#1a0a0a" }}>

@@ -224,7 +224,7 @@ const CommercialBrowse = ({ user }) => {
                 </div>
                 <button className="dash-form-submit" style={{ marginTop: 16, width: "100%" }}
                   disabled={saving} onClick={() => handleFlag(flagging)}>
-                  {saving ? "Envoi..." : "Signaler →"}
+                  {saving ? "Envoi..." : "Signaler"}
                 </button>
               </div>
             </motion.div>

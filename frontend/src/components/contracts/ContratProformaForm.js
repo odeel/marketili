@@ -162,7 +162,7 @@ const ContratProformaForm = ({ contract, onSuccess, onCancel }) => {
             borderRadius: 8, padding: "6px 14px", cursor: "pointer",
             fontSize: "0.82rem", color: "var(--d-muted)", fontFamily: "inherit",
             fontWeight: 600, flexShrink: 0 }}>
-          ← Retour
+          Retour
         </button>
         <div>
           <h2 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800 }}>
@@ -361,7 +361,7 @@ const ContratProformaForm = ({ contract, onSuccess, onCancel }) => {
             border: "1.5px solid var(--d-border-soft)", background: "none",
             color: "var(--d-muted)", fontWeight: 600, fontSize: "0.83rem",
             cursor: "pointer", fontFamily: "inherit" }}>
-          {step === 1 ? "Annuler" : "← Précédent"}
+          {step === 1 ? "Annuler" : "Précédent"}
         </button>
 
         <div style={{ fontSize: "0.72rem", color: "var(--d-muted)", fontWeight: 600 }}>
@@ -370,7 +370,7 @@ const ContratProformaForm = ({ contract, onSuccess, onCancel }) => {
 
         {step < 6 ? (
           <button onClick={handleNext} disabled={saving} className="section-cta-btn">
-            {saving ? "Sauvegarde..." : "Suivant →"}
+            {saving ? "Sauvegarde..." : "Suivant"}
           </button>
         ) : (
           <button onClick={handleGenerate} disabled={saving}

@@ -24,7 +24,13 @@ const teamSchema = new mongoose.Schema(
       trim: true,
     },
 
-    phone: { type: String, trim: true },
+    phone: {
+      type: String, trim: true,
+      validate: {
+        validator: (v) => !v || /^(?:\+213|0)[567]\d{8}$/.test(String(v).replace(/[\s.\-()]/g, "")),
+        message: "Numéro de téléphone invalide (format algérien attendu)",
+      },
+    },
     website: { type: String, trim: true },
 
     password: {

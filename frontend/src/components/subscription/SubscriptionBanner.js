@@ -59,7 +59,7 @@ const SubscriptionBanner = () => {
           fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
         }}
       >
-        {cta} →
+        {cta}
       </button>
     </div>
   );

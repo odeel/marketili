@@ -32,12 +32,12 @@ const Unauthorized = () => {
         {isAuthenticated
           ? (
             <Link to={`/dashboard/${role}`} className="unauthorized-btn">
-              ← Retour à mon tableau de bord
+              Retour à mon tableau de bord
             </Link>
           )
           : (
             <Link to="/login" className="unauthorized-btn">
-              ← Se connecter
+              Se connecter
             </Link>
           )
         }

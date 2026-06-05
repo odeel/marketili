@@ -142,7 +142,7 @@ const PitchDetail = ({ post, clientId, onBack }) => {
   return (
     <div>
       <div className="offres-recues-back-header">
-        <button onClick={onBack} className="offres-recues-back-btn">← Retour aux posts</button>
+        <button onClick={onBack} className="offres-recues-back-btn">Retour aux posts</button>
         <div>
           <h2 className="offres-recues-detail-title">{post.title}</h2>
           <p className="offres-recues-detail-subtitle">

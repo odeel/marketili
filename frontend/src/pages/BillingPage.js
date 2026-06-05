@@ -245,7 +245,7 @@ const Shell = ({ children, onBack }) => (
   <div style={{ minHeight: "100vh", background: "#fff7f7", padding: "28px 16px" }}>
     <div style={{ maxWidth: 640, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-        <button onClick={onBack} style={ghostBtn}>← Retour</button>
+        <button onClick={onBack} style={ghostBtn}>Retour</button>
         <h1 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#1a0a0a" }}>Abonnement</h1>
       </div>
       {children}

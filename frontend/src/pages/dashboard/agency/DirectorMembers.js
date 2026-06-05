@@ -407,7 +407,9 @@ const FreelancerSection = ({ user }) => {
     }
   };
 
-  const active = freelancers.filter(f => f.collaboration?.status === "active");
+  // Treat any collaboration that isn't explicitly "ended" as active, so an
+  // attached freelancer always shows even if its status field is missing/odd.
+  const active = freelancers.filter(f => f.collaboration && f.collaboration.status !== "ended");
   const ended  = freelancers.filter(f => f.collaboration?.status === "ended");
 
   return (
@@ -1117,7 +1119,7 @@ const DirectorMembers = ({ user }) => {
                   </div>
                   {formError && <div className="dash-form-error">{formError}</div>}
                   <button type="submit" className="dash-form-submit" disabled={saving}>
-                    {saving ? "Création..." : "Créer le compte →"}
+                    {saving ? "Création..." : "Créer le compte"}
                   </button>
                 </form>
               </div>

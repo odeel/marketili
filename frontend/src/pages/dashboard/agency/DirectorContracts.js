@@ -460,7 +460,7 @@ const ContractDetail = ({ contract: initial, user, onBack, onRefresh }) => {
           style={{ background: "none", border: "1.5px solid var(--d-border-soft)",
             borderRadius: 8, padding: "6px 14px", cursor: "pointer",
             fontSize: "0.82rem", color: "var(--d-muted)", fontFamily: "inherit", fontWeight: 600 }}>
-          ← Retour
+          Retour
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <h2 style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--d-ink)",

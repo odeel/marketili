@@ -247,7 +247,7 @@ const ProviderContractDetail = ({ contract: initial, user, onBack }) => {
           style={{ background: "none", border: "1.5px solid var(--d-border-soft)",
             borderRadius: 8, padding: "6px 14px", cursor: "pointer",
             fontSize: "0.82rem", color: "var(--d-muted)", fontFamily: "inherit", fontWeight: 600 }}>
-          ← Retour
+          Retour
         </button>
         <div>
           <h2 style={{ fontSize: "1rem", fontWeight: 800, color: "var(--d-ink)", marginBottom: 3 }}>

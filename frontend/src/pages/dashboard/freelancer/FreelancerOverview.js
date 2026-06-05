@@ -115,7 +115,7 @@ const FreelancerOverview = ({ user, collaborations, activeContext, onSwitchConte
               <button onClick={() => navigate("/dashboard/freelancer/projects")}
                 style={{ background: "none", border: "none", cursor: "pointer",
                   fontSize: "0.75rem", color: "var(--d-muted)", fontFamily: "inherit" }}>
-                Voir tout →
+                Voir tout
               </button>
             </div>
             {projects.length === 0 ? (
@@ -158,7 +158,7 @@ const FreelancerOverview = ({ user, collaborations, activeContext, onSwitchConte
                 <button onClick={() => navigate("/dashboard/freelancer/pitches")}
                   style={{ background: "none", border: "none", cursor: "pointer",
                     fontSize: "0.75rem", color: "var(--d-muted)", fontFamily: "inherit" }}>
-                  Voir tout →
+                  Voir tout
                 </button>
               </div>
               {pitches.length === 0 ? (

@@ -228,7 +228,7 @@ const EditProfilePage = () => {
         style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
           fontSize: "0.82rem", color: "#888", marginBottom: 24, padding: 0,
           fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
-        ← Retour
+        Retour
       </button>
 
       <div style={{ borderRadius: 16, border: "1px solid #ebebeb", background: "#fff",
@@ -298,7 +298,7 @@ const EditProfilePage = () => {
             )}
 
             <button type="submit" className="dash-form-submit" disabled={saving}>
-              {saving ? "Sauvegarde..." : "Sauvegarder les modifications →"}
+              {saving ? "Sauvegarde..." : "Sauvegarder les modifications"}
             </button>
           </form>
         )}

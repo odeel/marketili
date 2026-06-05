@@ -43,7 +43,13 @@ const clientSchema = new mongoose.Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
     },
-    phone:    { type: String, trim: true },
+    phone:    {
+      type: String, trim: true,
+      validate: {
+        validator: (v) => !v || /^(?:\+213|0)[567]\d{8}$/.test(String(v).replace(/[\s.\-()]/g, "")),
+        message: "Numéro de téléphone invalide (format algérien attendu)",
+      },
+    },
     password: {
       type: String,
       required: [true, "Password is required"],

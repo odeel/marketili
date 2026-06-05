@@ -171,7 +171,7 @@ const HistoryPage = () => {
                   background: "none", cursor: page <= 1 ? "default" : "pointer",
                   fontSize: "0.82rem", color: page <= 1 ? "#d1d5db" : "var(--d-ink)",
                   fontFamily: "inherit", fontWeight: 600 }}>
-                ← Précédent
+                Précédent
               </button>
               <span style={{ fontSize: "0.82rem", color: "var(--d-muted)" }}>
                 Page {page} / {pages}
@@ -184,7 +184,7 @@ const HistoryPage = () => {
                   background: "none", cursor: page >= pages ? "default" : "pointer",
                   fontSize: "0.82rem", color: page >= pages ? "#d1d5db" : "var(--d-ink)",
                   fontFamily: "inherit", fontWeight: 600 }}>
-                Suivant →
+                Suivant
               </button>
             </div>
           )}

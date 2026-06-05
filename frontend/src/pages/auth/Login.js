@@ -146,13 +146,17 @@ const Login = () => {
               <button type="submit" className="auth-submit-btn" disabled={loading}>
                 {loading
                   ? <><span className="btn-spinner" /> Connexion...</>
-                  : "Se connecter →"
+                  : "Se connecter"
                 }
               </button>
             </form>
 
             <p className="auth-footer-text">
               Pas encore de compte ? <Link to="/register">Créer un compte</Link>
+            </p>
+            <p className="auth-footer-text" style={{ fontSize: "0.76rem", opacity: 0.7, marginTop: 6 }}>
+              En continuant, vous acceptez notre{" "}
+              <Link to="/privacy">Politique de confidentialité</Link>.
             </p>
           </motion.div>
         </div>

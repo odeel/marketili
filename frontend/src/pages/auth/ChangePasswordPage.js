@@ -191,7 +191,7 @@ const ChangePasswordPage = () => {
               <button type="submit" className="auth-submit-btn" disabled={loading}>
                 {loading
                   ? <><span className="btn-spinner" /> Enregistrement...</>
-                  : "Confirmer et accéder →"
+                  : "Confirmer et accéder"
                 }
               </button>
             </form>

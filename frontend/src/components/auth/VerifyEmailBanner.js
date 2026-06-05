@@ -59,7 +59,7 @@ const VerifyEmailBanner = () => {
           opacity: sending ? 0.7 : 1,
         }}
       >
-        {sending ? "Envoi…" : "Renvoyer l'email →"}
+        {sending ? "Envoi…" : "Renvoyer l'email"}
       </button>
     </div>
   );

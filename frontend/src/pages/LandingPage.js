@@ -11,8 +11,6 @@ const FADE_UP = {
   }),
 };
 
-const WA_NUMBER = "213676774374";
-const WA_HREF   = `https://wa.me/${WA_NUMBER}`;
 const EMAIL     = "contact@marketili.dz";
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
@@ -189,14 +187,6 @@ const ContactForm = () => {
           style={{ opacity: sending ? 0.7 : 1 }}>
           {sending ? "Envoi..." : "Envoyer le message"}
         </button>
-        <a href={WA_HREF} target="_blank" rel="noopener noreferrer"
-          style={{ fontSize: "0.8rem", color: "#25d366", textDecoration: "none",
-            display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
-          <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor">
-            <path d="M16 0C7.164 0 0 7.163 0 16c0 2.824.738 5.476 2.027 7.785L0 32l8.418-2.002A15.93 15.93 0 0 0 16 32c8.836 0 16-7.163 16-16S24.836 0 16 0zm8.27 22.516c-.343.965-2 1.84-2.742 1.957-.7.112-1.582.16-2.555-.16-.588-.188-1.344-.44-2.313-.862-4.063-1.75-6.72-5.836-6.922-6.105-.199-.27-1.625-2.164-1.625-4.129s1.028-2.93 1.395-3.328c.367-.398.8-.496 1.066-.496.266 0 .531.003.762.015.244.012.572-.093.895.684.34.8 1.156 2.766 1.258 2.965.102.2.168.434.035.7-.133.265-.2.43-.398.664-.2.234-.42.523-.601.703-.2.2-.407.414-.175.813.234.398 1.04 1.718 2.23 2.781 1.531 1.363 2.82 1.785 3.22 1.984.397.2.628.168.862-.102.234-.27 1.003-1.168 1.27-1.566.265-.398.53-.332.895-.2.367.133 2.329 1.098 2.727 1.297.398.2.664.3.762.465.1.164.1.965-.243 1.93z"/>
-          </svg>
-          WhatsApp
-        </a>
       </div>
     </form>
   );
@@ -341,6 +331,13 @@ const LandingPage = () => {
             </motion.div>
 
           </div>
+
+          {/* Brand "M" watermark — fills the empty right side of the hero */}
+          <motion.div className="lp-hero-decor" aria-hidden="true"
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}>
+            M
+          </motion.div>
         </div>
       </section>
 
@@ -469,7 +466,7 @@ const LandingPage = () => {
                   {r.benefits.map(b => <li key={b}>{b}</li>)}
                 </ul>
                 <button className="lp-role-cta" onClick={() => navigate(r.nav)}>
-                  Rejoindre →
+                  Rejoindre
                 </button>
               </motion.div>
             ))}
@@ -508,7 +505,7 @@ const LandingPage = () => {
             <span className="lp-label">Contact</span>
             <h2 className="lp-h2">Une question ?<br />Écrivez-nous.</h2>
             <p className="lp-body-text">
-              Remplissez le formulaire ou contactez-nous directement sur WhatsApp.
+              Remplissez le formulaire ou écrivez-nous directement par email.
             </p>
           </motion.div>
 
@@ -526,24 +523,9 @@ const LandingPage = () => {
               </svg>
               {EMAIL}
             </a>
-            <a href={WA_HREF} target="_blank" rel="noopener noreferrer" className="lp-contact-quick-item lp-contact-quick-wa">
-              <svg width="14" height="14" viewBox="0 0 32 32" fill="currentColor">
-                <path d="M16 0C7.164 0 0 7.163 0 16c0 2.824.738 5.476 2.027 7.785L0 32l8.418-2.002A15.93 15.93 0 0 0 16 32c8.836 0 16-7.163 16-16S24.836 0 16 0zm8.27 22.516c-.343.965-2 1.84-2.742 1.957-.7.112-1.582.16-2.555-.16-.588-.188-1.344-.44-2.313-.862-4.063-1.75-6.72-5.836-6.922-6.105-.199-.27-1.625-2.164-1.625-4.129s1.028-2.93 1.395-3.328c.367-.398.8-.496 1.066-.496.266 0 .531.003.762.015.244.012.572-.093.895.684.34.8 1.156 2.766 1.258 2.965.102.2.168.434.035.7-.133.265-.2.43-.398.664-.2.234-.42.523-.601.703-.2.2-.407.414-.175.813.234.398 1.04 1.718 2.23 2.781 1.531 1.363 2.82 1.785 3.22 1.984.397.2.628.168.862-.102.234-.27 1.003-1.168 1.27-1.566.265-.398.53-.332.895-.2.367.133 2.329 1.098 2.727 1.297.398.2.664.3.762.465.1.164.1.965-.243 1.93z"/>
-              </svg>
-              +213 676 774 374
-            </a>
           </motion.div>
         </div>
       </section>
-
-      {/* ── Floating WhatsApp ─────────────────────────────────────────── */}
-      <a href={WA_HREF} target="_blank" rel="noopener noreferrer"
-        className="lp-wa-float" aria-label="Contactez-nous sur WhatsApp">
-        <svg width="24" height="24" viewBox="0 0 32 32" fill="currentColor">
-          <path d="M16 0C7.164 0 0 7.163 0 16c0 2.824.738 5.476 2.027 7.785L0 32l8.418-2.002A15.93 15.93 0 0 0 16 32c8.836 0 16-7.163 16-16S24.836 0 16 0zm8.27 22.516c-.343.965-2 1.84-2.742 1.957-.7.112-1.582.16-2.555-.16-.588-.188-1.344-.44-2.313-.862-4.063-1.75-6.72-5.836-6.922-6.105-.199-.27-1.625-2.164-1.625-4.129s1.028-2.93 1.395-3.328c.367-.398.8-.496 1.066-.496.266 0 .531.003.762.015.244.012.572-.093.895.684.34.8 1.156 2.766 1.258 2.965.102.2.168.434.035.7-.133.265-.2.43-.398.664-.2.234-.42.523-.601.703-.2.2-.407.414-.175.813.234.398 1.04 1.718 2.23 2.781 1.531 1.363 2.82 1.785 3.22 1.984.397.2.628.168.862-.102.234-.27 1.003-1.168 1.27-1.566.265-.398.53-.332.895-.2.367.133 2.329 1.098 2.727 1.297.398.2.664.3.762.465.1.164.1.965-.243 1.93z"/>
-        </svg>
-        <span className="lp-wa-float-label">WhatsApp</span>
-      </a>
 
       {/* ── Footer ────────────────────────────────────────────────────── */}
       <footer className="lp-footer">
@@ -574,11 +556,8 @@ const LandingPage = () => {
           <div className="lp-footer-col">
             <h4 className="lp-footer-col-title">Contact</h4>
             <a href={`mailto:${EMAIL}`} className="lp-footer-link">{EMAIL}</a>
-            <a href={WA_HREF} target="_blank" rel="noopener noreferrer" className="lp-footer-link">
-              WhatsApp
-            </a>
             <span className="lp-footer-link lp-footer-muted">Conditions d'utilisation</span>
-            <span className="lp-footer-link lp-footer-muted">Politique de confidentialité</span>
+            <Link to="/privacy" className="lp-footer-link">Politique de confidentialité</Link>
           </div>
         </div>
         <div className="lp-footer-bar">

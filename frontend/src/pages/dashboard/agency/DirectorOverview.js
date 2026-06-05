@@ -30,7 +30,7 @@ const DirectorOverview = ({ user, flaggedPosts = [], projects = [] }) => {
                 <div className="section-head-title">Posts flaggés récents</div>
                 <div className="section-head-sub">Signalés par votre équipe commerciale</div>
               </div>
-              <span style={{ fontSize: "0.75rem", color: "var(--d-muted)" }}>Voir tout →</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--d-muted)" }}>Voir tout</span>
             </div>
           </div>
           <div className="card-body" style={{ padding: "12px 0 0" }}>
@@ -69,7 +69,7 @@ const DirectorOverview = ({ user, flaggedPosts = [], projects = [] }) => {
                 <div className="section-head-title">Projets actifs</div>
                 <div className="section-head-sub">Progression</div>
               </div>
-              <span style={{ fontSize: "0.75rem", color: "var(--d-muted)" }}>Voir tout →</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--d-muted)" }}>Voir tout</span>
             </div>
           </div>
           <div className="card-body" style={{ padding: "12px 0 0" }}>

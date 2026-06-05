@@ -138,7 +138,7 @@ const ClientOverview = ({ user, onCreatePost }) => {
               <button onClick={() => navigate("/dashboard/client/posts")}
                 style={{ background: "none", border: "none", cursor: "pointer",
                   fontSize: "0.75rem", color: "var(--d-muted)", fontFamily: "inherit" }}>
-                Voir tout →
+                Voir tout
               </button>
             </div>
           </div>
@@ -415,7 +415,7 @@ const ClientProjectDetail = ({ project: initial, onBack, onRefresh }) => {
           style={{ background: "none", border: "1.5px solid #f0dede", borderRadius: 8,
             padding: "6px 14px", cursor: "pointer", fontSize: "0.82rem",
             color: "#9a6060", fontFamily: "inherit", fontWeight: 600 }}>
-          ← Retour
+          Retour
         </button>
         <div>
           <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#1a0a0a" }}>
@@ -873,7 +873,7 @@ const ClientContractDetail = ({ contract: initial, user, onBack, onRefresh }) =>
           style={{ background: "none", border: "1.5px solid #f0dede", borderRadius: 8,
             padding: "6px 14px", cursor: "pointer", fontSize: "0.82rem",
             color: "#9a6060", fontFamily: "inherit", fontWeight: 600 }}>
-          ← Retour
+          Retour
         </button>
         <div>
           <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#1a0a0a" }}>

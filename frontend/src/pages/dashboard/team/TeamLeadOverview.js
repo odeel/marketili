@@ -109,7 +109,7 @@ const TeamLeadOverview = ({ user }) => {
               <button onClick={() => navigate("/dashboard/team/projects")}
                 style={{ background: "none", border: "none", cursor: "pointer",
                   fontSize: "0.75rem", color: "var(--d-muted)", fontFamily: "inherit" }}>
-                Voir tout →
+                Voir tout
               </button>
             </div>
             {projects.length === 0 ? (
@@ -151,7 +151,7 @@ const TeamLeadOverview = ({ user }) => {
               <button onClick={() => navigate("/dashboard/team/pitches")}
                 style={{ background: "none", border: "none", cursor: "pointer",
                   fontSize: "0.75rem", color: "var(--d-muted)", fontFamily: "inherit" }}>
-                Voir tout →
+                Voir tout
               </button>
             </div>
             {pitches.length === 0 ? (

@@ -209,7 +209,9 @@ exports.detachFreelancer = async (req, res) => {
 // ─────────────────────────────────────────────
 exports.getFreelancers = async (req, res) => {
   try {
-    const agencyId = req.user._id;
+    // Works whether the requester is the agency account or one of its members
+    // (members store their parent agency on `agency`).
+    const agencyId = req.userRole === "agency_member" ? req.user.agency : req.user._id;
     const freelancers = await Freelancer.find({
       "agencyCollaborations.agency": agencyId,
     }).select("-password").lean();

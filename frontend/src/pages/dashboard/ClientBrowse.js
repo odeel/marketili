@@ -232,12 +232,12 @@ const ClientBrowse = () => {
             <div style={{ display: "flex", justifyContent: "center",
               alignItems: "center", gap: 12 }}>
               <button onClick={prevPage} disabled={!pagination.hasPrev}
-                className="pagination-btn">← Précédent</button>
+                className="pagination-btn">Précédent</button>
               <span style={{ fontSize: "0.8rem", color: "var(--d-muted)" }}>
                 {pagination.page} / {pagination.totalPages}
               </span>
               <button onClick={nextPage} disabled={!pagination.hasNext}
-                className="pagination-btn">Suivant →</button>
+                className="pagination-btn">Suivant</button>
             </div>
           )}
         </>
@@ -405,7 +405,7 @@ const PostDetail = ({ post, onBack }) => {
           color: "var(--d-muted)", fontFamily: "inherit", fontWeight: 600,
           transition: "border-color 0.13s",
         }}>
-          ← Retour
+          Retour
         </button>
         <div>
           <h2 style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--d-ink)" }}>

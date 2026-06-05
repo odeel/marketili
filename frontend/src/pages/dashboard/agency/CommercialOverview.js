@@ -90,7 +90,7 @@ const CommercialOverview = ({ user }) => {
               style={{ background: "none", border: "none", cursor: "pointer",
                 fontSize: "0.75rem", color: "var(--d-muted)", fontFamily: "inherit",
                 fontWeight: 600 }}>
-              Parcourir →
+              Parcourir
             </button>
           </div>
         </div>

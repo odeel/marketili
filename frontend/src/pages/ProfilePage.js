@@ -149,7 +149,7 @@ const PortfolioGrid = ({ items }) => {
                 <a href={item.link} target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.7rem", color: "#7c3aed", marginTop: 6,
                     display: "inline-block", fontWeight: 600 }}>
-                  Voir →
+                  Voir
                 </a>
               )}
             </div>
@@ -281,7 +281,7 @@ const PostFeed = ({ role, id, isOwner, accentColor }) => {
                   background: accentColor, color: "#fff", fontFamily: "inherit", fontSize: "0.8rem",
                   fontWeight: 700, cursor: posting ? "not-allowed" : "pointer",
                   opacity: posting || !content.trim() ? 0.6 : 1 }}>
-                {posting ? "Publication..." : "Publier →"}
+                {posting ? "Publication..." : "Publier"}
               </button>
             </div>
           </motion.form>
@@ -357,6 +357,7 @@ const ProfilePage = () => {
   const [propDone,     setPropDone]     = useState(false);
 
   const [sendingMsg, setSendingMsg] = useState(false);
+  const [msgError,   setMsgError]   = useState("");
 
   const ROLE_TO_DASHBOARD = {
     client: "/dashboard/client/messages",
@@ -370,12 +371,18 @@ const ProfilePage = () => {
   const handleSendMessage = async () => {
     if (!user || sendingMsg) return;
     setSendingMsg(true);
+    setMsgError("");
     try {
       const data = await chatService.startDirectConversation(id, role);
+      const convId = data?.conversation?._id;
+      if (!convId) throw new Error("Conversation introuvable");
       const dashPath = ROLE_TO_DASHBOARD[user.role] || "/dashboard/client/messages";
-      navigate(dashPath, { state: { openConvId: data.conversation._id } });
-    } catch {
-      // silently fail — user can navigate to messages manually
+      navigate(dashPath, { state: { openConvId: convId } });
+    } catch (err) {
+      setMsgError(
+        err.response?.data?.message ||
+        "Impossible d'ouvrir la conversation. Réessayez."
+      );
     } finally {
       setSendingMsg(false);
     }
@@ -425,7 +432,7 @@ const ProfilePage = () => {
       <button onClick={() => navigate(-1)}
         style={{ padding: "8px 18px", borderRadius: 8, border: "1px solid #ddd",
           background: "#fff", fontFamily: "inherit", cursor: "pointer", fontSize: "0.85rem" }}>
-        ← Retour
+        Retour
       </button>
     </div>
   );
@@ -467,7 +474,7 @@ const ProfilePage = () => {
             background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.25)",
             borderRadius: 8, padding: "6px 14px", color: "#fff", fontFamily: "inherit",
             fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", backdropFilter: "blur(4px)" }}>
-          ← Retour
+          Retour
         </button>
         {/* Edit / actions — top-right on cover */}
         <div style={{ position: "absolute", top: 20, right: 20, display: "flex", gap: 8 }}>
@@ -614,16 +621,22 @@ const ProfilePage = () => {
                 onClick={handleSendMessage}
                 disabled={sendingMsg}
                 style={{
-                  padding: "9px 20px", borderRadius: 9, border: "none",
+                  width: "100%", padding: "12px 20px", borderRadius: 10, border: "none",
                   background: sendingMsg ? "#ddd" : meta.color,
                   color: "#fff", fontFamily: "inherit",
-                  fontSize: "0.82rem", fontWeight: 700,
+                  fontSize: "0.88rem", fontWeight: 700,
                   cursor: sendingMsg ? "not-allowed" : "pointer",
-                  transition: "background 0.15s",
-                  display: "flex", alignItems: "center", gap: 7,
+                  transition: "background 0.15s, transform 0.1s",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  boxShadow: sendingMsg ? "none" : `0 4px 14px ${meta.color}33`,
                 }}>
                 ✉ {sendingMsg ? "Ouverture…" : "Envoyer un message"}
               </button>
+              {msgError && (
+                <div style={{ marginTop: 8, fontSize: "0.78rem", color: "#b91c1c", textAlign: "center" }}>
+                  {msgError}
+                </div>
+              )}
             </div>
           )}
         </Card>
@@ -731,7 +744,7 @@ const ProfilePage = () => {
                           background: meta.color, color: "#fff", fontFamily: "inherit",
                           fontSize: "0.83rem", fontWeight: 700, cursor: "pointer",
                           opacity: propSaving || !propForm.title.trim() ? 0.6 : 1 }}>
-                        {propSaving ? "Envoi..." : "Envoyer →"}
+                        {propSaving ? "Envoi..." : "Envoyer"}
                       </button>
                     </div>
                   </form>

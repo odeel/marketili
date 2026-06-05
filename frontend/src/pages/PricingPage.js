@@ -53,7 +53,7 @@ const PricingPage = () => {
         </Link>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <Link to="/" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "none", fontSize: "0.85rem", fontWeight: 600 }}>
-            ← Accueil
+            Accueil
           </Link>
           {isAuthenticated ? (
             <button onClick={() => navigate("/billing")} style={ctaBtn}>Mon abonnement</button>
