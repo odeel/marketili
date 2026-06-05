@@ -8,28 +8,21 @@
 
 - A [Netlify](https://netlify.com) account (free tier is fine)
 - The backend already deployed and its URL known (e.g. `https://api.marketili.com`)
-- Git repository pushed to GitHub: `https://github.com/sifyacine/marketili.git` ✓ (Already pushed to main branch)
-
-**Repository Status:** Code is now available on GitHub at [sifyacine/marketili](https://github.com/sifyacine/marketili)
+- Git repository pushed to GitHub / GitLab / Bitbucket
 
 ---
 
-## Step 1 — Repository Setup
+## Step 1 — Push the repository
 
-**✓ Repository already pushed to GitHub:** `https://github.com/sifyacine/marketili.git`
-
-The Netlify build root is the `frontend/` folder. The repo structure is:
+The Netlify build root is the `frontend/` folder. Make sure your repo has this layout:
 
 ```
-marketili/
+try1/
 ├── frontend/          ← Netlify builds from here
 │   ├── netlify.toml
 │   ├── package.json
 │   └── src/
-├── backend/
-├── DEPLOY_FRONTEND.md (this file)
-├── DEPLOY_BACKEND.md
-└── DEPLOY.md
+└── backend/
 ```
 
 ---
@@ -64,8 +57,8 @@ In **Site settings → Environment variables**, add:
 
 Click **Deploy site** (or trigger a deploy from the Deploys tab).
 
-The build takes ~2–3 minutes. When it finishes, your site will be live at:
-`https://marketili.netlify.app`
+The build takes ~2–3 minutes. When it finishes, Netlify gives you a URL like
+`https://bright-sunshine-abc123.netlify.app`.
 
 ---
 
@@ -80,11 +73,17 @@ The build takes ~2–3 minutes. When it finishes, your site will be live at:
 
 ## Step 6 — Tell the backend about the Netlify domain
 
-After deployment, go to your backend server and add or update the
-`CORS_ORIGIN` environment variable (see `DEPLOY_BACKEND.md`) to:
+After you have the final Netlify URL, go to your backend server and add or update the
+`CORS_ORIGIN` environment variable (see `DEPLOY_BACKEND.md`):
 
 ```
-CORS_ORIGIN=https://marketili.netlify.app
+CORS_ORIGIN=https://bright-sunshine-abc123.netlify.app
+```
+
+Or if using a custom domain:
+
+```
+CORS_ORIGIN=https://app.marketili.com
 ```
 
 Without this step the browser will block API requests with a CORS error.

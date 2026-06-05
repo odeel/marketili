@@ -5,30 +5,30 @@
 
 [build.environment]
   NODE_VERSION = "18"
-  # CRA treats lint warnings as errors when CI=true (which Netlify sets by
-  # default). Keep warnings non-blocking so they don't fail production builds.
-  CI = "false"
+  # Talk to the backend through a same-origin relative path so the browser
+  # only ever makes HTTPS requests to the Netlify domain. The /api and
+  # /socket.io rewrites below proxy these to the (HTTP-only) backend
+  # server-side, which avoids mixed-content blocking on the HTTPS frontend.
+  REACT_APP_API_URL = "/api"
 
-# Proxy API calls to the backend server-side, so the HTTPS site can reach the
-# plain-HTTP backend without browser mixed-content errors. Requests stay
-# same-origin from the browser's view (so cookies + CORS just work).
-# MUST come before the SPA fallback below — Netlify matches rules top-to-bottom.
+# ── Proxy API + real-time traffic to the backend ──────────────────────────────
+# These MUST come before the SPA fallback, otherwise "/*" swallows them.
+# Netlify performs the upstream HTTP call server-side, so the browser sees
+# only HTTPS responses from marketili.netlify.app (no mixed content, and the
+# secure/SameSite=None auth cookie is stored as first-party over HTTPS).
 [[redirects]]
   from   = "/api/*"
   to     = "http://157.245.255.43/api/:splat"
   status = 200
   force  = true
 
-# Socket.io — best effort. HTTP long-polling proxies through here; native
-# WebSocket upgrades are NOT supported by Netlify rewrites and will fall back
-# to polling. For full real-time, terminate HTTPS on the backend (Option B).
 [[redirects]]
   from   = "/socket.io/*"
   to     = "http://157.245.255.43/socket.io/:splat"
   status = 200
   force  = true
 
-# SPA fallback — every path serves index.html so React Router works
+# SPA fallback — every other path serves index.html so React Router works
 [[redirects]]
   from   = "/*"
   to     = "/index.html"

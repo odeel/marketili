@@ -6,10 +6,10 @@ import adminService from "../../services/adminService";
 import adService from "../../services/adService";
 import notificationService from "../../services/notificationService";
 import {
-  IconGrid, IconUsers, IconFlag, IconTrendingUp,
+  IconGrid, IconUsers, IconUser, IconFlag, IconTrendingUp,
   IconBriefcase, IconSend, IconClipboard, IconSettings,
   IconBell, IconLogOut, IconChevronLeft, IconChevronRight,
-  IconShield, IconSearch, IconPlus, IconX,
+  IconShield, IconSearch, IconPlus, IconX, IconNote,
 } from "../../components/ui/Icons";
 import "../../styles/Dashboard.css";
 
@@ -60,7 +60,13 @@ const ROLE_COLORS = {
   team: C.green, team_member: "#047857", freelancer: C.orange,
 };
 
-// ── Activity action metadata ──────────────────────────────────────────────────
+const ACTION_TYPES = [
+  "user_registered","user_disabled","user_enabled",
+  "post_created","post_closed","post_removed","post_reactivated",
+  "pitch_sent","pitch_accepted",
+  "project_created","project_completed","contract_signed",
+  "ad_created","member_created","account_restored",
+];
 const ACTION_META = {
   user_registered:   { icon: "👤", color: C.blue },
   user_disabled:     { icon: "🚫", color: C.red },
@@ -1531,7 +1537,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-
-
-
-

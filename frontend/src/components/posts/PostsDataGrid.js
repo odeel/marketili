@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import postService from "../../services/postService";
 import { getDeadlineColor, getDeadlineLabel } from "../../utils/deadlineColor";
-import { IconSearch, IconClipboard } from "../ui/Icons";
+import { IconSearch, IconFilter, IconClipboard } from "../ui/Icons";
 
 const STATUS_META = {
   open:        { label: "Ouvert",   cls: "open"        },

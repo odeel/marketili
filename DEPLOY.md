@@ -4,15 +4,6 @@ Full step-by-step guide to host the **backend on a DigitalOcean Droplet** and th
 
 ---
 
-## 🚀 Deployment Status
-
-**Repository:** ✓ Code pushed to GitHub main branch
-- **URL:** https://github.com/sifyacine/marketili.git
-- **Branch:** main
-- **Status:** Ready for deployment
-
----
-
 ## Table of Contents
 
 1. [Prerequisites](#1-prerequisites)
@@ -38,11 +29,7 @@ Before you start, make sure you have:
 
 - A [DigitalOcean account](https://cloud.digitalocean.com)
 - A [Netlify account](https://app.netlify.com)
-- A [GitHub account](https://github.com) with access to **✓ Code is now available at:**
-  ```
-  https://github.com/sifyacine/marketili.git
-  ```
-  Main branch contains the latest production-ready code.
+- A [GitHub account](https://github.com) with access to `https://github.com/odeel/try1.git`
 - Your local SSH **public** key (the one you'll add to DigitalOcean):
   ```
   ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKfXqCuUMyfiATtURlJ9o6MtEnS3GS2pbjAslY/5vnR2 admin@DESKTOP-RCTGCJ2
@@ -171,9 +158,7 @@ ssh -T git@github.com
 
 ---
 
-## 6. Clone the Repo & Checkout Branch (GitHub)
-
-**Your repository is now on GitHub:** `https://github.com/sifyacine/marketili.git`
+## 6. Clone the Repo & Checkout Branch
 
 ```bash
 cd /var/www
@@ -206,11 +191,11 @@ MONGO_URI=mongodb://liloshoppingdz_db_user:wBwU6hnnNALyyV10@ac-i991urm-shard-00-
 JWT_SECRET=marketili_secret_key_2024
 JWT_EXPIRES_IN=7d
 NODE_ENV=production
-CORS_ORIGIN=https://marketili.netlify.app
+CORS_ORIGIN=https://YOUR-NETLIFY-SITE.netlify.app
 ```
 
 > **Important:**
-> - CORS_ORIGIN is set to your production Netlify URL: `https://marketili.netlify.app`
+> - Replace `https://YOUR-NETLIFY-SITE.netlify.app` with your actual Netlify URL after step 11
 > - Consider changing `JWT_SECRET` to a long random string for production:
 >   ```bash
 >   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
@@ -383,13 +368,21 @@ In Netlify: **Site Settings → Environment variables → Add variable**
 
 | Key | Value |
 |---|---|
-| `REACT_APP_API_URL` | `http://157.245.255.43/api` |
+| `REACT_APP_API_URL` | `/api` |
 
-> The local `frontend/.env` only contains `PORT=3000` — the API URL **must** be set here in Netlify so the production build points to the server. Do not add it to `frontend/.env` or local login will break (see note below).
+> **Important:** use the **relative** value `/api` — NOT `http://157.245.255.43/api`.
+> The Netlify site is served over HTTPS, but the backend is HTTP-only. Pointing
+> the browser directly at `http://157.245.255.43` is **mixed content**, which
+> browsers block (images/PDFs fail to load, and the `secure` auth cookie can't
+> be stored). Instead, `frontend/netlify.toml` proxies `/api/*` and
+> `/socket.io/*` to the backend server-side, so the browser only ever makes
+> same-origin HTTPS requests to the Netlify domain.
 
-> **Why:** The production backend sets cookies with `secure: true` (HTTPS-only). Local dev uses `localhost:5000` where cookies are `secure: false`, which is why they work. Never point local frontend at the production backend over plain HTTP.
+> The local `frontend/.env` only contains `PORT=3000` — the API URL **must** be set here in Netlify. Do not add it to `frontend/.env` or local login will break.
 
-> If you add HTTPS (step 10), change this value to `https://api.yourdomain.com/api`.
+> **Why mixed content matters:** The production backend sets cookies with `secure: true` + `SameSite=None` (HTTPS-only). Routing through the Netlify HTTPS proxy lets those cookies be stored as first-party. Local dev uses `localhost:5000` where cookies are `secure: false`, which is why they work there.
+
+> If you later add real HTTPS to the backend (step 10, requires a domain), you can either keep the proxy or set this value to `https://api.yourdomain.com/api` and remove the proxy rewrites from `netlify.toml`.
 
 ### 11d. Deploy
 
@@ -409,7 +402,7 @@ nano /var/www/marketili/backend/.env
 
 Change:
 ```env
-CORS_ORIGIN=https://marketili.netlify.app
+CORS_ORIGIN=https://amazing-name-123456.netlify.app
 ```
 
 Save, then restart the backend:
@@ -479,7 +472,7 @@ pm2 monit
 | `502 Bad Gateway` from Nginx | Backend crashed — run `pm2 restart marketili-backend && pm2 logs` |
 | CORS errors in browser | Check `CORS_ORIGIN` in `.env` matches exact Netlify URL (no trailing slash) |
 | Socket.io not connecting | Make sure Nginx config has the `Upgrade` and `Connection` headers (step 9a) |
-| Images not loading | Check `REACT_APP_API_URL` in Netlify env vars — no trailing slash |
+| Images / PDFs not loading (blank or broken icon) | Mixed content. Set `REACT_APP_API_URL=/api` (relative) in Netlify so files load through the HTTPS `netlify.toml` proxy, then redeploy |
 | MongoDB connection error | Whitelist the Droplet IP in MongoDB Atlas → Network Access |
 | `Permission denied (publickey)` on GitHub | Re-run step 5 and make sure the deploy key was added to the repo |
 

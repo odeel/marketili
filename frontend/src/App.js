@@ -15,13 +15,22 @@ import ChangePasswordPage from "./pages/auth/ChangePasswordPage";
 import ProfilePage        from "./pages/ProfilePage";
 import EditProfilePage    from "./pages/EditProfilePage";
 import BrowseProvidersPage from "./pages/BrowseProvidersPage";
-
+//uuyou
 let LandingPage;
 try {
   LandingPage = require("./pages/LandingPage").default;
 } catch {
   LandingPage = () => <Navigate to="/login" replace />;
 }
+
+const ComingSoon = ({ role }) => (
+  <div style={{ display:"flex", alignItems:"center", justifyContent:"center",
+    minHeight:"100vh", background:"#fff5f5", flexDirection:"column", gap:16 }}>
+    <div style={{ fontSize:"2.5rem" }}>{role==="team"?"👥":"⚡"}</div>
+    <h2 style={{ color:"#1a0a0a", fontWeight:800 }}>Dashboard {role}</h2>
+    <p style={{ color:"#7a4a4a", fontSize:"0.9rem" }}>Phase suivante — bientôt disponible</p>
+  </div>
+);
 
 function App() {
   return (
@@ -36,9 +45,8 @@ function App() {
         <Route path="/admin"        element={<AdminDashboard />} />
 
         // Add as a public route (no PrivateRoute wrapper — member is logged in but forced here):
-        <Route path="/change-password" element={<ChangePasswordPage />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />   
 
-        {/* Client dashboard */}
         <Route path="/dashboard/client/*" element={
           <PrivateRoute allowedRoles={["client"]}>
             <ClientDashboard />

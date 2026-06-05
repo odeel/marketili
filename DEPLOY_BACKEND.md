@@ -14,9 +14,7 @@ MongoDB is always hosted on **MongoDB Atlas** (free M0 cluster is fine for stagi
 
 - A [DigitalOcean](https://digitalocean.com) account
 - A [MongoDB Atlas](https://cloud.mongodb.com) cluster (free M0 or paid)
-- The backend repo pushed to GitHub: `https://github.com/sifyacine/marketili.git` ✓ (Already on main branch)
-
-**Repository Status:** Backend code is now available on GitHub at [sifyacine/marketili](https://github.com/sifyacine/marketili)
+- The backend repo pushed to GitHub
 
 ---
 
@@ -62,11 +60,6 @@ In the **App → Settings → App-Level Environment Variables**, add all of thes
 
 Click **Deploy**. The first deploy takes ~3 minutes. You get a URL like
 `https://marketili-api-xxxxx.ondigitalocean.app`.
-
-**Set CORS_ORIGIN to the frontend URL:**
-```
-CORS_ORIGIN=https://marketili.netlify.app
-```
 
 ### 4. Custom domain (optional)
 
