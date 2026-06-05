@@ -212,7 +212,7 @@ const IncomingRequests = ({ onAccepted }) => {
           </button>
         ))}
       </div>
-
+Mot
       {loading ? (
         <div className="spinner-wrap" style={{ padding: 32 }}><div className="spinner" /></div>
       ) : displayed.length === 0 ? (
@@ -986,74 +986,7 @@ const DirectorMembers = ({ user }) => {
                 </tr>
               </thead>
               <tbody>
-                <AnimatePresence>
-                  {activeMembers.map(m => <MemberRow key={m._id} m={m} showRestore={false} />)}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Inactive / suspended / archived section */}
-          {inactiveMembers.length > 0 && (
-            <div style={{ marginTop: 20 }}>
-              <button
-                onClick={() => setShowInactive(o => !o)}
-                style={{ background: "none", border: "none", cursor: "pointer",
-                  fontFamily: "inherit", fontSize: "0.82rem", color: "var(--d-muted)",
-                  fontWeight: 600, padding: "4px 0", display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ transform: showInactive ? "rotate(90deg)" : "rotate(0deg)",
-                  transition: "transform 0.2s", display: "inline-block" }}>▶</span>
-                {showInactive ? "Masquer" : "Afficher"} les membres inactifs ({inactiveMembers.length})
-              </button>
-
-              <AnimatePresence>
-                {showInactive && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    style={{ overflow: "hidden", marginTop: 8 }}>
-                    <div className="card" style={{ overflow: "auto" }}>
-                      <table className="data-grid">
-                        <thead>
-                          <tr>
-                            <th>Membre</th>
-                            <th>Rôle</th>
-                            <th>Email</th>
-                            <th>Mot de passe</th>
-                            <th>Statut</th>
-                            <th>Restaurer</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <AnimatePresence>
-                            {inactiveMembers.map(m => <MemberRow key={m._id} m={m} showRestore={true} />)}
-                          </AnimatePresence>
-                        </tbody>
-                      </table>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-        </>
-      )}
-
-      <FreelancerSection user={user} />
-
-      {/* Member history modal */}
-      <AnimatePresence>
-        {historyMember && (
-          <MemberHistoryModal
-            member={historyMember}
-            onClose={() => setHistoryMember(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Create member modal */}
-      <AnimatePresence>
+                     <AnimatePresence>
         {showModal && (
           <motion.div className="modal-overlay"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -1125,6 +1058,74 @@ const DirectorMembers = ({ user }) => {
           </motion.div>
         )}
       </AnimatePresence>
+                <AnimatePresence>
+                  {activeMembers.map(m => <MemberRow key={m._id} m={m} showRestore={false} />)}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Inactive / suspended / archived section */}
+          {inactiveMembers.length > 0 && (
+            <div style={{ marginTop: 20 }}>
+              <button
+                onClick={() => setShowInactive(o => !o)}
+                style={{ background: "none", border: "none", cursor: "pointer",
+                  fontFamily: "inherit", fontSize: "0.82rem", color: "var(--d-muted)",
+                  fontWeight: 600, padding: "4px 0", display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ transform: showInactive ? "rotate(90deg)" : "rotate(0deg)",
+                  transition: "transform 0.2s", display: "inline-block" }}>▶</span>
+                {showInactive ? "Masquer" : "Afficher"} les membres inactifs ({inactiveMembers.length})
+              </button>
+
+              <AnimatePresence>
+                {showInactive && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    style={{ overflow: "hidden", marginTop: 8 }}>
+                    <div className="card" style={{ overflow: "auto" }}>
+                      <table className="data-grid">
+                        <thead>
+                          <tr>
+                            <th>Membre</th>
+                            <th>Rôle</th>
+                            <th>Email</th>
+                            <th>Mot de passe</th>
+                            <th>Statut</th>
+                            <th>Restaurer</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <AnimatePresence>
+                            {inactiveMembers.map(m => <MemberRow key={m._id} m={m} showRestore={true} />)}
+                          </AnimatePresence>
+                        </tbody>
+                      </table>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+        </>
+      )}
+
+      <FreelancerSection user={user} />
+
+      {/* Member history modal */}
+      <AnimatePresence>
+        {historyMember && (
+          <MemberHistoryModal
+            member={historyMember}
+            onClose={() => setHistoryMember(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Create member modal */}
+ 
     </div>
   );
 };
