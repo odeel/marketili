@@ -309,13 +309,10 @@ const BrowseCard = ({ post, index, onClick }) => {
           <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
             {post.media.slice(0, 3).map((m, i) => (
               m.mimeType?.startsWith("image/") ? (
-                <a key={i} href={uploadService.resolveUrl(m.url)} target="_blank" rel="noreferrer"
-                  style={{ display: "block", flexShrink: 0 }}>
-                  <img src={uploadService.resolveUrl(m.url)} alt={m.filename}
-                    onError={e => { e.target.style.display = "none"; }}
-                    style={{ width: 64, height: 48, objectFit: "cover",
-                      borderRadius: 6, border: "1px solid #f0dede" }} />
-                </a>
+                <img key={i} src={uploadService.resolveUrl(m.url)} alt={m.filename}
+                  onError={e => { e.target.style.display = "none"; }}
+                  style={{ width: 64, height: 48, objectFit: "cover",
+                    borderRadius: 6, border: "1px solid #f0dede", flexShrink: 0 }} />
               ) : (
                 <a key={i} href={uploadService.resolveUrl(m.url)} target="_blank" rel="noreferrer"
                   style={{ display: "flex", alignItems: "center", gap: 4,
