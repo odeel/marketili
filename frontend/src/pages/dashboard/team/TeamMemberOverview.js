@@ -95,7 +95,7 @@ const TeamMemberOverview = ({ user }) => {
               <button onClick={() => navigate("/dashboard/team/tasks")}
                 style={{ background: "none", border: "none", cursor: "pointer",
                   fontSize: "0.75rem", color: "var(--d-muted)", fontFamily: "inherit" }}>
-                Voir tout →
+                Voir tout
               </button>
             </div>
             {urgent.length === 0 ? (
